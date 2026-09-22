@@ -1,4 +1,4 @@
-# 🛡️ ClaimShield AI — Multi-Agent Fact Verification System
+#  ClaimShield AI — Multi-Agent Fact Verification System
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Framework: LangGraph](https://img.shields.io/badge/Framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
@@ -35,36 +35,36 @@ ClaimShield AI orchestrates verification across a multi-stage agentic pipeline:
 
 ```mermaid
 flowchart TD
-    User([👤 User / News Reader]) -->|Submits Claim| UI[🖥️ Streamlit Web Dashboard]
-    UI -->|A2A Request| Orchestrator[🎯 Master Orchestrator Agent]
+    User([ User / News Reader]) -->|Submits Claim| UI[Streamlit Web Dashboard]
+    UI -->|A2A Request| Orchestrator[ Master Orchestrator Agent]
     
     subgraph "ClaimShield Multi-Agent Core (A2A/1.0)"
-        Orchestrator -->|1. Validate & Sanitize| SecAgent[🔒 Security Agent]
+        Orchestrator -->|1. Validate & Sanitize| SecAgent[ Security Agent]
         SecAgent -->|Pass / Fail| Orchestrator
         
-        Orchestrator -->|2. Extract Entities & Stance| NLPAgent[🧠 NLP Agent]
+        Orchestrator -->|2. Extract Entities & Stance| NLPAgent[ NLP Agent]
         NLPAgent -->|Entities, Query, ML Score| Orchestrator
         
-        Orchestrator -->|3. Retrieve Evidence| RetAgent[🔍 Information Retrieval Agent]
+        Orchestrator -->|3. Retrieve Evidence| RetAgent[ Information Retrieval Agent]
         RetAgent <-->|Dense Search| FAISS[(FAISS Vector Index)]
         RetAgent <-->|Local Articles| SQLite[(SQLite Database)]
-        RetAgent <-->|Live Search| WebCrawler[🌐 Web Crawler httpx/BS4]
+        RetAgent <-->|Live Search| WebCrawler[ Web Crawler httpx/BS4]
         RetAgent -->|Top Context & URLs| Orchestrator
         
-        Orchestrator -->|4. Verify with LLMs| VerAgent[⚖️ Verification Agent]
-        VerAgent <-->|Consensus| LLMs[🤖 Groq / Gemini / Ollama]
+        Orchestrator -->|4. Verify with LLMs| VerAgent[ Verification Agent]
+        VerAgent <-->|Consensus| LLMs[ Groq / Gemini / Ollama]
         VerAgent -->|Verdict & Reasoning| Orchestrator
         
         Orchestrator -->|5. Audit Log| SecAgent
     end
     
     Orchestrator -->|Final Result & PDF Export| UI
-    UI -->|Download Report| PDFGen[📑 PDF Report Generator]
+    UI -->|Download Report| PDFGen[ PDF Report Generator]
 ```
 
 ---
 
-## 🤖 Specialized Agents
+##  Specialized Agents
 
 | # | Agent | Primary Role & Responsibilities | Key Technologies |
 |---|---|---|---|
@@ -76,7 +76,7 @@ flowchart TD
 
 ---
 
-## 🔄 Workflow Pipeline
+##  Workflow Pipeline
 
 The claim verification pipeline executes through five distinct stages:
 
@@ -88,7 +88,7 @@ The claim verification pipeline executes through five distinct stages:
 
 ---
 
-## 💻 Tech Stack
+##  Tech Stack
 
 - **Language:** Python 3.10+
 - **Multi-Agent Orchestration:** LangGraph (StateGraph), AutoGen (RoundRobinGroupChat)
@@ -103,7 +103,7 @@ The claim verification pipeline executes through five distinct stages:
 
 ---
 
-## 📁 Project Directory Structure
+##  Project Directory Structure
 
 ```text
 ClaimShield_AI/
@@ -142,7 +142,7 @@ ClaimShield_AI/
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### Prerequisites
 - **Python 3.10+** installed
@@ -247,7 +247,7 @@ python -m unittest tests/test_agents.py -v
 
 ---
 
-## 👥 Team Members & Contributions
+##  Team Members & Contributions
 
 | Member | Assigned Agent / Role | Primary Responsibilities |
 |---|---|---|
