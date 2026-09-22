@@ -50,3 +50,81 @@ class NLPAgent(BaseAgent):
             ('clf', LogisticRegression())
         ])
         self.ml_pipeline.fit(X_train, y_train)
+
+    def handle_message(self, message: dict) -> dict:
+        action = message.get("action")
+        data = message.get("data", {})
+        
+        if action == "process_claim":
+            return self._process_claim(data)
+        elif action == "summarize":
+            return self._summarize(data)
+        elif action == "ml_classify":
+            return self._ml_classify(data)
+        else:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Unknown action: {action}"
+            }
+
+    def _process_claim(self, data: dict) -> dict:
+        claim = data.get("claim", "").strip()
+        if not claim:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": "Empty claim text provided."
+            }
+
+        # Also get ML classification if available
+        ml_res = self._ml_classify({"text": claim}) if hasattr(self, "_ml_classify") else {}
+
+        if self.nlp is None:
+            # Fallback if spaCy failed to load
+            return {
+                "sender": self.name,
+                "status": "success",
+                "entities": [],
+                "search_query": claim,
+                "ml_classification": ml_res.get("classification", {})
+            }
+
+        try:
+            doc = self.nlp(claim)
+            
+            # Extract entities
+            entities = []
+            for ent in doc.ents:
+                entities.append({
+                    "text": ent.text,
+                    "label": ent.label_
+                })
+            
+            # Build search query from key parts of speech
+            keywords = []
+            for token in doc:
+                # Remove stop words and punctuation; retain key terms
+                if not token.is_stop and not token.is_punct:
+                    if token.pos_ in ["NOUN", "PROPN", "ADJ", "NUM", "VERB"]:
+                        keywords.append(token.text)
+            
+            search_query = " ".join(keywords)
+            
+            # If token filter results in an empty query, fallback to full claim
+            if not search_query.strip():
+                search_query = claim
+                
+            return {
+                "sender": self.name,
+                "status": "success",
+                "entities": entities,
+                "search_query": search_query,
+                "ml_classification": ml_res.get("classification", {})
+            }
+        except Exception as e:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"NLP processing error: {e}"
+            }
