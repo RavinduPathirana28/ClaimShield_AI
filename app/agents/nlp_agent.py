@@ -166,3 +166,82 @@ class NLPAgent(BaseAgent):
                 "status": "error",
                 "message": f"Scikit-learn classification failure: {e}"
             }
+
+    def _summarize(self, data: dict) -> dict:
+        """Extractive summarization using spaCy sentence scoring based on keyword frequency."""
+        text = data.get("text", "").strip()
+        max_sentences = int(data.get("max_sentences", 3))
+
+        if not text:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": "Empty text provided for summarization."
+            }
+
+        if self.nlp is None:
+            # Fallback: return first N sentences
+            sentences = text.split(". ")
+            fallback = ". ".join(sentences[:max_sentences])
+            if not fallback.endswith("."):
+                fallback += "."
+            return {
+                "sender": self.name,
+                "status": "success",
+                "summary": fallback,
+                "technique": "fallback_split"
+            }
+
+        try:
+            doc = self.nlp(text)
+            sentences = list(doc.sents)
+
+            if len(sentences) <= max_sentences:
+                return {
+                    "sender": self.name,
+                    "status": "success",
+                    "summary": text,
+                    "technique": "extractive_spacy"
+                }
+
+            # Build word frequency table (excluding stop words and punctuation)
+            word_freq = {}
+            for token in doc:
+                if not token.is_stop and not token.is_punct and token.pos_ in ["NOUN", "PROPN", "VERB", "ADJ"]:
+                    lemma = token.lemma_.lower()
+                    word_freq[lemma] = word_freq.get(lemma, 0) + 1
+
+            # Normalize frequencies
+            if word_freq:
+                max_freq = max(word_freq.values())
+                for word in word_freq:
+                    word_freq[word] /= max_freq
+
+            # Score each sentence by summing normalized word frequencies
+            sentence_scores = []
+            for sent in sentences:
+                score = 0.0
+                for token in sent:
+                    lemma = token.lemma_.lower()
+                    if lemma in word_freq:
+                        score += word_freq[lemma]
+                sentence_scores.append((sent, score))
+
+            # Select top-N sentences, preserving original order
+            ranked = sorted(sentence_scores, key=lambda x: x[1], reverse=True)[:max_sentences]
+            # Re-sort by position in original text to maintain coherence
+            top_sents = sorted(ranked, key=lambda x: x[0].start)
+            summary = " ".join(s.text.strip() for s, _ in top_sents)
+
+            return {
+                "sender": self.name,
+                "status": "success",
+                "summary": summary,
+                "technique": "extractive_spacy"
+            }
+        except Exception as e:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Summarization error: {e}"
+            }
