@@ -68,6 +68,7 @@ def encrypt_data(plaintext: str) -> str:
     except Exception:
         return plaintext  # Fallback to unencrypted on error
 
+
 def decrypt_data(ciphertext: str) -> str:
     """Decrypts Fernet-encrypted ciphertext back to plaintext."""
     from cryptography.fernet import Fernet
