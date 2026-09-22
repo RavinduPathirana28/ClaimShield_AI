@@ -78,7 +78,7 @@ class NLPAgent(BaseAgent):
             }
 
         # Also get ML classification if available
-        ml_res = self._ml_classify({"text": claim}) if hasattr(self, "_ml_classify") else {}
+        ml_res = self._ml_classify({"text": claim})
 
         if self.nlp is None:
             # Fallback if spaCy failed to load
@@ -127,4 +127,42 @@ class NLPAgent(BaseAgent):
                 "sender": self.name,
                 "status": "error",
                 "message": f"NLP processing error: {e}"
+            }
+
+    def _ml_classify(self, data: dict) -> dict:
+        """Classifies text credibility using Scikit-Learn TF-IDF Model."""
+        text = data.get("text", "").strip()
+        if not text:
+            return {"sender": self.name, "status": "error", "message": "No text provided for ML classification."}
+
+        if not SKLEARN_AVAILABLE or self.ml_pipeline is None:
+            return {
+                "sender": self.name,
+                "status": "success",
+                "classification": {
+                    "label": "Neutral / Unclassified",
+                    "confidence": 0.5,
+                    "engine": "Fallback Rules"
+                }
+            }
+
+        try:
+            pred_label = self.ml_pipeline.predict([text])[0]
+            probs = self.ml_pipeline.predict_proba([text])[0]
+            confidence = float(max(probs))
+
+            return {
+                "sender": self.name,
+                "status": "success",
+                "classification": {
+                    "label": pred_label,
+                    "confidence": round(confidence, 4),
+                    "engine": "Scikit-Learn TF-IDF + LogisticRegression"
+                }
+            }
+        except Exception as e:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Scikit-learn classification failure: {e}"
             }
