@@ -195,3 +195,79 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
         except Exception as e:
             print(f"[Warning] Ollama Local LLM call note: {e}")
         return {"status": "error"}
+
+    def _verify_with_gemini(self, claim: str, articles: list) -> dict:
+        # Build articles formatting
+        articles_formatted = ""
+        for art in articles:
+            articles_formatted += (
+                f"--- ARTICLE ID: {art['id']} ---\n"
+                f"Title: {art['title']}\n"
+                f"Source: {art['source']} ({art['date']})\n"
+                f"Content: {art['content']}\n\n"
+            )
+
+        prompt = f"""
+You are an intelligent, friendly AI assistant and expert fact verifier.
+Your goal is to answer the user's input clearly, accurately, and in simple, plain language that ANYONE can easily understand.
+
+User Input: "{claim}"
+
+Retrieved Source Articles (if any):
+{articles_formatted if articles_formatted else "No specific database articles found."}
+
+Instructions:
+1. Understand the intent of the input:
+   - If it is a general question or informational query (e.g. "What is quantum computing?", "Why is the sky blue?"), answer it directly in plain, friendly language.
+   - If it is a factual claim or news rumour (e.g. "iPhone 18 launch in 2026", "Drinking coffee is good for heart health"), evaluate whether it is true or false using the source articles and general factual knowledge.
+2. Select a clear verdict:
+   - "Answered" (for general questions, definitions, or conceptual explanations)
+   - "Supported" (for true statements or verified factual claims)
+   - "Contradicted" (for false claims, debunks, or refutations)
+   - "Unverified" (only if a claim lacks sufficient evidence to confirm or deny)
+3. Straight Answer: Provide a 1-sentence immediate direct verdict/answer.
+4. Detailed Explanation: Provide a comprehensive 2-4 sentence explanation detailing why.
+5. Citations & Links: Reference any source articles with quotes and explanations.
+
+Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrappers):
+{{
+  "verdict": "Supported" | "Contradicted" | "Answered" | "Unverified",
+  "confidence": 0.95,
+  "straight_answer": "Direct 1-sentence verdict or direct answer.",
+  "summary": "Detailed explanation breakdown of why.",
+  "citations": [
+    {{
+      "article_id": 1,
+      "quote": "Exact sentence or key factual insight",
+      "explanation": "Why this matters in simple terms."
+    }}
+  ]
+}}
+"""
+        for candidate_model in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
+            try:
+                response = self.gemini_client.models.generate_content(
+                    model=candidate_model,
+                    contents=prompt
+                )
+                text_resp = response.text.strip()
+                
+                # Clean possible markdown block formatting from model
+                if text_resp.startswith("```"):
+                    lines = text_resp.split("\n")
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    text_resp = "\n".join(lines).strip()
+                
+                result = json.loads(text_resp)
+                result["sender"] = self.name
+                result["status"] = "success"
+                result["engine"] = f"Google Gemini AI Engine ({candidate_model})"
+                return result
+            except Exception as e:
+                print(f"[Warning] Gemini model '{candidate_model}' call note: {e}")
+
+        print("[Warning] All Gemini API attempts failed. Falling back to local solver.")
+        return self._verify_with_mock(claim, articles)
