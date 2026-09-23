@@ -1,0 +1,94 @@
+from app.agents.base_agent import BaseAgent
+from app.database.db_manager import DBManager
+from app.utils.vector_store import VectorStore
+from app.utils.web_crawler import WebCrawler
+
+class RetrievalAgent(BaseAgent):
+    """
+    Information Retrieval (IR) Agent. Integrates FAISS vector indexing with database
+    queries and live web crawling to fetch related news articles to back up or dispute claims.
+    """
+    def __init__(self, db: DBManager = None, vector_store: VectorStore = None):
+        super().__init__("retrieval_agent")
+        self.db = db if db is not None else DBManager()
+        self.vector_store = vector_store if vector_store is not None else VectorStore()
+        self.web_crawler = WebCrawler()
+
+    def handle_message(self, message: dict) -> dict:
+        action = message.get("action")
+        data = message.get("data", {})
+        
+        if action == "retrieve":
+            return self._retrieve(data)
+        else:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Unknown action: {action}"
+            }
+
+    def _retrieve(self, data: dict) -> dict:
+        query = data.get("query", "").strip()
+        limit = int(data.get("limit", 3))
+
+        if not query:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": "Empty query text supplied to Retrieval Agent."
+            }
+
+        try:
+            # 1. Query local FAISS Vector Store index
+            results = self.vector_store.search_index(query, limit=limit)
+            articles_list = self.db.get_all_articles()
+            articles_map = {art["id"]: art for art in articles_list}
+            
+            retrieved_articles = []
+            top_score = 0.0
+            
+            if results:
+                for art_id, score in results:
+                    article = articles_map.get(art_id)
+                    if article:
+                        enriched = article.copy()
+                        enriched["score"] = score
+                        retrieved_articles.append(enriched)
+                if retrieved_articles:
+                    top_score = retrieved_articles[0].get("score", 0.0)
+
+            # 2. If local database results are insufficient (top score < 0.30 or empty), launch live web crawler
+            if not retrieved_articles or top_score < 0.30:
+                print(f"[Retrieval Agent] Local FAISS score ({top_score:.2f}) insufficient. Launching Live Web Crawler for '{query}'...")
+                web_results = self.web_crawler.search_and_crawl(query, limit=limit)
+                
+                if web_results:
+                    # Save web articles to database & append to results
+                    for web_art in web_results:
+                        try:
+                            # Save to local database so it can be vector indexed in the future
+                            db_saved = self.db.add_article(
+                                title=web_art["title"],
+                                content=web_art["content"],
+                                source=web_art["source"],
+                                url=web_art["url"],
+                                date=web_art["date"]
+                            )
+                            web_art["id"] = db_saved.get("id", web_art["id"])
+                        except Exception as save_err:
+                            print(f"[Warning] Failed to save web article to DB: {save_err}")
+                            
+                        retrieved_articles.append(web_art)
+
+            return {
+                "sender": self.name,
+                "status": "success",
+                "articles": retrieved_articles[:limit],
+                "web_crawled": any("Live Web" in a.get("source", "") for a in retrieved_articles)
+            }
+        except Exception as e:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Retrieval failed: {e}"
+            }
