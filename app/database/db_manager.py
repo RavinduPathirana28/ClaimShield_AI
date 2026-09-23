@@ -131,6 +131,7 @@ class DBManager:
                     user["tokens"] = float(user.get("tokens", 10.0))
                     user["last_request_time"] = float(user.get("last_request_time", 0.0))
                     return user
+                return None
             except Exception as e:
                 print(f"[Warning] Supabase get_user error: {e}. Trying SQLite fallback.")
                 
@@ -156,8 +157,9 @@ class DBManager:
                     "last_request_time": float(time.time())
                 }
                 res = self.supabase_client.table("users").insert(user_data).execute()
-                if res.data:
+                if res.data and len(res.data) > 0:
                     return res.data[0]
+                return self.get_user(username)
             except Exception as e:
                 print(f"[Warning] Supabase create_user error: {e}. Trying SQLite fallback.")
                 
@@ -184,8 +186,7 @@ class DBManager:
                     "tokens": tokens,
                     "last_request_time": last_request_time
                 }).eq("username", username).execute()
-                if res.data:
-                    return True
+                return True
             except Exception as e:
                 print(f"[Warning] Supabase update_user_tokens error: {e}. Trying SQLite fallback.")
                 
@@ -206,8 +207,7 @@ class DBManager:
                 res = self.supabase_client.table("users").update({
                     "role": role
                 }).eq("username", username).execute()
-                if res.data:
-                    return True
+                return True
             except Exception as e:
                 print(f"[Warning] Supabase update_user_role error: {e}. Trying SQLite fallback.")
                 
@@ -228,8 +228,7 @@ class DBManager:
                 res = self.supabase_client.table("users").update({
                     "password_hash": password_hash
                 }).eq("username", username).execute()
-                if res.data:
-                    return True
+                return True
             except Exception as e:
                 print(f"[Warning] Supabase update_user_password error: {e}. Trying SQLite fallback.")
                 
@@ -248,7 +247,7 @@ class DBManager:
         if self.use_supabase:
             try:
                 res = self.supabase_client.table("users").select("id, username, role, tokens, last_request_time").execute()
-                if res.data:
+                if res.data is not None:
                     return res.data
             except Exception as e:
                 print(f"[Warning] Supabase get_all_users error: {e}. Trying SQLite fallback.")
@@ -267,7 +266,7 @@ class DBManager:
         if self.use_supabase:
             try:
                 res = self.supabase_client.table("articles").select("*").execute()
-                if res.data:
+                if res.data is not None:
                     return res.data
             except Exception as e:
                 print(f"[Warning] Supabase get_all_articles error: {e}. Trying SQLite fallback.")
@@ -292,8 +291,9 @@ class DBManager:
                     "date": date
                 }
                 res = self.supabase_client.table("articles").insert(article_data).execute()
-                if res.data:
+                if res.data and len(res.data) > 0:
                     return res.data[0]
+                return article_data
             except Exception as e:
                 print(f"[Warning] Supabase add_article error: {e}. Trying SQLite fallback.")
                 
@@ -321,7 +321,7 @@ class DBManager:
         if self.use_supabase:
             try:
                 res = self.supabase_client.table("verification_logs").select("*").eq("user_id", user_id).order("timestamp", desc=True).execute()
-                if res.data:
+                if res.data is not None:
                     return res.data
             except Exception as e:
                 print(f"[Warning] Supabase get_logs_by_user error: {e}. Trying SQLite fallback.")
@@ -348,8 +348,9 @@ class DBManager:
                     "details_json": details_json
                 }
                 res = self.supabase_client.table("verification_logs").insert(log_data).execute()
-                if res.data:
+                if res.data and len(res.data) > 0:
                     return res.data[0]
+                return log_data
             except Exception as e:
                 print(f"[Warning] Supabase add_log error: {e}. Trying SQLite fallback.")
                 
