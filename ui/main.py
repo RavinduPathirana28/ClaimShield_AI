@@ -4,6 +4,7 @@ import os
 import json
 import time
 import datetime
+import textwrap
 from pathlib import Path
 
 # Add root folder to sys.path to enable app module imports
@@ -36,6 +37,14 @@ def load_css():
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 load_css()
+
+def render_html(html_str: str):
+    """Renders HTML reliably using st.html (or fallback) without markdown interference."""
+    dedented = textwrap.dedent(html_str).strip()
+    if hasattr(st, "html"):
+        st.html(dedented)
+    else:
+        st.markdown(dedented, unsafe_allow_html=True)
 
 # Lazy Initializations
 @st.cache_resource
@@ -250,11 +259,11 @@ if not st.session_state.authenticated:
         st.markdown("### 💎 Subscription & Pricing Tiers")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.markdown("""
+            render_html("""
             <div class='plan-card'>
                 <div>
                     <h4>Standard Tier</h4>
-                    <div class='plan-price-tag' style='color: #94A3B8;'>Free</div>
+                    <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for individual researchers</p>
                     <ul class='plan-feature-list'>
                         <li>10 claim checks capacity</li>
@@ -264,14 +273,14 @@ if not st.session_state.authenticated:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
         with col2:
-            st.markdown("""
+            render_html("""
             <div class='plan-card' style='border: 1px solid #6366F1;'>
                 <div class='plan-popular-tag'>Popular</div>
                 <div>
                     <h4>Premium Reader</h4>
-                    <div class='plan-price-tag' style='color: #818CF8;'>$19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
+                    <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for content writers & journalists</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> claim checks</li>
@@ -281,13 +290,13 @@ if not st.session_state.authenticated:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
         with col3:
-            st.markdown("""
+            render_html("""
             <div class='plan-card'>
                 <div>
                     <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>$49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
+                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>For agencies & news outlets</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> claim checks</li>
@@ -297,7 +306,7 @@ if not st.session_state.authenticated:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
     with landing_tabs[2]:
         st.markdown("### 🤖 Responsible AI — Ethics & Governance")
@@ -575,7 +584,7 @@ else:
         }.get(current_role, current_role.upper())
 
         # 1. Profile Banner
-        st.markdown(f"""
+        render_html(f"""
         <div class='user-profile-header'>
             <div class='avatar-badge'>
                 {initial_letter}
@@ -592,28 +601,28 @@ else:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
         # 2. Key Metrics Row
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.markdown(f"""
+            render_html(f"""
             <div class='quota-card'>
                 <div class='quota-metric-label'>Current Active Tier</div>
                 <div class='quota-metric-value' style='color: #818CF8;'>{role_display}</div>
                 <div style='font-size: 0.82em; color: #64748B;'>Unlimited / Standard Rate Limits</div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
             
         with m2:
             if current_role in ["premium", "newsroom_admin"]:
-                st.markdown("""
+                render_html("""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Verification Quota</div>
                     <div class='quota-metric-value' style='color: #10B981;'>Unlimited ∞</div>
                     <div style='font-size: 0.82em; color: #10B981;'>Rate Limit Bypassed</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             else:
                 now = time.time()
                 last_time = user_info.get("last_request_time", 0.0) if user_info else 0.0
@@ -621,22 +630,22 @@ else:
                 refill = (now - last_time) * (config.RATE_LIMIT_REFILL_AMOUNT / config.RATE_LIMIT_REFILL_PERIOD)
                 tokens = min(float(config.RATE_LIMIT_CAPACITY), curr_tokens + refill)
                 
-                st.markdown(f"""
+                render_html(f"""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Remaining Tokens</div>
                     <div class='quota-metric-value' style='color: #38BDF8;'>{tokens:.1f} <span style='font-size: 0.5em; color: #94A3B8;'>/ 10</span></div>
                     <div style='font-size: 0.82em; color: #64748B;'>Refills 5 tokens / hour</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
 
         with m3:
-            st.markdown(f"""
+            render_html(f"""
             <div class='quota-card'>
                 <div class='quota-metric-label'>Lifetime Claims Verified</div>
                 <div class='quota-metric-value' style='color: #C084FC;'>{total_checks}</div>
                 <div style='font-size: 0.82em; color: #64748B;'>Recorded in Encrypted Audit Trail</div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         st.markdown("---")
 
@@ -645,14 +654,14 @@ else:
         st.markdown("ClaimShield AI enforces a token-bucket rate limiting algorithm. Standard users refill tokens gradually over time, while Premium and Newsroom tiers enjoy unlimited high-concurrency access.")
 
         if current_role in ["premium", "newsroom_admin"]:
-            st.markdown(f"""
+            render_html(f"""
             <div class='glass-card' style='border-left: 6px solid #10B981; background: rgba(16, 185, 129, 0.08);'>
                 <h4 style='color: #10B981; margin-top: 0;'>🚀 Unlimited Verification Quota Active</h4>
                 <p style='color: #CBD5E1; line-height: 1.6; margin-bottom: 0;'>
                     Your account is subscribed to <strong>{role_display}</strong>. You have zero request throttles, priority execution in the verification queue, and direct access to multi-agent debate pipelines.
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """)
         else:
             # Free user live token simulation & progress bar
             now = time.time()
@@ -695,12 +704,12 @@ else:
             card_class = "plan-card plan-card-active" if is_active_free else "plan-card"
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_free else ""
             
-            st.markdown(f"""
+            render_html(f"""
             <div class='{card_class}'>
                 {active_tag_html}
                 <div>
                     <h4>Free Reader</h4>
-                    <div class='plan-price-tag' style='color: #94A3B8;'>$0</div>
+                    <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>Essential tools for individual fact-checkers</p>
                     <ul class='plan-feature-list'>
                         <li>10 verification tokens capacity</li>
@@ -711,7 +720,7 @@ else:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
             
             if is_active_free:
                 st.button("✅ Current Active Plan", key="btn_free_active", disabled=True, use_container_width=True)
@@ -730,12 +739,12 @@ else:
             card_class = "plan-card plan-card-active" if is_active_prem else "plan-card"
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_prem else "<div class='plan-popular-tag'>Popular</div>"
             
-            st.markdown(f"""
+            render_html(f"""
             <div class='{card_class}' style='border-color: #6366F1;'>
                 {active_tag_html}
                 <div>
                     <h4>Premium Journalist</h4>
-                    <div class='plan-price-tag' style='color: #818CF8;'>$19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
+                    <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>For freelance reporters and content writers</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> verification checks</li>
@@ -746,7 +755,7 @@ else:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
             
             if is_active_prem:
                 st.button("✅ Current Active Plan", key="btn_prem_active", disabled=True, use_container_width=True)
@@ -764,12 +773,12 @@ else:
             card_class = "plan-card plan-card-active" if is_active_news else "plan-card"
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_news else ""
             
-            st.markdown(f"""
+            render_html(f"""
             <div class='{card_class}'>
                 {active_tag_html}
                 <div>
                     <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>$49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
+                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>For media agencies & editorial newsrooms</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> verification checks</li>
@@ -780,7 +789,7 @@ else:
                     </ul>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
             
             if is_active_news:
                 st.button("✅ Current Active Plan", key="btn_news_active", disabled=True, use_container_width=True)
@@ -796,14 +805,14 @@ else:
 
         # 5. Plan Comparison Matrix Table
         st.markdown("### 📊 Subscription Tier Comparison Matrix")
-        st.markdown("""
+        render_html("""
         <table class='matrix-table'>
             <thead>
                 <tr>
                     <th>Feature / Capability</th>
-                    <th>Free Reader ($0)</th>
-                    <th style='color: #818CF8;'>Premium Journalist ($19/mo)</th>
-                    <th style='color: #10B981;'>Newsroom Enterprise ($49/mo)</th>
+                    <th>Free Reader (&#36;0)</th>
+                    <th style='color: #818CF8;'>Premium Journalist (&#36;19/mo)</th>
+                    <th style='color: #10B981;'>Newsroom Enterprise (&#36;49/mo)</th>
                 </tr>
             </thead>
             <tbody>
@@ -857,7 +866,7 @@ else:
                 </tr>
             </tbody>
         </table>
-        """, unsafe_allow_html=True)
+        """)
 
         st.markdown("---")
 
@@ -867,14 +876,14 @@ else:
         sec_col1, sec_col2 = st.columns(2)
 
         with sec_col1:
-            st.markdown("""
+            render_html("""
             <div class='glass-card'>
                 <h4 style='color: #818CF8; margin-top: 0;'>🛡️ Session JWT Token Inspector</h4>
                 <p style='font-size: 0.88em; color: #CBD5E1;'>
                     Your session is protected with JSON Web Tokens (JWT) signed via HMAC-SHA256 with 60-minute automated expiration.
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             if st.session_state.jwt_token:
                 decoded = verify_jwt(st.session_state.jwt_token)
@@ -890,14 +899,14 @@ else:
                     st.code(st.session_state.jwt_token, language="text")
 
         with sec_col2:
-            st.markdown("""
+            render_html("""
             <div class='glass-card'>
                 <h4 style='color: #10B981; margin-top: 0;'>🔑 Update Account Password</h4>
                 <p style='font-size: 0.88em; color: #CBD5E1;'>
                     Passwords are encrypted with PBKDF2-SHA256 with 100,000 salt iterations before storage.
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             with st.form("pwd_change_form"):
                 curr_pwd = st.text_input("Current Password", type="password")
@@ -943,7 +952,7 @@ else:
                     elif u_role == "newsroom_admin":
                         role_badge_class = "role-tag-admin"
 
-                    st.markdown(f"""
+                    render_html(f"""
                     <div class='admin-user-card'>
                         <div>
                             <strong style='font-size: 1.05em; color: #FFFFFF;'>{u['username']}</strong>
@@ -954,7 +963,7 @@ else:
                             <span class='{role_badge_class}'>{u_role.upper()}</span>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """)
                 
                 # Admin Fast Role Editor
                 with st.expander("🛠️ Admin Member Role Modifier"):
