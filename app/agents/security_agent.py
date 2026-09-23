@@ -27,6 +27,8 @@ class SecurityAgent(BaseAgent):
             return self._sanitize(data)
         elif action == "log_audit":
             return self._log_audit(data)
+        elif action == "decrypt_audit":
+            return self._decrypt_audit(data)
         else:
             return {
                 "sender": self.name,
@@ -180,6 +182,7 @@ class SecurityAgent(BaseAgent):
 
         try:
             details_json = json.dumps(details)
+            details_json = security.encrypt_data(details_json)
             log = self.db.add_log(user_id, claim, verdict, confidence, details_json)
             return {
                 "sender": self.name,
@@ -191,4 +194,21 @@ class SecurityAgent(BaseAgent):
                 "sender": self.name,
                 "status": "error",
                 "message": f"Audit logging failed: {e}"
+            }
+
+    def _decrypt_audit(self, data: dict) -> dict:
+        """Decrypts an encrypted audit log details_json field."""
+        encrypted_text = data.get("encrypted_text", "")
+        try:
+            decrypted = security.decrypt_data(encrypted_text)
+            return {
+                "sender": self.name,
+                "status": "success",
+                "decrypted_text": decrypted
+            }
+        except Exception as e:
+            return {
+                "sender": self.name,
+                "status": "error",
+                "message": f"Decryption failed: {e}"
             }
