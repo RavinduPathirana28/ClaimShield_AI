@@ -222,6 +222,46 @@ class DBManager:
         conn.close()
         return True
 
+    def update_user_password(self, username: str, password_hash: str):
+        if self.use_supabase:
+            try:
+                res = self.supabase_client.table("users").update({
+                    "password_hash": password_hash
+                }).eq("username", username).execute()
+                if res.data:
+                    return True
+            except Exception as e:
+                print(f"[Warning] Supabase update_user_password error: {e}. Trying SQLite fallback.")
+                
+        # SQLite fallback/primary
+        conn = sqlite3.connect(config.SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET password_hash = ? WHERE username = ?",
+            (password_hash, username)
+        )
+        conn.commit()
+        conn.close()
+        return True
+
+    def get_all_users(self):
+        if self.use_supabase:
+            try:
+                res = self.supabase_client.table("users").select("id, username, role, tokens, last_request_time").execute()
+                if res.data:
+                    return res.data
+            except Exception as e:
+                print(f"[Warning] Supabase get_all_users error: {e}. Trying SQLite fallback.")
+                
+        # SQLite fallback/primary
+        conn = sqlite3.connect(config.SQLITE_DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, role, tokens, last_request_time FROM users ORDER BY id ASC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
     # Articles Corpus
     def get_all_articles(self):
         if self.use_supabase:
