@@ -147,31 +147,33 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
             
         key = key.strip().strip("'").strip('"')
         prompt = self._build_prompt(claim, articles)
-        try:
-            headers = {
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.2,
-                "response_format": {"type": "json_object"}
-            }
-            with httpx.Client(timeout=15.0) as client:
-                r = client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
-                if r.status_code == 200:
-                    data = r.json()
-                    content = data["choices"][0]["message"]["content"].strip()
-                    res = json.loads(content)
-                    res["sender"] = self.name
-                    res["status"] = "success"
-                    res["engine"] = "Groq Free LLM (Llama-3.3-70B)"
-                    return res
-                else:
-                    print(f"[Warning] Groq API HTTP {r.status_code}: {r.text}")
-        except Exception as e:
-            print(f"[Warning] Groq Free API call error: {e}")
+        candidate_models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b", "llama-3.3-70b-versatile"]
+        for model_name in candidate_models:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": model_name,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.2,
+                    "response_format": {"type": "json_object"}
+                }
+                with httpx.Client(timeout=15.0) as client:
+                    r = client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+                    if r.status_code == 200:
+                        data = r.json()
+                        content = data["choices"][0]["message"]["content"].strip()
+                        res = json.loads(content)
+                        res["sender"] = self.name
+                        res["status"] = "success"
+                        res["engine"] = f"Groq Free LLM ({model_name})"
+                        return res
+                    else:
+                        print(f"[Warning] Groq API HTTP {r.status_code} for {model_name}: {r.text}")
+            except Exception as e:
+                print(f"[Warning] Groq Free API call error on {model_name}: {e}")
         return {"status": "error"}
 
     def _verify_with_ollama(self, claim: str, articles: list) -> dict:
@@ -244,7 +246,7 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
   ]
 }}
 """
-        for candidate_model in ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-1.5-flash"]:
+        for candidate_model in ["gemini-2.5-flash-lite", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash"]:
             try:
                 response = self.gemini_client.models.generate_content(
                     model=candidate_model,

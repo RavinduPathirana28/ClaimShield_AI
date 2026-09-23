@@ -63,7 +63,7 @@ class RetrievalAgent(BaseAgent):
                 web_results = self.web_crawler.search_and_crawl(query, limit=limit)
                 
                 if web_results:
-                    # Save web articles to database & append to results
+                    saved_web_articles = []
                     for web_art in web_results:
                         try:
                             # Save to local database so it can be vector indexed in the future
@@ -78,7 +78,10 @@ class RetrievalAgent(BaseAgent):
                         except Exception as save_err:
                             print(f"[Warning] Failed to save web article to DB: {save_err}")
                             
-                        retrieved_articles.append(web_art)
+                        saved_web_articles.append(web_art)
+                    
+                    # Prepend live web articles so they take priority over low-score local articles
+                    retrieved_articles = saved_web_articles + [a for a in retrieved_articles if a.get("score", 0.0) >= 0.30]
 
             return {
                 "sender": self.name,
