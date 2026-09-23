@@ -885,19 +885,7 @@ else:
             </div>
             """)
 
-            if st.session_state.jwt_token:
-                decoded = verify_jwt(st.session_state.jwt_token)
-                if decoded:
-                    st.json({
-                        "Subject (User)": decoded.get("sub"),
-                        "Assigned Role": decoded.get("role"),
-                        "Token Expiry (Unix)": decoded.get("exp"),
-                        "Issued At (Unix)": decoded.get("iat")
-                    })
-                show_raw_jwt = st.checkbox("Show Raw Signed JWT Token", key="chk_raw_jwt")
-                if show_raw_jwt:
-                    st.code(st.session_state.jwt_token, language="text")
-
+            
         with sec_col2:
             render_html("""
             <div class='glass-card'>
