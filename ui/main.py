@@ -5,6 +5,7 @@ import json
 import time
 import datetime
 import textwrap
+import importlib
 from pathlib import Path
 
 # Add root folder to sys.path to enable app module imports
@@ -12,10 +13,16 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
+import app.database.db_manager
+importlib.reload(app.database.db_manager)
 from app.database.db_manager import DBManager
+
+import app.utils.security
+importlib.reload(app.utils.security)
+from app.utils.security import verify_jwt, decrypt_data, hash_password, verify_password, generate_jwt
+
 from app.agents.orchestrator import Orchestrator
 from app.agents.base_agent import BaseAgent
-from app.utils.security import verify_jwt, decrypt_data, hash_password, verify_password, generate_jwt
 from app import config
 import seed_database
 
@@ -46,22 +53,23 @@ def render_html(html_str: str):
     else:
         st.markdown(dedented, unsafe_allow_html=True)
 
-# Lazy Initializations
+# System Initializations
 @st.cache_resource
-def get_system_components():
-    db = DBManager()
-    
+def get_orchestrator():
+    return Orchestrator(security_agent=None)  # Uses default subagents
+
+def get_db():
+    db_inst = DBManager()
     # Auto-seed SQLite DB if empty to ensure instant out-of-the-box operation
-    articles = db.get_all_articles()
+    articles = db_inst.get_all_articles()
     if not articles:
         print("Streamlit: Database appears empty. Seeding sample articles and default accounts...")
         seed_database.seed()
-        db = DBManager()  # Refresh manager
-        
-    orchestrator = Orchestrator(security_agent=None)  # Uses default subagents
-    return db, orchestrator
+        db_inst = DBManager()
+    return db_inst
 
-db, orchestrator = get_system_components()
+db = get_db()
+orchestrator = get_orchestrator()
 
 # Session State Initialization
 if "authenticated" not in st.session_state:
