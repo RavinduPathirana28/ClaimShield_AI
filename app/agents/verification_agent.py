@@ -139,3 +139,59 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
   ]
 }}
 """
+
+    def _verify_with_groq(self, claim: str, articles: list, api_key: str = None) -> dict:
+        key = api_key or os.environ.get("GROQ_API_KEY") or config.GROQ_API_KEY
+        if not key or not key.strip():
+            return {"status": "error"}
+            
+        key = key.strip().strip("'").strip('"')
+        prompt = self._build_prompt(claim, articles)
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "response_format": {"type": "json_object"}
+            }
+            with httpx.Client(timeout=15.0) as client:
+                r = client.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+                if r.status_code == 200:
+                    data = r.json()
+                    content = data["choices"][0]["message"]["content"].strip()
+                    res = json.loads(content)
+                    res["sender"] = self.name
+                    res["status"] = "success"
+                    res["engine"] = "Groq Free LLM (Llama-3.3-70B)"
+                    return res
+                else:
+                    print(f"[Warning] Groq API HTTP {r.status_code}: {r.text}")
+        except Exception as e:
+            print(f"[Warning] Groq Free API call error: {e}")
+        return {"status": "error"}
+
+    def _verify_with_ollama(self, claim: str, articles: list) -> dict:
+        prompt = self._build_prompt(claim, articles)
+        try:
+            payload = {
+                "model": config.OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "format": "json"
+            }
+            with httpx.Client(timeout=30.0) as client:
+                r = client.post(f"{config.OLLAMA_HOST}/api/generate", json=payload)
+                if r.status_code == 200:
+                    data = r.json()
+                    res = json.loads(data.get("response", "{}"))
+                    res["sender"] = self.name
+                    res["status"] = "success"
+                    res["engine"] = f"Ollama Free Local LLM ({config.OLLAMA_MODEL})"
+                    return res
+        except Exception as e:
+            print(f"[Warning] Ollama Local LLM call note: {e}")
+        return {"status": "error"}
