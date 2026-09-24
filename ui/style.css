@@ -1305,72 +1305,88 @@ div[data-testid="stJson"] * {
     margin: 0 auto 34px !important;
 }
 
-.hero-cta-row {
+/* Hero Start Verifying Claims Button Container & Trigger */
+.hero-btn-container {
+    margin: -10px auto 46px;
     display: flex;
     justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 48px;
+    width: 100%;
 }
 
-.hero-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #4338CA 0%, #3B82F6 100%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+.hero-btn-container div.stButton {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.hero-btn-container div.stButton > button,
+button[key="btn_hero_start_verifying"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    background: linear-gradient(135deg, #4338CA 0%, #3B82F6 100%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     color: #FFFFFF !important;
-    font-weight: 650;
-    font-size: 0.98em;
-    padding: 14px 30px;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    cursor: pointer;
+    font-weight: 650 !important;
+    font-size: 1.02em !important;
+    padding: 14px 34px !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    cursor: pointer !important;
     box-shadow:
         0 10px 24px -4px rgba(67, 56, 202, 0.35),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.45);
-    transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.55) !important;
+    transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    letter-spacing: -0.01em !important;
+    max-width: 360px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
 }
 
-.hero-btn-primary:hover {
-    transform: translateY(-2px) scale(1.008);
+.hero-btn-container div.stButton > button:hover,
+button[key="btn_hero_start_verifying"]:hover {
+    transform: translateY(-2px) scale(1.008) !important;
     box-shadow:
-        0 16px 32px -4px rgba(67, 56, 202, 0.45),
-        inset 0 2px 2px rgba(255, 255, 255, 0.65);
-    background: linear-gradient(135deg, #3730A3 0%, #2563EB 100%);
+        0 16px 32px -4px rgba(67, 56, 202, 0.48),
+        inset 0 2px 2px rgba(255, 255, 255, 0.75) !important;
+    background: linear-gradient(135deg, #3730A3 0%, #2563EB 100%) !important;
+    color: #FFFFFF !important;
 }
 
-.hero-btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.22) 100%);
-    backdrop-filter: var(--blur-control);
-    -webkit-backdrop-filter: var(--blur-control);
-    color: var(--text-primary) !important;
-    font-weight: 600;
-    font-size: 0.98em;
-    padding: 14px 30px;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    border: 1px solid var(--glass-border-highlight);
-    cursor: pointer;
-    box-shadow:
-        0 6px 18px rgba(15, 23, 42, 0.04),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
-    transition: all 0.24s ease;
+/* VisionOS Frosted Close Button for Access Portal */
+button[key="btn_close_access_portal"],
+div[data-testid="stButton"]:has(button[key="btn_close_access_portal"]) button {
+    background: rgba(255, 255, 255, 0.60) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border-radius: 50% !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+    cursor: pointer !important;
+    transition: all 0.20s ease !important;
+    margin-left: auto !important;
 }
 
-.hero-btn-secondary:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.38) 100%);
-    border-color: rgba(67, 56, 202, 0.35);
-    color: var(--apple-indigo) !important;
-    transform: translateY(-2px);
-    box-shadow:
-        0 10px 24px rgba(67, 56, 202, 0.12),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 1);
+button[key="btn_close_access_portal"]:hover,
+div[data-testid="stButton"]:has(button[key="btn_close_access_portal"]) button:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--apple-rose) !important;
+    transform: scale(1.08) !important;
+    border-color: rgba(220, 38, 38, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15), inset 0 1px 1px rgba(255, 255, 255, 1) !important;
 }
 
 /* ==========================================================================
