@@ -200,11 +200,11 @@ with st.sidebar:
 
         # Sidebar brand header (authenticated)
         st.markdown(f"""
-        <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);'>
+        <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(226,232,240,0.85);'>
             <img src='{LOGO_SRC}' style='width:48px; height:48px; border-radius:14px; object-fit:cover;
-                box-shadow: 0 0 20px rgba(99,102,241,0.5); margin-bottom:6px; display:block; margin-left:auto; margin-right:auto;'/>
+                box-shadow: 0 4px 16px rgba(99,102,241,0.25); margin-bottom:6px; display:block; margin-left:auto; margin-right:auto;'/>
             <div style='font-family:"Outfit",sans-serif; font-weight:800; font-size:1.05em;
-                background:linear-gradient(135deg,#818CF8,#7DD3FC); -webkit-background-clip:text;
+                background:linear-gradient(135deg,#312E81,#4F46E5); -webkit-background-clip:text;
                 -webkit-text-fill-color:transparent; background-clip:text;'>ClaimShield AI</div>
         </div>
         """, unsafe_allow_html=True)
@@ -214,12 +214,12 @@ with st.sidebar:
             <div style='display: flex; align-items: center; gap: 12px;'>
                 <div style='width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #A855F7);
                     display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.25em;
-                    box-shadow: 0 0 16px rgba(99,102,241,0.5); flex-shrink:0;'>
+                    box-shadow: 0 4px 14px rgba(99,102,241,0.3); flex-shrink:0;'>
                     {initial_letter}
                 </div>
                 <div>
-                    <div style='font-size: 1.05em; font-weight: 700; color: #FFFFFF;'>{st.session_state.username}</div>
-                    <div style='font-size: 0.76em; color: #818CF8; font-weight: 600;'>{role_icon} {role_display}</div>
+                    <div style='font-size: 1.05em; font-weight: 700; color: #0F172A;'>{st.session_state.username}</div>
+                    <div style='font-size: 0.76em; color: #4F46E5; font-weight: 600;'>{role_icon} {role_display}</div>
                 </div>
             </div>
         </div>
@@ -251,7 +251,7 @@ with st.sidebar:
             st.markdown("#### ⚡ Plan Quota")
             if current_role in ["premium", "newsroom_admin"]:
                 st.markdown("""
-                <div style='background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.82em; color: #34D399; margin-bottom: 12px;'>
+                <div style='background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 12px; border-radius: 8px; font-size: 0.82em; color: #047857; margin-bottom: 12px;'>
                     🚀 Unlimited Access Active
                 </div>
                 """, unsafe_allow_html=True)
@@ -484,8 +484,8 @@ if not st.session_state.authenticated:
             <div class='plan-card'>
                 <div>
                     <h4>Standard Tier</h4>
-                    <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for individual researchers</p>
+                    <div class='plan-price-tag' style='color: #0F172A;'>&#36;0</div>
+                    <p style='color: #64748B; font-size: 0.85em;'>Ideal for individual researchers</p>
                     <ul class='plan-feature-list'>
                         <li>10 claim checks capacity</li>
                         <li>Refills 5 tokens / hour</li>
@@ -497,12 +497,12 @@ if not st.session_state.authenticated:
             """)
         with col2:
             render_html("""
-            <div class='plan-card' style='border: 1px solid #6366F1;'>
+            <div class='plan-card' style='border: 2px solid #4F46E5;'>
                 <div class='plan-popular-tag'>Popular</div>
                 <div>
                     <h4>Premium Reader</h4>
-                    <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for content writers & journalists</p>
+                    <div class='plan-price-tag' style='color: #4F46E5;'>&#36;19<span style='font-size: 0.45em; color: #64748B;'>/mo</span></div>
+                    <p style='color: #64748B; font-size: 0.85em;'>Ideal for content writers & journalists</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> claim checks</li>
                         <li>Priority LLM access queue</li>
@@ -514,11 +514,11 @@ if not st.session_state.authenticated:
             """)
         with col3:
             render_html("""
-            <div class='plan-card'>
+            <div class='plan-card' style='border: 1px solid rgba(16, 185, 129, 0.4);'>
                 <div>
                     <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For agencies & news outlets</p>
+                    <div class='plan-price-tag' style='color: #059669;'>&#36;49<span style='font-size: 0.45em; color: #64748B;'>/mo</span></div>
+                    <p style='color: #64748B; font-size: 0.85em;'>For agencies & news outlets</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> claim checks</li>
                         <li>Multi-seat team management</li>
@@ -670,28 +670,28 @@ else:
                             
                         # 1. Straight Answer Section
                         st.markdown(f"""
-                        <div class="glass-card" style="border-left: 6px solid #6366F1; background: rgba(99, 102, 241, 0.1);">
+                        <div class="glass-card" style="border-left: 6px solid #4F46E5; background: rgba(99, 102, 241, 0.05);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <div class="verdict-badge {v_class}">{verdict_display}</div>
                                 <div>
-                                    <span style="font-size: 0.85em; color: #94A3B8;">Confidence Metric:</span>
-                                    <span style="font-size: 1.1em; font-weight: 700; color: #FFFFFF; margin-left: 5px;">{int(confidence*100)}%</span>
+                                    <span style="font-size: 0.85em; color: #64748B;">Confidence Metric:</span>
+                                    <span style="font-size: 1.15em; font-weight: 800; color: #0F172A; margin-left: 5px;">{int(confidence*100)}%</span>
                                 </div>
                             </div>
-                            <div style="font-size: 0.85em; color: #818CF8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
+                            <div style="font-size: 0.85em; color: #4F46E5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
                                 🎯 Straight Answer
                             </div>
-                            <h3 style="margin-top: 0; color: #FFFFFF; font-size: 1.3em;">{straight_ans}</h3>
+                            <h3 style="margin-top: 0; color: #0F172A; font-size: 1.3em;">{straight_ans}</h3>
                         </div>
                         """, unsafe_allow_html=True)
                         
                         # 2. Detailed Explanation Section
                         st.markdown(f"""
                         <div class="glass-card">
-                            <div style="font-size: 0.85em; color: #38BDF8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                            <div style="font-size: 0.85em; color: #0284C7; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
                                 📖 Detailed Explanation
                             </div>
-                            <p style="font-size: 1.05em; line-height: 1.6; color: #E2E8F0; margin-bottom: 15px;">{summary}</p>
+                            <p style="font-size: 1.05em; line-height: 1.6; color: #1E293B; margin-bottom: 15px;">{summary}</p>
                             <div style="font-size: 0.8em; color: #64748B;">
                                 Processing Engine: <strong>{engine}</strong> | Execution Time: {pipeline_end_time - pipeline_start_time:.2f}s
                             </div>
@@ -700,8 +700,8 @@ else:
 
                         # 2b. Multi-Model Consensus & Explainability
                         verdict_icons = {"Supported": "✅", "Contradicted": "❌", "Answered": "💬", "Unverified": "❓"}
-                        verdict_colors = {"Supported": "#10B981", "Contradicted": "#EF4444", "Answered": "#818CF8", "Unverified": "#F59E0B"}
-                        provider_dots = {"Groq": "#F55036", "Gemini": "#4285F4", "Ollama": "#29BEB0"}
+                        verdict_colors = {"Supported": "#059669", "Contradicted": "#DC2626", "Answered": "#4F46E5", "Unverified": "#D97706"}
+                        provider_dots = {"Groq": "#F55036", "Gemini": "#4285F4", "Ollama": "#0D9488"}
 
                         def esc(s):
                             return html.escape(str(s or ""), quote=True)
@@ -712,9 +712,9 @@ else:
                             for mr in model_breakdown:
                                 eng = mr.get("engine", "LLM") or "LLM"
                                 prov = next((p for p in ("Groq", "Gemini", "Ollama") if p in eng), "LLM")
-                                dot = provider_dots.get(prov, "#94A3B8")
+                                dot = provider_dots.get(prov, "#64748B")
                                 v = mr.get("verdict", "Unverified")
-                                vcolor = verdict_colors.get(v, "#F59E0B")
+                                vcolor = verdict_colors.get(v, "#D97706")
                                 conf = int(mr.get("confidence", 0) * 100)
                                 snippet = (mr.get("straight_answer") or mr.get("summary") or "").strip()
                                 if len(snippet) > 200:
@@ -724,7 +724,7 @@ else:
                                 <div class="cs-model-row">
                                     <div class="cs-model-head">
                                         <div class="cs-model-name"><span class="cs-provider-dot" style="background:{dot}"></span>{esc(eng)}</div>
-                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}1f; border:1px solid {vcolor}55;">{verdict_icons.get(v, "❓")} {v}</span>
+                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}18; border:1px solid {vcolor}44;">{verdict_icons.get(v, "❓")} {v}</span>
                                     </div>
                                     <div class="cs-conf-track"><div class="cs-conf-fill" style="width:{min(max(conf, 4), 100)}%; background:linear-gradient(90deg,{vcolor},{dot});"></div></div>
                                     <div class="cs-conf-note">{conf}% confidence</div>
@@ -743,23 +743,23 @@ else:
                         if agreement_score is not None:
                             agr_pct = int(agreement_score * 100)
                             converged = agreement_score >= 0.7
-                            fill_color = "linear-gradient(90deg,#10B981,#38BDF8)" if converged else "linear-gradient(90deg,#F59E0B,#EF4444)"
-                            note_color = "#10B981" if converged else "#F59E0B"
+                            fill_color = "linear-gradient(90deg,#059669,#0284C7)" if converged else "linear-gradient(90deg,#D97706,#DC2626)"
+                            note_color = "#059669" if converged else "#D97706"
                             note_text = ("✓ The models converged on this verdict." if converged
                                          else "⚠ The models diverged — treat this verdict with lower confidence.")
                             agreement_html = f"""
                             <div class="cs-agreement-box">
                                 <div class="cs-agreement-label">
-                                    <span style="font-size:0.85em; color:#94A3B8; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Cross-Model Agreement</span>
-                                    <span style="font-size:1.4em; font-weight:700; color:#FFFFFF;">{agr_pct}%</span>
+                                    <span style="font-size:0.85em; color:#64748B; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Cross-Model Agreement</span>
+                                    <span style="font-size:1.4em; font-weight:700; color:#0F172A;">{agr_pct}%</span>
                                 </div>
                                 <div class="cs-agreement-track"><div class="cs-conf-fill" style="width:{agr_pct}%; background:{fill_color};"></div></div>
                                 <div class="cs-agreement-note" style="border-left:4px solid {note_color};">{note_text}</div>
                             </div>"""
 
                         render_html(f"""
-                        <div class="glass-card" style="border-left: 4px solid #F59E0B;">
-                            <div style="font-size: 0.85em; color: #F59E0B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                        <div class="glass-card" style="border-left: 4px solid #D97706;">
+                            <div style="font-size: 0.85em; color: #D97706; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
                                 🤝 Multi-Model Consensus &amp; Explainability
                             </div>
                             {consensus_body}
@@ -789,9 +789,9 @@ else:
                         ev_summary = pipeline_result.get("evidence_summary", "")
                         if ev_summary:
                             st.markdown(f"""
-                            <div class="glass-card" style="border-left: 4px solid #818CF8;">
-                                <div style="font-size: 0.85em; color: #818CF8; font-weight: 600; margin-bottom: 8px;">📝 Extractive Evidence Highlights</div>
-                                <p style="font-size: 1.0em; line-height: 1.6; color: #E2E8F0;">{ev_summary}</p>
+                            <div class="glass-card" style="border-left: 4px solid #4F46E5;">
+                                <div style="font-size: 0.85em; color: #4F46E5; font-weight: 700; margin-bottom: 8px;">📝 Extractive Evidence Highlights</div>
+                                <p style="font-size: 1.0em; line-height: 1.6; color: #1E293B;">{ev_summary}</p>
                             </div>
                             """, unsafe_allow_html=True)
 
@@ -799,9 +799,9 @@ else:
                         ml_info = pipeline_result.get("ml_classification", {})
                         if ml_info:
                             st.markdown(f"""
-                            <div class="glass-card" style="border-left: 4px solid #10B981;">
-                                <div style="font-size: 0.85em; color: #10B981; font-weight: 600; margin-bottom: 4px;">⚡ Scikit-Learn ML Credibility Analysis</div>
-                                <div>Prediction Label: <strong>{ml_info.get('label', 'N/A')}</strong> | Confidence: <strong>{int(ml_info.get('confidence', 0)*100)}%</strong></div>
+                            <div class="glass-card" style="border-left: 4px solid #059669;">
+                                <div style="font-size: 0.85em; color: #059669; font-weight: 700; margin-bottom: 4px;">⚡ Scikit-Learn ML Credibility Analysis</div>
+                                <div style="color: #1E293B;">Prediction Label: <strong>{ml_info.get('label', 'N/A')}</strong> | Confidence: <strong>{int(ml_info.get('confidence', 0)*100)}%</strong></div>
                                 <div style="font-size: 0.8em; color: #64748B;">Engine: {ml_info.get('engine', 'TF-IDF Vectorizer')}</div>
                             </div>
                             """, unsafe_allow_html=True)
@@ -810,31 +810,31 @@ else:
                         autogen_info = pipeline_result.get("autogen_debate", {})
                         if autogen_info:
                             stage_cfg = {
-                                "FactCheckerAgent": {"icon": "🔍", "label": "Fact Checker", "color": "#38BDF8"},
-                                "CriticAgent": {"icon": "⚖️", "label": "Critic", "color": "#F59E0B"},
-                                "ConsensusAgent": {"icon": "🎯", "label": "Consensus", "color": "#10B981"},
+                                "FactCheckerAgent": {"icon": "🔍", "label": "Fact Checker", "color": "#0284C7"},
+                                "CriticAgent": {"icon": "⚖️", "label": "Critic", "color": "#D97706"},
+                                "ConsensusAgent": {"icon": "🎯", "label": "Consensus", "color": "#059669"},
                             }
                             turn_html = []
                             for msg in autogen_info.get("debate_log", []):
                                 agent = msg.get("agent", "")
-                                cfg = stage_cfg.get(agent, {"icon": "💬", "label": agent or "Agent", "color": "#94A3B8"})
+                                cfg = stage_cfg.get(agent, {"icon": "💬", "label": agent or "Agent", "color": "#64748B"})
                                 color = cfg["color"]
                                 model_badge = ""
                                 if msg.get("model"):
-                                    model_badge = (f'<span class="cs-debate-verdict" style="color:#E2E8F0; background:rgba(255,255,255,0.06); '
-                                                   f'border:1px solid rgba(255,255,255,0.12);">{esc(msg["model"])}</span>')
+                                    model_badge = (f'<span class="cs-debate-verdict" style="color:#1E293B; background:rgba(241,245,249,0.9); '
+                                                   f'border:1px solid rgba(203,213,225,0.8);">{esc(msg["model"])}</span>')
                                 verdict_badge = ""
                                 if msg.get("verdict"):
-                                    vcolor = verdict_colors.get(msg["verdict"], "#94A3B8")
-                                    verdict_badge = (f'<span class="cs-debate-verdict" style="color:{vcolor}; background:{vcolor}1f; '
-                                                     f'border:1px solid {vcolor}55;">{verdict_icons.get(msg["verdict"], "❓")} {esc(msg["verdict"])}</span>')
+                                    vcolor = verdict_colors.get(msg["verdict"], "#64748B")
+                                    verdict_badge = (f'<span class="cs-debate-verdict" style="color:{vcolor}; background:{vcolor}18; '
+                                                     f'border:1px solid {vcolor}44;">{verdict_icons.get(msg["verdict"], "❓")} {esc(msg["verdict"])}</span>')
                                 conf_badge = ""
                                 if msg.get("confidence") is not None:
-                                    conf_badge = (f'<span style="font-size:0.75em; color:#94A3B8; font-weight:600;">{int(msg["confidence"])}% confidence</span>')
+                                    conf_badge = (f'<span style="font-size:0.75em; color:#64748B; font-weight:600;">{int(msg["confidence"])}% confidence</span>')
                                 turn_html.append(f"""
                                 <div class="cs-debate-turn" style="border-left: 4px solid {color};">
                                     <div class="cs-debate-head">
-                                        <span class="cs-debate-stage" style="color:{color}; background:{color}1f; border:1px solid {color}55;">{cfg["icon"]} {cfg["label"]}</span>
+                                        <span class="cs-debate-stage" style="color:{color}; background:{color}18; border:1px solid {color}44;">{cfg["icon"]} {cfg["label"]}</span>
                                         {model_badge}
                                         {verdict_badge}
                                         {conf_badge}
@@ -852,7 +852,7 @@ else:
                             with st.expander("🗣️ Multi-Agent Debate Transcript", expanded=True):
                                 render_html(f"""
                                 <div style="font-size: 0.85em; color: #64748B; margin-bottom: 12px;">
-                                    Fueled by <strong style="color: #94A3B8;">{esc(autogen_info.get("engine"))}</strong> — every statement is grounded in an actual model response, never fabricated.
+                                    Fueled by <strong style="color: #4F46E5;">{esc(autogen_info.get("engine"))}</strong> — every statement is grounded in an actual model response, never fabricated.
                                 </div>
                                 """)
                                 render_html("".join(turn_html) + consensus_box)
@@ -878,13 +878,13 @@ else:
                                     art_label = f"Article #{cit['article_id']}" if 'article_id' in cit else "General Evidence"
                                     st.markdown(f"""
                                     <div class="citation-box">
-                                        <div style="font-size: 0.85em; font-weight: 600; color: #C084FC; margin-bottom: 5px;">
+                                        <div style="font-size: 0.85em; font-weight: 700; color: #7C3AED; margin-bottom: 5px;">
                                             {art_label}:
                                         </div>
-                                        <div style="font-style: italic; font-size: 0.9em; margin-bottom: 8px; color: #E2E8F0;">
+                                        <div style="font-style: italic; font-size: 0.9em; margin-bottom: 8px; color: #1E293B;">
                                             "{cit['quote']}"
                                         </div>
-                                        <div style="font-size: 0.8em; color: #94A3B8;">
+                                        <div style="font-size: 0.8em; color: #64748B;">
                                             <strong>Insight:</strong> {cit['explanation']}
                                         </div>
                                     </div>
@@ -901,8 +901,8 @@ else:
                             article_dates = [a.get("date", "") for a in ret_articles if a.get("date")]
                             newest_date = max(article_dates) if article_dates else "unknown"
                             render_html(f"""
-                            <div style="font-size: 0.82em; color: #94A3B8; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
-                                🧾 <strong style="color:#CBD5E1;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
+                            <div style="font-size: 0.82em; color: #475569; background: rgba(241, 245, 249, 0.8); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
+                                🧾 <strong style="color:#0F172A;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
                             </div>
                             """)
                             if live_web_articles:
@@ -912,23 +912,23 @@ else:
                             for idx, art in enumerate(ret_articles):
                                 url_link = art.get('url', '#')
                                 st.markdown(f"""
-                                <div class="article-card" style="border-left: 4px solid #38BDF8;">
+                                <div class="article-card" style="border-left: 4px solid #0284C7;">
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                        <div class="article-title" style="font-size: 1.1em; font-weight: 700; color: #F8FAFC;">
+                                        <div class="article-title" style="font-size: 1.1em; font-weight: 700; color: #0F172A;">
                                             [{idx+1}] {art['title']}
                                         </div>
                                         <span class="badge-secondary" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px;">
                                             Score: {art['score']:.4f}
                                         </span>
                                     </div>
-                                    <div class="article-meta" style="margin-top: 4px; margin-bottom: 8px; color: #94A3B8; font-size: 0.85em;">
+                                    <div class="article-meta" style="margin-top: 4px; margin-bottom: 8px; color: #64748B; font-size: 0.85em;">
                                         📰 <strong>Source:</strong> {art['source']} | 📅 <strong>Date:</strong> {art['date']}
                                     </div>
-                                    <div style="font-size: 0.9em; color: #CBD5E1; line-height: 1.5; margin-bottom: 10px;">
+                                    <div style="font-size: 0.9em; color: #334155; line-height: 1.5; margin-bottom: 10px;">
                                         {art['content']}
                                     </div>
-                                    <div style="background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: 6px; font-size: 0.85em;">
-                                        🔗 <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #38BDF8; font-weight: 600; text-decoration: underline;">{url_link}</a>
+                                    <div style="background: rgba(241, 245, 249, 0.85); border: 1px solid rgba(226, 232, 240, 0.85); padding: 8px 12px; border-radius: 8px; font-size: 0.85em;">
+                                        🔗 <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline;">{url_link}</a>
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
@@ -966,13 +966,13 @@ else:
             </div>
             <div style='flex-grow: 1;'>
                 <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 4px;'>
-                    <h2 style='margin: 0; font-size: 1.8em; color: #FFFFFF;'>{st.session_state.username}</h2>
+                    <h2 style='margin: 0; font-size: 1.8em; color: #0F172A;'>{st.session_state.username}</h2>
                     <span class='user-status-pill status-active'>
                         <span class='status-indicator-dot'></span> Active Session
                     </span>
                 </div>
-                <div style='color: #94A3B8; font-size: 0.95em;'>
-                    Subscription Tier: <strong style='color: #818CF8;'>{role_display}</strong> | Authentication: <strong style='color: #34D399;'>JWT Signed (HS256)</strong>
+                <div style='color: #64748B; font-size: 0.95em;'>
+                    Subscription Tier: <strong style='color: #4F46E5;'>{role_display}</strong> | Authentication: <strong style='color: #059669;'>JWT Signed (HS256)</strong>
                 </div>
             </div>
         </div>
@@ -984,7 +984,7 @@ else:
             render_html(f"""
             <div class='quota-card'>
                 <div class='quota-metric-label'>Current Active Tier</div>
-                <div class='quota-metric-value' style='color: #818CF8;'>{role_display}</div>
+                <div class='quota-metric-value' style='color: #4F46E5;'>{role_display}</div>
                 <div style='font-size: 0.82em; color: #64748B;'>Unlimited / Standard Rate Limits</div>
             </div>
             """)
@@ -994,8 +994,8 @@ else:
                 render_html("""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Verification Quota</div>
-                    <div class='quota-metric-value' style='color: #10B981;'>Unlimited ∞</div>
-                    <div style='font-size: 0.82em; color: #10B981;'>Rate Limit Bypassed</div>
+                    <div class='quota-metric-value' style='color: #059669;'>Unlimited ∞</div>
+                    <div style='font-size: 0.82em; color: #059669;'>Rate Limit Bypassed</div>
                 </div>
                 """)
             else:
@@ -1008,7 +1008,7 @@ else:
                 render_html(f"""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Remaining Tokens</div>
-                    <div class='quota-metric-value' style='color: #38BDF8;'>{tokens:.1f} <span style='font-size: 0.5em; color: #94A3B8;'>/ 10</span></div>
+                    <div class='quota-metric-value' style='color: #0284C7;'>{tokens:.1f} <span style='font-size: 0.5em; color: #64748B;'>/ 10</span></div>
                     <div style='font-size: 0.82em; color: #64748B;'>Refills 5 tokens / hour</div>
                 </div>
                 """)
@@ -1017,7 +1017,7 @@ else:
             render_html(f"""
             <div class='quota-card'>
                 <div class='quota-metric-label'>Lifetime Claims Verified</div>
-                <div class='quota-metric-value' style='color: #C084FC;'>{total_checks}</div>
+                <div class='quota-metric-value' style='color: #7C3AED;'>{total_checks}</div>
                 <div style='font-size: 0.82em; color: #64748B;'>Recorded in Encrypted Audit Trail</div>
             </div>
             """)
@@ -1030,9 +1030,9 @@ else:
 
         if current_role in ["premium", "newsroom_admin"]:
             render_html(f"""
-            <div class='glass-card' style='border-left: 6px solid #10B981; background: rgba(16, 185, 129, 0.08);'>
-                <h4 style='color: #10B981; margin-top: 0;'>🚀 Unlimited Verification Quota Active</h4>
-                <p style='color: #CBD5E1; line-height: 1.6; margin-bottom: 0;'>
+            <div class='glass-card' style='border-left: 6px solid #059669; background: rgba(16, 185, 129, 0.06);'>
+                <h4 style='color: #059669; margin-top: 0;'>🚀 Unlimited Verification Quota Active</h4>
+                <p style='color: #334155; line-height: 1.6; margin-bottom: 0;'>
                     Your account is subscribed to <strong>{role_display}</strong>. You have zero request throttles, priority execution in the verification queue, and direct access to multi-agent debate pipelines.
                 </p>
             </div>
@@ -1063,8 +1063,6 @@ else:
                 else:
                     st.success("✅ Your token bucket is currently at **100% full capacity**.")
 
-
-
         st.markdown("---")
 
         # 4. Plan Changing & Subscription Switcher
@@ -1084,8 +1082,8 @@ else:
                 {active_tag_html}
                 <div>
                     <h4>Free Reader</h4>
-                    <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>Essential tools for individual fact-checkers</p>
+                    <div class='plan-price-tag' style='color: #0F172A;'>&#36;0</div>
+                    <p style='color: #64748B; font-size: 0.85em;'>Essential tools for individual fact-checkers</p>
                     <ul class='plan-feature-list'>
                         <li>10 verification tokens capacity</li>
                         <li>Refills 5 tokens / hour</li>
@@ -1115,12 +1113,12 @@ else:
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_prem else "<div class='plan-popular-tag'>Popular</div>"
             
             render_html(f"""
-            <div class='{card_class}' style='border-color: #6366F1;'>
+            <div class='{card_class}' style='border-color: #4F46E5;'>
                 {active_tag_html}
                 <div>
                     <h4>Premium Journalist</h4>
-                    <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For freelance reporters and content writers</p>
+                    <div class='plan-price-tag' style='color: #4F46E5;'>&#36;19<span style='font-size: 0.45em; color: #64748B;'>/mo</span></div>
+                    <p style='color: #64748B; font-size: 0.85em;'>For freelance reporters and content writers</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> verification checks</li>
                         <li>Bypassed token bucket rate limits</li>
@@ -1153,8 +1151,8 @@ else:
                 {active_tag_html}
                 <div>
                     <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For media agencies & editorial newsrooms</p>
+                    <div class='plan-price-tag' style='color: #059669;'>&#36;49<span style='font-size: 0.45em; color: #64748B;'>/mo</span></div>
+                    <p style='color: #64748B; font-size: 0.85em;'>For media agencies & editorial newsrooms</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> verification checks</li>
                         <li>Multi-seat team user directory</li>
@@ -1186,16 +1184,16 @@ else:
                 <tr>
                     <th>Feature / Capability</th>
                     <th>Free Reader (&#36;0)</th>
-                    <th style='color: #818CF8;'>Premium Journalist (&#36;19/mo)</th>
-                    <th style='color: #10B981;'>Newsroom Enterprise (&#36;49/mo)</th>
+                    <th style='color: #4F46E5;'>Premium Journalist (&#36;19/mo)</th>
+                    <th style='color: #059669;'>Newsroom Enterprise (&#36;49/mo)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><strong>Verification Quota</strong></td>
                     <td>10 Checks / Bucket (5/hr refill)</td>
-                    <td><strong style='color: #818CF8;'>Unlimited</strong></td>
-                    <td><strong style='color: #10B981;'>Unlimited</strong></td>
+                    <td><strong style='color: #4F46E5;'>Unlimited</strong></td>
+                    <td><strong style='color: #059669;'>Unlimited</strong></td>
                 </tr>
                 <tr>
                     <td><strong>Rate Limiter Status</strong></td>
@@ -1253,8 +1251,8 @@ else:
         with sec_col1:
             render_html("""
             <div class='glass-card'>
-                <h4 style='color: #818CF8; margin-top: 0;'>🛡️ Session JWT Token Inspector</h4>
-                <p style='font-size: 0.88em; color: #CBD5E1;'>
+                <h4 style='color: #4F46E5; margin-top: 0;'>🛡️ Session JWT Token Inspector</h4>
+                <p style='font-size: 0.88em; color: #475569;'>
                     Your session is protected with JSON Web Tokens (JWT) signed via HMAC-SHA256 with 60-minute automated expiration.
                 </p>
             </div>
@@ -1264,8 +1262,8 @@ else:
         with sec_col2:
             render_html("""
             <div class='glass-card'>
-                <h4 style='color: #10B981; margin-top: 0;'>🔑 Update Account Password</h4>
-                <p style='font-size: 0.88em; color: #CBD5E1;'>
+                <h4 style='color: #059669; margin-top: 0;'>🔑 Update Account Password</h4>
+                <p style='font-size: 0.88em; color: #475569;'>
                     Passwords are encrypted with PBKDF2-SHA256 with 100,000 salt iterations before storage.
                 </p>
             </div>
@@ -1318,11 +1316,11 @@ else:
                     render_html(f"""
                     <div class='admin-user-card'>
                         <div>
-                            <strong style='font-size: 1.05em; color: #FFFFFF;'>{u['username']}</strong>
+                            <strong style='font-size: 1.05em; color: #0F172A;'>{u['username']}</strong>
                             <span style='color: #64748B; font-size: 0.85em; margin-left: 10px;'>ID: #{u['id']}</span>
                         </div>
                         <div style='display: flex; align-items: center; gap: 15px;'>
-                            <span style='color: #94A3B8; font-size: 0.85em;'>Tokens: <strong>{u_tokens:.1f}</strong></span>
+                            <span style='color: #475569; font-size: 0.85em;'>Tokens: <strong>{u_tokens:.1f}</strong></span>
                             <span class='{role_badge_class}'>{u_role.upper()}</span>
                         </div>
                     </div>
@@ -1373,9 +1371,9 @@ else:
                     st.markdown(f"""
                     <div style="margin-bottom: 10px;">
                         <span class="verdict-badge {v_class}">{verdict}</span>
-                        <span style="margin-left: 15px; font-size: 0.9em; color: #94A3B8;">Confidence: <strong>{int(l['confidence']*100)}%</strong></span>
+                        <span style="margin-left: 15px; font-size: 0.9em; color: #64748B;">Confidence: <strong>{int(l['confidence']*100)}%</strong></span>
                     </div>
-                    <div style="font-size: 0.95em; color: #E2E8F0; line-height: 1.5; margin-bottom: 12px;">
+                    <div style="font-size: 0.95em; color: #1E293B; line-height: 1.5; margin-bottom: 12px;">
                         <strong>Verdict Explanation:</strong><br>
                         {details.get('summary', 'No reasoning logged.')}
                     </div>
@@ -1404,27 +1402,27 @@ else:
         """)
 
         st.markdown("""
-        <div class='glass-card' style='border-left: 4px solid #6366F1;'>
-            <h4 style='color: #818CF8; margin-bottom: 10px;'>📋 A2A/1.0 Protocol Specification</h4>
-            <table style='width: 100%; border-collapse: collapse; color: #CBD5E1; font-size: 0.9em;'>
-                <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                    <td style='padding: 8px; font-weight: 600; color: #818CF8; width: 25%;'>Protocol</td>
+        <div class='glass-card' style='border-left: 4px solid #4F46E5;'>
+            <h4 style='color: #4F46E5; margin-bottom: 10px;'>📋 A2A/1.0 Protocol Specification</h4>
+            <table style='width: 100%; border-collapse: collapse; color: #1E293B; font-size: 0.9em;'>
+                <tr style='border-bottom: 1px solid rgba(226,232,240,0.85);'>
+                    <td style='padding: 8px; font-weight: 600; color: #4F46E5; width: 25%;'>Protocol</td>
                     <td style='padding: 8px;'>A2A/1.0 — Agent-to-Agent messaging over in-process Python function calls</td>
                 </tr>
-                <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                    <td style='padding: 8px; font-weight: 600; color: #818CF8;'>Serialization</td>
+                <tr style='border-bottom: 1px solid rgba(226,232,240,0.85);'>
+                    <td style='padding: 8px; font-weight: 600; color: #4F46E5;'>Serialization</td>
                     <td style='padding: 8px;'>JSON — validated via dumps/loads round-trip for strict compliance</td>
                 </tr>
-                <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                    <td style='padding: 8px; font-weight: 600; color: #818CF8;'>Message ID</td>
+                <tr style='border-bottom: 1px solid rgba(226,232,240,0.85);'>
+                    <td style='padding: 8px; font-weight: 600; color: #4F46E5;'>Message ID</td>
                     <td style='padding: 8px;'>UUID4 — unique identifier for every message for end-to-end traceability</td>
                 </tr>
-                <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                    <td style='padding: 8px; font-weight: 600; color: #818CF8;'>Timestamp</td>
+                <tr style='border-bottom: 1px solid rgba(226,232,240,0.85);'>
+                    <td style='padding: 8px; font-weight: 600; color: #4F46E5;'>Timestamp</td>
                     <td style='padding: 8px;'>Unix epoch float — precise timing for performance profiling</td>
                 </tr>
                 <tr>
-                    <td style='padding: 8px; font-weight: 600; color: #818CF8;'>Transport</td>
+                    <td style='padding: 8px; font-weight: 600; color: #4F46E5;'>Transport</td>
                     <td style='padding: 8px;'>In-process function invocation — zero-latency delivery via BaseAgent.send_message()</td>
                 </tr>
             </table>
@@ -1462,11 +1460,11 @@ else:
         with rai1:
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #10B981;'>🔍 Transparency</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #059669;'>🔍 Transparency</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     Every verification decision is fully traceable. The system exposes:
                 </p>
-                <ul style='color: #CBD5E1; line-height: 2;'>
+                <ul style='color: #334155; line-height: 2;'>
                     <li>Complete agent-to-agent communication logs (A2A/1.0 protocol)</li>
                     <li>Retrieved source articles with cosine similarity scores</li>
                     <li>The exact LLM prompt and processing engine used</li>
@@ -1478,8 +1476,8 @@ else:
 
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #F59E0B;'>⚖️ Fairness</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #D97706;'>⚖️ Fairness</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     ClaimShield applies the <strong>same verification pipeline</strong> to all users regardless of subscription tier.
                     Rate limits differ by tier (Free: 10/hr, Premium/Enterprise: unlimited), but the NLP analysis,
                     FAISS retrieval algorithm, and LLM verification logic are identical for every query.
@@ -1490,11 +1488,11 @@ else:
 
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #818CF8;'>🧠 Bias Mitigation</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #4F46E5;'>🧠 Bias Mitigation</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     To minimize bias in verification outcomes:
                 </p>
-                <ul style='color: #CBD5E1; line-height: 2;'>
+                <ul style='color: #334155; line-height: 2;'>
                     <li>The LLM is <strong>grounded in retrieved evidence</strong> — verdicts must cite specific article quotes rather than relying on pre-trained knowledge</li>
                     <li>Multi-source retrieval ensures diverse perspectives are considered</li>
                     <li>Confidence scores quantify certainty, preventing overstatement</li>
@@ -1506,11 +1504,11 @@ else:
         with rai2:
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #C084FC;'>💡 Explainability</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #7C3AED;'>💡 Explainability</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     Every fact-check verdict includes:
                 </p>
-                <ul style='color: #CBD5E1; line-height: 2;'>
+                <ul style='color: #334155; line-height: 2;'>
                     <li><strong>Verdict</strong> — Supported, Contradicted, or Unclear</li>
                     <li><strong>Confidence Score</strong> — Quantified certainty (0–100%)</li>
                     <li><strong>Summary Reasoning</strong> — 2–3 sentence explanation of the verdict rationale</li>
@@ -1524,11 +1522,11 @@ else:
 
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #EF4444;'>🔒 Data Protection & Security</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #DC2626;'>🔒 Data Protection & Security</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     User data is safeguarded through multiple layers:
                 </p>
-                <ul style='color: #CBD5E1; line-height: 2;'>
+                <ul style='color: #334155; line-height: 2;'>
                     <li><strong>Password Hashing</strong> — PBKDF2-SHA256 with random salt (100,000 iterations)</li>
                     <li><strong>Session Tokens</strong> — JWT (HS256) with configurable expiry</li>
                     <li><strong>Encryption at Rest</strong> — Fernet symmetric encryption for audit log details</li>
@@ -1541,11 +1539,11 @@ else:
 
             st.markdown("""
             <div class='glass-card'>
-                <h4 style='color: #34D399;'>👤 User Rights</h4>
-                <p style='color: #CBD5E1; line-height: 1.7;'>
+                <h4 style='color: #059669;'>👤 User Rights</h4>
+                <p style='color: #334155; line-height: 1.7;'>
                     In compliance with data protection principles:
                 </p>
-                <ul style='color: #CBD5E1; line-height: 2;'>
+                <ul style='color: #334155; line-height: 2;'>
                     <li>Users can view their complete verification history in the Audit Logs tab</li>
                     <li>All personal data is stored locally (SQLite) or in user-controlled cloud (Supabase)</li>
                     <li>No user data is shared with third parties beyond LLM API calls (claim text only)</li>
@@ -1555,9 +1553,9 @@ else:
             """, unsafe_allow_html=True)
 
         st.markdown("""
-        <div class='glass-card' style='border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;'>
-            <p style='color: #34D399; font-size: 1.1em; font-weight: 600; margin-bottom: 5px;'>🌍 Responsible AI Commitment</p>
-            <p style='color: #94A3B8; font-size: 0.95em;'>
+        <div class='glass-card' style='border: 1px solid rgba(16, 185, 129, 0.35); text-align: center;'>
+            <p style='color: #059669; font-size: 1.1em; font-weight: 700; margin-bottom: 5px;'>🌍 Responsible AI Commitment</p>
+            <p style='color: #475569; font-size: 0.95em;'>
                 ClaimShield AI is committed to ethical AI development. We prioritize human oversight, evidence-based verdicts,
                 and transparent decision-making. Our system augments — never replaces — human editorial judgment.
             </p>
