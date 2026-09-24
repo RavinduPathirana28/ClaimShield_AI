@@ -169,15 +169,11 @@ with st.sidebar:
         st.markdown(f"""
         <div class='demo-account-card'>
             <div class='demo-account-role'>🆓 Free Plan</div>
-            <div class='demo-account-creds'>user / password (3 tokens, 2 resources)</div>
+            <div class='demo-account-creds'>user / password (3 tokens, 2 resources displayed)</div>
         </div>
         <div class='demo-account-card'>
             <div class='demo-account-role'>⭐ Pro Plan</div>
-            <div class='demo-account-creds'>premium / premium (Unlimited, 3–5 resources)</div>
-        </div>
-        <div class='demo-account-card'>
-            <div class='demo-account-role'>🏢 Pro Plan (Enterprise)</div>
-            <div class='demo-account-creds'>newsroom / newsroom (Unlimited, 3–5 resources)</div>
+            <div class='demo-account-creds'>pro / password (Unlimited, 3–5 resources displayed)</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -187,18 +183,8 @@ with st.sidebar:
         current_role = user_info.get("role", st.session_state.role) if user_info else st.session_state.role
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
 
-        role_display = {
-            "user": "Free Plan (3 checks, 2 resources)",
-            "pro": "Pro Plan (Unlimited, 3–5 resources)",
-            "premium": "Pro Plan (Unlimited, 3–5 resources)",
-            "newsroom_admin": "Pro Plan (Unlimited, 3–5 resources)"
-        }.get(current_role, current_role.upper())
-
-        role_icon = {
-            "user": "🆓",
-            "premium": "💎",
-            "newsroom_admin": "🏢"
-        }.get(current_role, "👤")
+        role_display = "Free Plan" if current_role == "user" else "Pro Plan"
+        role_icon = "🆓" if current_role == "user" else "⭐"
 
 
         # Sidebar brand header (authenticated)
@@ -957,12 +943,7 @@ else:
         total_checks = len(user_logs)
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
 
-        role_display = {
-            "user": "Free Plan",
-            "pro": "Pro Plan",
-            "premium": "Pro Plan",
-            "newsroom_admin": "Pro Plan"
-        }.get(current_role, current_role.upper())
+        role_display = "Free Plan" if current_role == "user" else "Pro Plan"
 
         # 1. Profile Banner
         render_html(f"""
@@ -978,7 +959,7 @@ else:
                     </span>
                 </div>
                 <div style='color: #64748B; font-size: 0.95em;'>
-                    Subscription Tier: <strong style='color: #4F46E5;'>{role_display}</strong> | Authentication: <strong style='color: #059669;'>JWT Signed (HS256)</strong>
+                    Subscription Plan: <strong style='color: #4F46E5;'>{role_display}</strong> | Authentication: <strong style='color: #059669;'>JWT Signed (HS256)</strong>
                 </div>
             </div>
         </div>
@@ -989,7 +970,7 @@ else:
         with m1:
             render_html(f"""
             <div class='quota-card'>
-                <div class='quota-metric-label'>Current Active Tier</div>
+                <div class='quota-metric-label'>Current Active Plan</div>
                 <div class='quota-metric-value' style='color: #4F46E5;'>{role_display}</div>
                 <div style='font-size: 0.82em; color: #64748B;'>{'Unlimited / Up to 5 resources' if current_role in ['pro', 'premium', 'newsroom_admin'] else '3 Tokens / 2 Resources displayed'}</div>
             </div>
@@ -1072,7 +1053,7 @@ else:
         st.markdown("---")
 
         # 4. Plan Changing & Subscription Switcher
-        st.markdown("### 💎 Subscription Tier & Plan Switcher")
+        st.markdown("### 💎 Subscription Plan Switcher")
         st.markdown("Switch between plans instantly with real-time role updates and quota privileges.")
 
         p_col1, p_col2 = st.columns(2)
@@ -1150,7 +1131,7 @@ else:
         st.markdown("---")
 
         # 5. Plan Comparison Matrix Table
-        st.markdown("### 📊 Subscription Tier Comparison Matrix")
+        st.markdown("### 📊 Subscription Plan Comparison Matrix")
         render_html("""
         <table class='matrix-table'>
             <thead>
@@ -1256,11 +1237,11 @@ else:
                         else:
                             st.error("Current password verification failed.")
 
-        # 7. Newsroom Enterprise Admin Console (Visible to newsroom_admin)
+        # 7. Member Directory & Role Manager (Visible to newsroom_admin)
         if current_role == "newsroom_admin":
             st.markdown("---")
-            st.markdown("### 👥 Newsroom Enterprise User Directory")
-            st.markdown("As a Newsroom Enterprise Administrator, you can view all member accounts across your organization and manage their access tiers.")
+            st.markdown("### 👥 Member Directory & Access Management")
+            st.markdown("Administrator console for reviewing registered member accounts and managing their subscription plan.")
 
             all_users = db.get_all_users()
             if all_users:
@@ -1269,13 +1250,12 @@ else:
                 # Render clean user directory
                 for u in all_users:
                     u_role = u.get("role", "user")
-                    u_tokens = u.get("tokens", 10.0)
+                    u_tokens = u.get("tokens", float(config.RATE_LIMIT_CAPACITY))
+                    is_pro_member = u_role in ["pro", "premium", "newsroom_admin"]
                     
-                    role_badge_class = "role-tag-user"
-                    if u_role in ["pro", "premium"]:
-                        role_badge_class = "role-tag-premium"
-                    elif u_role == "newsroom_admin":
-                        role_badge_class = "role-tag-admin"
+                    role_badge_class = "role-tag-premium" if is_pro_member else "role-tag-user"
+                    display_role_label = "PRO PLAN" if is_pro_member else "FREE PLAN"
+                    token_label = "Unlimited" if is_pro_member else f"{u_tokens:.1f} / {config.RATE_LIMIT_CAPACITY}"
 
                     render_html(f"""
                     <div class='admin-user-card'>
@@ -1284,20 +1264,24 @@ else:
                             <span style='color: #64748B; font-size: 0.85em; margin-left: 10px;'>ID: #{u['id']}</span>
                         </div>
                         <div style='display: flex; align-items: center; gap: 15px;'>
-                            <span style='color: #475569; font-size: 0.85em;'>Tokens: <strong>{u_tokens:.1f}</strong></span>
-                            <span class='{role_badge_class}'>{u_role.upper()}</span>
+                            <span style='color: #475569; font-size: 0.85em;'>Quota: <strong>{token_label}</strong></span>
+                            <span class='{role_badge_class}'>{display_role_label}</span>
                         </div>
                     </div>
                     """)
                 
                 # Admin Fast Role Editor
-                with st.expander("🛠️ Admin Member Role Modifier"):
+                with st.expander("🛠️ Member Plan Modifier"):
                     usernames_list = [u["username"] for u in all_users]
                     selected_target_user = st.selectbox("Select User Account", usernames_list)
-                    selected_new_role = st.selectbox("Assign Subscription Role", ["user", "pro", "premium", "newsroom_admin"])
-                    if st.button("Apply Role Change", key="admin_apply_role"):
+                    selected_new_role = st.selectbox(
+                        "Assign Subscription Plan",
+                        ["user", "pro"],
+                        format_func=lambda x: "Free Plan (3 capacity, 2 resources displayed)" if x == "user" else "Pro Plan (Unlimited, 3–5 resources displayed)"
+                    )
+                    if st.button("Apply Plan Change", key="admin_apply_role"):
                         db.update_user_role(selected_target_user, selected_new_role)
-                        st.success(f"Updated user '{selected_target_user}' role to '{selected_new_role}'.")
+                        st.success(f"Updated user '{selected_target_user}' plan to '{'Pro Plan' if selected_new_role == 'pro' else 'Free Plan'}'.")
                         st.rerun()
 
     # -------------------------------------------------------------------------
