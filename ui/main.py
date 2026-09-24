@@ -196,6 +196,8 @@ if "agent_logs" not in st.session_state:
     st.session_state.agent_logs = []
 if "current_page" not in st.session_state:
     st.session_state.current_page = PAGE_VERIFICATION
+if "nav_radio" not in st.session_state:
+    st.session_state.nav_radio = PAGE_VERIFICATION
 if "show_access_portal" not in st.session_state:
     st.session_state.show_access_portal = False
 
@@ -366,6 +368,8 @@ with st.sidebar:
                 st.session_state.username = auth_resp["user"]["username"]
                 st.session_state.role = auth_resp["user"]["role"]
                 st.session_state.jwt_token = auth_resp["token"]
+                st.session_state.current_page = PAGE_VERIFICATION
+                st.session_state.nav_radio = PAGE_VERIFICATION
                 st.success(f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}")
                 st.rerun()
             else:
@@ -431,12 +435,20 @@ with st.sidebar:
             PAGE_RESPONSIBLE_AI
         ]
         
-        # Keep track of active page
+        # Ensure session state radio key matches current page
+        if "nav_radio" not in st.session_state or st.session_state.nav_radio not in nav_options:
+            st.session_state.nav_radio = st.session_state.current_page if st.session_state.current_page in nav_options else PAGE_VERIFICATION
+
+        def _on_nav_change():
+            st.session_state.current_page = st.session_state.nav_radio
+
+        # Keep track of active page with direct key binding for immediate single-click navigation
         selected_page = st.radio(
             "Go to Page",
             nav_options,
             label_visibility="collapsed",
-            index=nav_options.index(st.session_state.current_page) if st.session_state.current_page in nav_options else 0
+            key="nav_radio",
+            on_change=_on_nav_change
         )
         st.session_state.current_page = selected_page
 
@@ -478,6 +490,7 @@ with st.sidebar:
             st.session_state.jwt_token = None
             st.session_state.agent_logs = []
             st.session_state.current_page = PAGE_VERIFICATION
+            st.session_state.nav_radio = PAGE_VERIFICATION
             st.session_state.show_access_portal = False
             st.rerun()
 

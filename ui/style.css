@@ -399,6 +399,7 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] > label {
 section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     display: flex !important;
     align-items: center !important;
+    width: 100% !important;
     padding: 10px 14px !important;
     border-radius: var(--radius-md) !important;
     background: rgba(255, 255, 255, 0.36) !important;
@@ -408,6 +409,7 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
     margin-bottom: 4px !important;
     cursor: pointer !important;
+    user-select: none !important;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
 }
 
