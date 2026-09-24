@@ -144,70 +144,107 @@
     overflow-x: hidden;
 }
 
-/* Ambient Spatial Light Emitters (Diffuse, Non-Distracting, Physical Studio Illuminators) */
+/* Ambient Spatial Light Emitters (Luminous Studio Illuminators with Smooth Fade In/Out Breathing Animation) */
 .stApp::before {
     content: '';
     position: fixed;
-    top: -260px;
-    left: -200px;
-    width: 1100px;
-    height: 1100px;
-    background: radial-gradient(circle, rgba(219, 234, 254, 0.25) 0%, rgba(224, 231, 255, 0.12) 40%, transparent 70%);
+    top: -180px;
+    left: -140px;
+    width: 950px;
+    height: 950px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(99, 102, 241, 0.28) 40%, rgba(224, 231, 255, 0.10) 65%, transparent 78%);
     border-radius: 50%;
-    filter: blur(140px);
+    filter: blur(100px);
+    -webkit-filter: blur(100px);
     z-index: 0;
     pointer-events: none;
-    animation: vision-spatial-drift-1 38s ease-in-out infinite alternate;
+    animation: bg-fade-pulse-1 9s ease-in-out infinite alternate;
 }
 
 .stApp::after {
     content: '';
     position: fixed;
-    bottom: -280px;
-    right: -200px;
-    width: 1200px;
-    height: 1200px;
-    background: radial-gradient(circle, rgba(224, 231, 255, 0.22) 0%, rgba(237, 233, 254, 0.10) 45%, transparent 70%);
+    bottom: -200px;
+    right: -140px;
+    width: 1050px;
+    height: 1050px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.40) 0%, rgba(99, 102, 241, 0.30) 42%, rgba(56, 189, 248, 0.12) 65%, transparent 78%);
     border-radius: 50%;
-    filter: blur(150px);
+    filter: blur(110px);
+    -webkit-filter: blur(110px);
     z-index: 0;
     pointer-events: none;
-    animation: vision-spatial-drift-2 42s ease-in-out infinite alternate;
+    animation: bg-fade-pulse-2 11s ease-in-out infinite alternate;
 }
 
-@keyframes vision-spatial-drift-1 {
+/* Third ambient center light layer for deep spatial breathing */
+div[data-testid="stAppViewContainer"]::before {
+    content: '';
+    position: fixed;
+    top: 28%;
+    left: 28%;
+    width: 750px;
+    height: 750px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.28) 0%, rgba(56, 189, 248, 0.16) 45%, transparent 72%);
+    border-radius: 50%;
+    filter: blur(120px);
+    -webkit-filter: blur(120px);
+    z-index: 0;
+    pointer-events: none;
+    animation: bg-fade-pulse-center 14s ease-in-out infinite alternate;
+}
+
+@keyframes bg-fade-pulse-1 {
     0% {
-        transform: translate(0, 0) scale(1);
+        opacity: 0.25;
+        transform: translate(0, 0) scale(0.92);
     }
-
     50% {
-        transform: translate(45px, 35px) scale(1.04);
+        opacity: 0.90;
+        transform: translate(50px, 40px) scale(1.10);
     }
-
     100% {
-        transform: translate(15px, 60px) scale(0.98);
+        opacity: 0.35;
+        transform: translate(20px, 70px) scale(1.00);
     }
 }
 
-@keyframes vision-spatial-drift-2 {
+@keyframes bg-fade-pulse-2 {
     0% {
-        transform: translate(0, 0) scale(1);
+        opacity: 0.30;
+        transform: translate(0, 0) scale(1.06);
     }
-
     50% {
-        transform: translate(-50px, -35px) scale(1.03);
+        opacity: 0.95;
+        transform: translate(-60px, -45px) scale(0.94);
     }
-
     100% {
-        transform: translate(-20px, -60px) scale(0.97);
+        opacity: 0.28;
+        transform: translate(-25px, -70px) scale(1.08);
+    }
+}
+
+@keyframes bg-fade-pulse-center {
+    0% {
+        opacity: 0.18;
+        transform: scale(0.88);
+    }
+    50% {
+        opacity: 0.75;
+        transform: scale(1.15);
+    }
+    100% {
+        opacity: 0.22;
+        transform: scale(0.96);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-
     .stApp::before,
-    .stApp::after {
+    .stApp::after,
+    div[data-testid="stAppViewContainer"]::before {
         animation: none !important;
+        opacity: 0.4 !important;
     }
 }
 
