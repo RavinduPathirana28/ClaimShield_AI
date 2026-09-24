@@ -110,12 +110,16 @@ with st.sidebar:
         st.markdown("### 🔐 User Authentication")
         auth_mode = st.radio("Access Level", ["Login", "Register"], label_visibility="collapsed")
         
-        username_in = st.text_input("Username", placeholder="e.g. user, premium, newsroom")
+        username_in = st.text_input("Username", placeholder="e.g. user, pro")
         password_in = st.text_input("Password", type="password", placeholder="password")
         
         role_select = "user"
         if auth_mode == "Register":
-            role_select = st.selectbox("Select Subscription Tier", ["user", "premium", "newsroom_admin"])
+            role_select = st.selectbox(
+                "Select Subscription Plan",
+                ["user", "pro"],
+                format_func=lambda x: "Free Plan (3 capacity, 2 resources displayed)" if x == "user" else "Pro Plan (Unlimited, 3–5 resources displayed)"
+            )
             
         if st.button(auth_mode, use_container_width=True):
             auth_action = "login" if auth_mode == "Login" else "register"
@@ -145,7 +149,7 @@ with st.sidebar:
                 st.error(auth_resp.get("message", "Authentication failed."))
                 
         st.markdown("---")
-        st.info("💡 **Pre-seeded Demo Accounts:**\n- `user` / `password` (Free Reader)\n- `premium` / `premium` (Journalist)\n- `newsroom` / `newsroom` (Enterprise Admin)")
+        st.info("💡 **Pre-seeded Demo Accounts:**\n- `user` / `password` (Free Plan — 3 capacity, 2 resources)\n- `premium` / `premium` (Pro Plan — Unlimited, 3–5 resources)\n- `newsroom` / `newsroom` (Pro Plan — Unlimited, 3–5 resources)")
         
     else:
         # User is authenticated
@@ -154,9 +158,10 @@ with st.sidebar:
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
         
         role_display = {
-            "user": "Free Reader",
-            "premium": "Premium Journalist",
-            "newsroom_admin": "Newsroom Enterprise"
+            "user": "Free Plan (3 checks, 2 resources)",
+            "pro": "Pro Plan (Unlimited, 3–5 resources)",
+            "premium": "Pro Plan (Unlimited, 3–5 resources)",
+            "newsroom_admin": "Pro Plan (Unlimited, 3–5 resources)"
         }.get(current_role, current_role.upper())
 
         st.markdown(f"""
@@ -196,22 +201,22 @@ with st.sidebar:
         # Display current rate limit tokens (Quick Widget in Sidebar)
         if user_info:
             st.markdown("#### ⚡ Plan Quota")
-            if current_role in ["premium", "newsroom_admin"]:
+            if current_role in ["pro", "premium", "newsroom_admin"]:
                 st.markdown("""
                 <div style='background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.82em; color: #34D399; margin-bottom: 12px;'>
-                    🚀 Unlimited Access Active
+                    🚀 Pro Plan: Unlimited Access Active
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 now = time.time()
                 last_time = user_info.get("last_request_time", 0.0)
-                curr_tokens = user_info.get("tokens", 10.0)
+                curr_tokens = user_info.get("tokens", float(config.RATE_LIMIT_CAPACITY))
                 refill = (now - last_time) * (config.RATE_LIMIT_REFILL_AMOUNT / config.RATE_LIMIT_REFILL_PERIOD)
                 tokens = min(float(config.RATE_LIMIT_CAPACITY), curr_tokens + refill)
                 
                 progress_pct = tokens / config.RATE_LIMIT_CAPACITY
                 st.progress(min(max(progress_pct, 0.0), 1.0))
-                st.caption(f"Tokens: **{tokens:.1f} / {config.RATE_LIMIT_CAPACITY}** (5/hr)")
+                st.caption(f"Tokens: **{tokens:.1f} / {config.RATE_LIMIT_CAPACITY}** ({config.RATE_LIMIT_REFILL_AMOUNT}/hr) · Displays 2 resources")
 
         st.markdown("---")
         st.markdown("### 🤖 Multi-Agent Engine")
@@ -275,19 +280,20 @@ if not st.session_state.authenticated:
             """, unsafe_allow_html=True)
 
     with landing_tabs[1]:
-        st.markdown("### 💎 Subscription & Pricing Tiers")
-        col1, col2, col3 = st.columns(3)
+        st.markdown("### 💎 Commercial Subscription Plans")
+        col1, col2 = st.columns(2)
         with col1:
             render_html("""
             <div class='plan-card'>
                 <div>
-                    <h4>Standard Tier</h4>
+                    <h4>Free Plan</h4>
                     <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for individual researchers</p>
+                    <p style='color: #94A3B8; font-size: 0.85em;'>Essential tools for individual fact-checking</p>
                     <ul class='plan-feature-list'>
-                        <li>10 claim checks capacity</li>
-                        <li>Refills 5 tokens / hour</li>
-                        <li>Standard NLP & FAISS index</li>
+                        <li><strong>3 requests</strong> token capacity</li>
+                        <li><strong>Displays only 2 resources</strong> to user</li>
+                        <li>Refills 3 tokens / hour</li>
+                        <li>Standard NLP & FAISS vector search</li>
                         <li>Encrypted audit logging</li>
                     </ul>
                 </div>
@@ -298,30 +304,15 @@ if not st.session_state.authenticated:
             <div class='plan-card' style='border: 1px solid #6366F1;'>
                 <div class='plan-popular-tag'>Popular</div>
                 <div>
-                    <h4>Premium Reader</h4>
+                    <h4>Pro Plan</h4>
                     <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>Ideal for content writers & journalists</p>
+                    <p style='color: #94A3B8; font-size: 0.85em;'>For journalists, researchers & media professionals</p>
                     <ul class='plan-feature-list'>
-                        <li><strong>Unlimited</strong> claim checks</li>
-                        <li>Priority LLM access queue</li>
-                        <li>Retrieval expansion (Top 5)</li>
-                        <li>Multi-Agent Persona Debate (FactChecker → Critic → Consensus)</li>
-                    </ul>
-                </div>
-            </div>
-            """)
-        with col3:
-            render_html("""
-            <div class='plan-card'>
-                <div>
-                    <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For agencies & news outlets</p>
-                    <ul class='plan-feature-list'>
-                        <li><strong>Unlimited</strong> claim checks</li>
-                        <li>Multi-seat team management</li>
-                        <li>Advanced historical audit trails</li>
-                        <li>LangGraph stateful workflow</li>
+                        <li><strong>Unlimited</strong> claim checks (Zero throttles)</li>
+                        <li><strong>Displays at least 3 (if available) & up to 5 max</strong></li>
+                        <li>Priority LLM reasoning queue</li>
+                        <li>Multi-Agent Persona Debate & LangGraph</li>
+                        <li>Verified live source citations</li>
                     </ul>
                 </div>
             </div>
@@ -422,7 +413,7 @@ else:
                     
                     if pipeline_result.get("status") == "rate_limited":
                         st.error(pipeline_result.get("message"))
-                        st.info(f"Please wait {pipeline_result.get('retry_after_seconds')} seconds, or upgrade to a Premium account on the Account page.")
+                        st.info(f"Please wait {pipeline_result.get('retry_after_seconds')} seconds, or upgrade to the Pro Plan on the Account page.")
                     elif pipeline_result.get("status") == "success":
                         st.markdown("### 📊 AI Analysis Report")
                         
@@ -698,6 +689,22 @@ else:
                             db_articles = [a for a in ret_articles if "Live Web" not in a.get("source", "")]
                             article_dates = [a.get("date", "") for a in ret_articles if a.get("date")]
                             newest_date = max(article_dates) if article_dates else "unknown"
+                            total_found = pipeline_result.get("total_resources_found", len(ret_articles))
+                            is_pro = pipeline_result.get("is_pro_plan", current_role in ["pro", "premium", "newsroom_admin"])
+
+                            if not is_pro:
+                                render_html(f"""
+                                <div style="font-size: 0.84em; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #CBD5E1;">
+                                    🔒 <strong style="color: #818CF8;">Free Plan Display:</strong> Showing <strong>{len(ret_articles)}</strong> resources (Free plan displays maximum 2 of {total_found} retrieved). <span style="color: #94A3B8;">Upgrade to <strong>Pro Plan</strong> to view at least 3 (if available) and up to 5 maximum resources!</span>
+                                </div>
+                                """)
+                            else:
+                                render_html(f"""
+                                <div style="font-size: 0.84em; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #CBD5E1;">
+                                    ⭐ <strong style="color: #34D399;">Pro Plan Active:</strong> Displaying <strong>{len(ret_articles)}</strong> verified resources (Pro tier displays at least 3 if available, up to 5 maximum).
+                                </div>
+                                """)
+
                             render_html(f"""
                             <div style="font-size: 0.82em; color: #94A3B8; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
                                 🧾 <strong style="color:#CBD5E1;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
@@ -751,9 +758,10 @@ else:
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
 
         role_display = {
-            "user": "Free Reader",
-            "premium": "Premium Journalist",
-            "newsroom_admin": "Newsroom Enterprise"
+            "user": "Free Plan",
+            "pro": "Pro Plan",
+            "premium": "Pro Plan",
+            "newsroom_admin": "Pro Plan"
         }.get(current_role, current_role.upper())
 
         # 1. Profile Banner
@@ -783,31 +791,31 @@ else:
             <div class='quota-card'>
                 <div class='quota-metric-label'>Current Active Tier</div>
                 <div class='quota-metric-value' style='color: #818CF8;'>{role_display}</div>
-                <div style='font-size: 0.82em; color: #64748B;'>Unlimited / Standard Rate Limits</div>
+                <div style='font-size: 0.82em; color: #64748B;'>{'Unlimited / Up to 5 resources' if current_role in ['pro', 'premium', 'newsroom_admin'] else '3 Tokens / 2 Resources displayed'}</div>
             </div>
             """)
             
         with m2:
-            if current_role in ["premium", "newsroom_admin"]:
+            if current_role in ["pro", "premium", "newsroom_admin"]:
                 render_html("""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Verification Quota</div>
                     <div class='quota-metric-value' style='color: #10B981;'>Unlimited ∞</div>
-                    <div style='font-size: 0.82em; color: #10B981;'>Rate Limit Bypassed</div>
+                    <div style='font-size: 0.82em; color: #10B981;'>Rate Limit Bypassed · 3–5 Resources</div>
                 </div>
                 """)
             else:
                 now = time.time()
                 last_time = user_info.get("last_request_time", 0.0) if user_info else 0.0
-                curr_tokens = user_info.get("tokens", 10.0) if user_info else 10.0
+                curr_tokens = user_info.get("tokens", float(config.RATE_LIMIT_CAPACITY)) if user_info else float(config.RATE_LIMIT_CAPACITY)
                 refill = (now - last_time) * (config.RATE_LIMIT_REFILL_AMOUNT / config.RATE_LIMIT_REFILL_PERIOD)
                 tokens = min(float(config.RATE_LIMIT_CAPACITY), curr_tokens + refill)
                 
                 render_html(f"""
                 <div class='quota-card'>
                     <div class='quota-metric-label'>Remaining Tokens</div>
-                    <div class='quota-metric-value' style='color: #38BDF8;'>{tokens:.1f} <span style='font-size: 0.5em; color: #94A3B8;'>/ 10</span></div>
-                    <div style='font-size: 0.82em; color: #64748B;'>Refills 5 tokens / hour</div>
+                    <div class='quota-metric-value' style='color: #38BDF8;'>{tokens:.1f} <span style='font-size: 0.5em; color: #94A3B8;'>/ {config.RATE_LIMIT_CAPACITY}</span></div>
+                    <div style='font-size: 0.82em; color: #64748B;'>Refills {config.RATE_LIMIT_REFILL_AMOUNT} / hour · Only 2 resources shown</div>
                 </div>
                 """)
 
@@ -824,14 +832,14 @@ else:
 
         # 3. Real-Time Token & Quota Management Section
         st.markdown("### ⚡ Real-Time Plan Quotas & Token Bucket Status")
-        st.markdown("ClaimShield AI enforces a token-bucket rate limiting algorithm. Standard users refill tokens gradually over time, while Premium and Newsroom tiers enjoy unlimited high-concurrency access.")
+        st.markdown("ClaimShield AI enforces commercial plan quotas: **Free Plan** has a 3-token capacity with 2 displayed resources, while **Pro Plan** enjoys unlimited verification quota and up to 5 verified resources displayed.")
 
-        if current_role in ["premium", "newsroom_admin"]:
+        if current_role in ["pro", "premium", "newsroom_admin"]:
             render_html(f"""
             <div class='glass-card' style='border-left: 6px solid #10B981; background: rgba(16, 185, 129, 0.08);'>
-                <h4 style='color: #10B981; margin-top: 0;'>🚀 Unlimited Verification Quota Active</h4>
+                <h4 style='color: #10B981; margin-top: 0;'>🚀 Unlimited Pro Plan Active</h4>
                 <p style='color: #CBD5E1; line-height: 1.6; margin-bottom: 0;'>
-                    Your account is subscribed to <strong>{role_display}</strong>. You have zero request throttles, priority execution in the verification queue, and direct access to multi-agent debate pipelines.
+                    Your account is subscribed to the <strong>Pro Plan</strong>. You have zero request throttles, priority execution in the verification queue, and display of at least 3 (if available) and up to 5 maximum verified resources per query.
                 </p>
             </div>
             """)
@@ -839,7 +847,7 @@ else:
             # Free user live token simulation & progress bar
             now = time.time()
             last_time = user_info.get("last_request_time", 0.0) if user_info else 0.0
-            curr_tokens = user_info.get("tokens", 10.0) if user_info else 10.0
+            curr_tokens = user_info.get("tokens", float(config.RATE_LIMIT_CAPACITY)) if user_info else float(config.RATE_LIMIT_CAPACITY)
             refill = (now - last_time) * (config.RATE_LIMIT_REFILL_AMOUNT / config.RATE_LIMIT_REFILL_PERIOD)
             tokens = min(float(config.RATE_LIMIT_CAPACITY), curr_tokens + refill)
             
@@ -850,7 +858,7 @@ else:
             with q_col1:
                 st.markdown(f"**Token Capacity Utilization ({tokens:.1f} / {config.RATE_LIMIT_CAPACITY} available)**")
                 st.progress(progress_val)
-                st.caption(f"Refill rate: **{config.RATE_LIMIT_REFILL_AMOUNT} tokens per hour** ({config.RATE_LIMIT_REFILL_PERIOD/config.RATE_LIMIT_REFILL_AMOUNT:.0f} seconds per token).")
+                st.caption(f"Refill rate: **{config.RATE_LIMIT_REFILL_AMOUNT} tokens per hour** ({config.RATE_LIMIT_REFILL_PERIOD/config.RATE_LIMIT_REFILL_AMOUNT:.0f} seconds per token) · Displays only 2 resources.")
             
             with q_col2:
                 if tokens < config.RATE_LIMIT_CAPACITY:
@@ -859,9 +867,7 @@ else:
                     mins_to_full = int(seconds_to_full / 60)
                     st.info(f"⏳ Estimated time until 100% capacity: **~{mins_to_full} minutes**.")
                 else:
-                    st.success("✅ Your token bucket is currently at **100% full capacity**.")
-
-
+                    st.success("✅ Your token bucket is currently at **100% full capacity (3 tokens)**.")
 
         st.markdown("---")
 
@@ -869,9 +875,9 @@ else:
         st.markdown("### 💎 Subscription Tier & Plan Switcher")
         st.markdown("Switch between plans instantly with real-time role updates and quota privileges.")
 
-        p_col1, p_col2, p_col3 = st.columns(3)
+        p_col1, p_col2 = st.columns(2)
 
-        # Plan 1: Free Reader
+        # Plan 1: Free Plan
         with p_col1:
             is_active_free = (current_role == "user")
             card_class = "plan-card plan-card-active" if is_active_free else "plan-card"
@@ -881,12 +887,13 @@ else:
             <div class='{card_class}'>
                 {active_tag_html}
                 <div>
-                    <h4>Free Reader</h4>
+                    <h4>Free Plan</h4>
                     <div class='plan-price-tag' style='color: #94A3B8;'>&#36;0</div>
                     <p style='color: #94A3B8; font-size: 0.85em;'>Essential tools for individual fact-checkers</p>
                     <ul class='plan-feature-list'>
-                        <li>10 verification tokens capacity</li>
-                        <li>Refills 5 tokens / hour</li>
+                        <li><strong>3 verification tokens</strong> capacity</li>
+                        <li><strong>Displays only 2 resources</strong> per claim</li>
+                        <li>Refills 3 tokens / hour</li>
                         <li>Standard NLP & spaCy extraction</li>
                         <li>FAISS vector similarity search</li>
                         <li>Encrypted audit logging</li>
@@ -898,80 +905,46 @@ else:
             if is_active_free:
                 st.button("✅ Current Active Plan", key="btn_free_active", disabled=True, use_container_width=True)
             else:
-                if st.button("Downgrade to Free Reader", key="btn_free_downgrade", use_container_width=True):
-                    db.update_user_tokens(st.session_state.username, 10.0, time.time())
+                if st.button("Downgrade to Free Plan", key="btn_free_downgrade", use_container_width=True):
+                    db.update_user_tokens(st.session_state.username, float(config.RATE_LIMIT_CAPACITY), time.time())
                     db.update_user_role(st.session_state.username, "user")
                     st.session_state.role = "user"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "user")
-                    st.success("Successfully switched to Free Reader tier!")
+                    st.success("Successfully switched to Free Plan!")
                     st.rerun()
 
-        # Plan 2: Premium Journalist
+        # Plan 2: Pro Plan
         with p_col2:
-            is_active_prem = (current_role == "premium")
-            card_class = "plan-card plan-card-active" if is_active_prem else "plan-card"
-            active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_prem else "<div class='plan-popular-tag'>Popular</div>"
+            is_active_pro = (current_role in ["pro", "premium", "newsroom_admin"])
+            card_class = "plan-card plan-card-active" if is_active_pro else "plan-card"
+            active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_pro else "<div class='plan-popular-tag'>Popular</div>"
             
             render_html(f"""
             <div class='{card_class}' style='border-color: #6366F1;'>
                 {active_tag_html}
                 <div>
-                    <h4>Premium Journalist</h4>
+                    <h4>Pro Plan</h4>
                     <div class='plan-price-tag' style='color: #818CF8;'>&#36;19<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For freelance reporters and content writers</p>
+                    <p style='color: #94A3B8; font-size: 0.85em;'>For freelance reporters, researchers and journalists</p>
                     <ul class='plan-feature-list'>
                         <li><strong>Unlimited</strong> verification checks</li>
+                        <li><strong>Displays at least 3 (if available) & up to 5 max</strong></li>
                         <li>Bypassed token bucket rate limits</li>
                         <li>Priority LLM execution queue</li>
-                        <li>Expanded FAISS search (Top 5)</li>
-                        <li>Multi-Agent Persona Debate (FactChecker → Critic → Consensus)</li>
+                        <li>Multi-Agent Persona Debate & LangGraph</li>
                     </ul>
                 </div>
             </div>
             """)
             
-            if is_active_prem:
-                st.button("✅ Current Active Plan", key="btn_prem_active", disabled=True, use_container_width=True)
+            if is_active_pro:
+                st.button("✅ Current Active Plan", key="btn_pro_active", disabled=True, use_container_width=True)
             else:
-                if st.button("⚡ Switch to Premium Journalist", key="btn_prem_upgrade", use_container_width=True):
-                    db.update_user_role(st.session_state.username, "premium")
-                    st.session_state.role = "premium"
-                    st.session_state.jwt_token = generate_jwt(st.session_state.username, "premium")
-                    st.success("Successfully upgraded to Premium Journalist! Rate limits bypassed.")
-                    st.rerun()
-
-        # Plan 3: Newsroom Enterprise
-        with p_col3:
-            is_active_news = (current_role == "newsroom_admin")
-            card_class = "plan-card plan-card-active" if is_active_news else "plan-card"
-            active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_news else ""
-            
-            render_html(f"""
-            <div class='{card_class}'>
-                {active_tag_html}
-                <div>
-                    <h4>Newsroom Enterprise</h4>
-                    <div class='plan-price-tag' style='color: #10B981;'>&#36;49<span style='font-size: 0.45em; color: #94A3B8;'>/mo</span></div>
-                    <p style='color: #94A3B8; font-size: 0.85em;'>For media agencies & editorial newsrooms</p>
-                    <ul class='plan-feature-list'>
-                        <li><strong>Unlimited</strong> verification checks</li>
-                        <li>Multi-seat team user directory</li>
-                        <li>Advanced audit trails & telemetry</li>
-                        <li>LangGraph stateful workflow</li>
-                        <li>Dedicated SLA & priority support</li>
-                    </ul>
-                </div>
-            </div>
-            """)
-            
-            if is_active_news:
-                st.button("✅ Current Active Plan", key="btn_news_active", disabled=True, use_container_width=True)
-            else:
-                if st.button("🚀 Switch to Newsroom Enterprise", key="btn_news_upgrade", use_container_width=True):
-                    db.update_user_role(st.session_state.username, "newsroom_admin")
-                    st.session_state.role = "newsroom_admin"
-                    st.session_state.jwt_token = generate_jwt(st.session_state.username, "newsroom_admin")
-                    st.success("Successfully upgraded to Newsroom Enterprise tier! Admin tools unlocked.")
+                if st.button("⚡ Upgrade to Pro Plan", key="btn_pro_upgrade", use_container_width=True):
+                    db.update_user_role(st.session_state.username, "pro")
+                    st.session_state.role = "pro"
+                    st.session_state.jwt_token = generate_jwt(st.session_state.username, "pro")
+                    st.success("Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled.")
                     st.rerun()
 
         st.markdown("---")
@@ -983,59 +956,50 @@ else:
             <thead>
                 <tr>
                     <th>Feature / Capability</th>
-                    <th>Free Reader (&#36;0)</th>
-                    <th style='color: #818CF8;'>Premium Journalist (&#36;19/mo)</th>
-                    <th style='color: #10B981;'>Newsroom Enterprise (&#36;49/mo)</th>
+                    <th>Free Plan (&#36;0)</th>
+                    <th style='color: #818CF8;'>Pro Plan (&#36;19/mo)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><strong>Verification Quota</strong></td>
-                    <td>10 Checks / Bucket (5/hr refill)</td>
+                    <td>3 Checks / Bucket (3/hr refill)</td>
                     <td><strong style='color: #818CF8;'>Unlimited</strong></td>
-                    <td><strong style='color: #10B981;'>Unlimited</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Resources Displayed</strong></td>
+                    <td>Only 2 Resources</td>
+                    <td><strong style='color: #818CF8;'>At least 3 (if available) · 5 Maximum</strong></td>
                 </tr>
                 <tr>
                     <td><strong>Rate Limiter Status</strong></td>
-                    <td>Token-Bucket Active</td>
-                    <td>Bypassed (Zero Throttles)</td>
+                    <td>Token-Bucket Active (3 capacity)</td>
                     <td>Bypassed (Zero Throttles)</td>
                 </tr>
                 <tr>
                     <td><strong>LLM Verification Models</strong></td>
                     <td>Standard Heuristic + LLM</td>
                     <td>Priority Gemini / Groq Queue</td>
-                    <td>Custom Enterprise Endpoints</td>
                 </tr>
                 <tr>
-                    <td><strong>FAISS Vector Search Depth</strong></td>
-                    <td>Top 3 Articles</td>
-                    <td>Top 5 Articles</td>
-                    <td>Top 10 Articles + Live Crawler</td>
+                    <td><strong>FAISS Vector Search & Retrieval</strong></td>
+                    <td>Top 3 Articles retrieved (2 displayed)</td>
+                    <td>Top 5 Articles retrieved (3–5 displayed)</td>
                 </tr>
                 <tr>
                     <td><strong>Persona Debate (FactChecker → Critic → Consensus)</strong></td>
-                    <td>❌ Limited</td>
-                    <td>✅ Full Consensus Debate</td>
+                    <td>Standard Sequential</td>
                     <td>✅ Full Consensus Debate</td>
                 </tr>
                 <tr>
                     <td><strong>LangGraph Stateful Graph</strong></td>
-                    <td>❌ Basic Sequential</td>
-                    <td>✅ Enabled</td>
-                    <td>✅ Advanced Branching</td>
-                </tr>
-                <tr>
-                    <td><strong>Team & Multi-Seat Management</strong></td>
-                    <td>❌ Single User</td>
-                    <td>❌ Single User</td>
-                    <td>✅ Newsroom Admin Console</td>
+                    <td>Standard Graph</td>
+                    <td>✅ Full Graph Execution</td>
                 </tr>
                 <tr>
                     <td><strong>Audit Trail Encryption</strong></td>
                     <td>Fernet AES-128-CBC</td>
-                    <td>Fernet AES-128-CBC</td>
-                    <td>Fernet + Enterprise Telemetry</td>
+                    <td>Fernet AES-128-CBC + Telemetry</td>
                 </tr>
             </tbody>
         </table>
@@ -1108,7 +1072,7 @@ else:
                     u_tokens = u.get("tokens", 10.0)
                     
                     role_badge_class = "role-tag-user"
-                    if u_role == "premium":
+                    if u_role in ["pro", "premium"]:
                         role_badge_class = "role-tag-premium"
                     elif u_role == "newsroom_admin":
                         role_badge_class = "role-tag-admin"
@@ -1130,7 +1094,7 @@ else:
                 with st.expander("🛠️ Admin Member Role Modifier"):
                     usernames_list = [u["username"] for u in all_users]
                     selected_target_user = st.selectbox("Select User Account", usernames_list)
-                    selected_new_role = st.selectbox("Assign Subscription Role", ["user", "premium", "newsroom_admin"])
+                    selected_new_role = st.selectbox("Assign Subscription Role", ["user", "pro", "premium", "newsroom_admin"])
                     if st.button("Apply Role Change", key="admin_apply_role"):
                         db.update_user_role(selected_target_user, selected_new_role)
                         st.success(f"Updated user '{selected_target_user}' role to '{selected_new_role}'.")
@@ -1279,7 +1243,7 @@ else:
                 <h4 style='color: #F59E0B;'>⚖️ Fairness</h4>
                 <p style='color: #CBD5E1; line-height: 1.7;'>
                     ClaimShield applies the <strong>same verification pipeline</strong> to all users regardless of subscription tier.
-                    Rate limits differ by tier (Free: 10/hr, Premium/Enterprise: unlimited), but the NLP analysis,
+                    Commercial plans differ by request capacity and display depth (Free Plan: 3 capacity displaying 2 resources, Pro Plan: unlimited displaying 3-5 resources), but the NLP analysis,
                     FAISS retrieval algorithm, and LLM verification logic are identical for every query.
                     No user demographic data influences the fact-checking verdict.
                 </p>

@@ -67,14 +67,17 @@ class LangGraphClaimVerifier:
             }
 
         def retrieval_node(state: ClaimVerificationState) -> Dict[str, Any]:
-            limit = 5 if state.get("role") in ["premium", "newsroom_admin"] else 3
+            is_pro = state.get("role") in ["pro", "premium", "newsroom_admin"]
+            limit = 5 if is_pro else 3
             res = self.orchestrator.retrieval_agent.handle_message({
                 "action": "retrieve",
                 "data": {"query": state["search_query"], "limit": limit}
             })
             if res.get("status") != "success":
                 return {"status": "error", "error_message": res.get("message")}
-            return {"articles": res.get("articles", [])}
+            raw_articles = res.get("articles", [])
+            display_articles = raw_articles[:2] if not is_pro else raw_articles[:5]
+            return {"articles": display_articles}
 
         def verify_node(state: ClaimVerificationState) -> Dict[str, Any]:
             res = self.orchestrator.verification_agent.handle_message({
