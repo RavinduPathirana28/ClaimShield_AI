@@ -57,13 +57,16 @@ class RetrievalAgent(BaseAgent):
                 if retrieved_articles:
                     top_score = retrieved_articles[0].get("score", 0.0)
 
-            # 2. If local database results are insufficient (top score < 0.30 or empty), launch live web crawler
-            if not retrieved_articles or top_score < 0.30:
-                print(f"[Retrieval Agent] Local FAISS score ({top_score:.2f}) insufficient. Launching Live Web Crawler for '{query}'...")
+            # 2. Launch the live web crawler when the query is time-sensitive
+            #    (news, launches, reports) so fresh evidence always reaches the
+            #    verifier, OR when local results are insufficient.
+            query_is_news = WebCrawler.is_time_sensitive(query)
+            if query_is_news or not retrieved_articles or top_score < 0.30:
+                print(f"[Retrieval Agent] {'Time-sensitive query -> ' if query_is_news else 'Local FAISS score (' + f'{top_score:.2f}' + ') insufficient -> '}Launching Live Web Crawler for '{query}'...")
                 web_results = self.web_crawler.search_and_crawl(query, limit=limit)
                 
                 if web_results:
-                    # Save web articles to database & append to results
+                    saved_web_articles = []
                     for web_art in web_results:
                         try:
                             # Save to local database so it can be vector indexed in the future
@@ -78,7 +81,10 @@ class RetrievalAgent(BaseAgent):
                         except Exception as save_err:
                             print(f"[Warning] Failed to save web article to DB: {save_err}")
                             
-                        retrieved_articles.append(web_art)
+                        saved_web_articles.append(web_art)
+                    
+                    # Prepend live web articles so they take priority over low-score local articles
+                    retrieved_articles = saved_web_articles + [a for a in retrieved_articles if a.get("score", 0.0) >= 0.30]
 
             return {
                 "sender": self.name,

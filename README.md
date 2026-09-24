@@ -2,7 +2,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Framework: LangGraph](https://img.shields.io/badge/Framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
-[![Framework: AutoGen](https://img.shields.io/badge/Framework-AutoGen%200.4%2B-purple.svg)](https://github.com/microsoft/autogen)
+[![LLM Consensus](https://img.shields.io/badge/Verification-Multi--LLM%20Consensus-purple.svg)](#cross-examination--verification)
 [![Vector Store: FAISS](https://img.shields.io/badge/Vector%20Store-FAISS-green.svg)](https://github.com/facebookresearch/faiss)
 [![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -68,10 +68,10 @@ flowchart TD
 
 | # | Agent | Primary Role & Responsibilities | Key Technologies |
 |---|---|---|---|
-| 1 | **Master Orchestrator Agent** | Controls agent lifecycle, message dispatching, state management, and fallback strategies. Supports **LangGraph StateGraph** and **AutoGen Multi-Agent Debate**. | `langgraph`, `autogen`, Python |
+| 1 | **Master Orchestrator Agent** | Controls agent lifecycle, message dispatching, state management, and fallback strategies. Supports **LangGraph StateGraph** and the **Multi-Agent Persona Debate** (FactChecker → Critic → Consensus). | `langgraph`, Python |
 | 2 | **NLP Agent** | Analyzes claim syntax, extracts Named Entities (NER), generates search queries, and scores stance credibility using Machine Learning. | `spaCy (en_core_web_sm)`, `scikit-learn (TF-IDF + LogisticRegression)` |
 | 3 | **Information Retrieval (IR) Agent** | Indexes and retrieves matching ground-truth evidence using dense semantic vector search and live web scraping. | `FAISS`, `SentenceTransformers (all-MiniLM-L6-v2)`, `httpx`, `BeautifulSoup4` |
-| 4 | **Fact-Verification Agent** | Evaluates retrieved evidence against the claim using multi-provider LLMs to generate a verdict, confidence score, and explanation. | `Groq (Llama 3.3)`, `Google Gemini Flash`, `Ollama (Local)`, Heuristic Fallback |
+| 4 | **Fact-Verification Agent** | Runs every configured LLM provider (Groq, Gemini, Ollama) in parallel, normalizes their verdicts into a weighted **cross-model consensus** with an agreement score, and caches per-model results for the audit view and the persona debate. Falls back to a transparent local heuristic engine when no LLM is reachable. | `Groq (Llama 3.3, GPT-OSS)`, `Google Gemini Flash`, `Ollama (Local)`, Heuristic Fallback |
 | 5 | **Security & Audit Agent** | Enforces PBKDF2 password hashing, JWT session governance, token-bucket rate limiting, input sanitization, and immutable audit logging. | `PyJWT`, `cryptography`, `hashlib`, `SQLite` |
 
 ---
@@ -83,7 +83,7 @@ The claim verification pipeline executes through five distinct stages:
 1. **Input Sanitization & Authentication**: Cleans user input, prevents injection attacks, validates JWT tokens, and checks rate-limit quotas via a Token Bucket algorithm.
 2. **Linguistic & Semantic Processing**: Extracts named entities (persons, orgs, locations) using spaCy, normalizes stopwords, and classifies claim credibility stance via scikit-learn.
 3. **Multi-Source Evidence Retrieval**: Queries FAISS dense vector embeddings (`all-MiniLM-L6-v2`) and performs live internet web crawling for real-time news coverage.
-4. **Cross-Examination & Verification**: Synthesizes evidence through LLM reasoning engines (or AutoGen multi-agent debate) to produce a verdict: **True**, **False**, or **Partially True / Unverified**.
+4. **Cross-Examination & Verification**: Queries all configured LLM providers (Groq, Gemini, Ollama) in **parallel**, aggregates their independent verdicts into a weighted **consensus** with a cross-model agreement score, and surfaces disagreement when models diverge. An optional **multi-agent persona debate** (FactChecker → Critic → Consensus) grounds the final decision in the real per-model analyses.
 5. **Report Generation & Audit**: Logs the complete cryptographic audit trail into SQLite and generates a downloadable PDF verification certificate with detailed source citations.
 
 ---
@@ -91,7 +91,7 @@ The claim verification pipeline executes through five distinct stages:
 ##  Tech Stack
 
 - **Language:** Python 3.10+
-- **Multi-Agent Orchestration:** LangGraph (StateGraph), AutoGen (RoundRobinGroupChat)
+- **Multi-Agent Orchestration:** LangGraph (StateGraph), persona-based multi-agent debate bridge (consensus transcript, no separate LLM round-trips)
 - **Natural Language Processing:** spaCy, scikit-learn, TF-IDF Vectorizer
 - **Embeddings & Vector Search:** FAISS (CPU), SentenceTransformers (`all-MiniLM-L6-v2`)
 - **Web Crawling:** HTTPX, BeautifulSoup4, urllib
@@ -119,7 +119,7 @@ ClaimShield_AI/
 │   │   ├── verification_agent.py # Multi-LLM verification agent
 │   │   ├── security_agent.py     # Auth, rate-limiting & audit agent
 │   │   ├── langgraph_workflow.py # LangGraph StateGraph pipeline
-│   │   └── autogen_bridge.py     # AutoGen multi-agent debate bridge
+│   │   └── autogen_bridge.py     # Multi-agent persona debate bridge
 │   ├── database/
 │   │   ├── __init__.py           # Database package
 │   │   └── db_manager.py         # SQLite & SQLAlchemy CRUD operations
@@ -132,7 +132,8 @@ ClaimShield_AI/
 │   ├── main.py                   # Streamlit interactive application
 │   └── style.css                 # Custom glassmorphism UI styling
 ├── tests/
-│   └── test_agents.py            # Automated test suite
+│   ├── test_agents.py              # Shared agent test suite
+│   └── test_verification.py        # Verification consensus, debate & PDF tests
 ├── seed_database.py              # Knowledge base seeding script
 ├── generate_pdf.py               # ReportLab PDF report builder
 ├── requirements.txt              # Project dependencies
@@ -243,6 +244,12 @@ Run the automated test suite covering all agents, security controls, and databas
 
 ```bash
 python -m unittest tests/test_agents.py -v
+```
+
+Run the verification-agent focused tests (multi-LLM consensus, offline fallback, debate bridge, PDF generator) independently:
+
+```bash
+python -m unittest tests/test_verification.py -v
 ```
 
 ---

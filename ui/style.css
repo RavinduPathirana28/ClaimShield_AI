@@ -392,3 +392,190 @@ section[data-testid="stSidebar"] {
     font-weight: 600;
 }
 
+/* ==========================================================================
+   CONSENSUS & DEBATE UI (Verification Agent)
+   ========================================================================== */
+
+/* Per-model row inside the consensus card */
+.cs-model-row {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+
+.cs-model-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cs-model-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.95em;
+    color: #F8FAFC;
+}
+
+.cs-provider-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cs-model-badge {
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 14px;
+    white-space: nowrap;
+}
+
+.cs-conf-track {
+    height: 6px;
+    background: #1E293B;
+    border-radius: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.cs-conf-fill {
+    height: 100%;
+    border-radius: 6px;
+}
+
+.cs-conf-note {
+    font-size: 0.72em;
+    color: #64748B;
+    margin-top: 6px;
+}
+
+.cs-model-snippet {
+    font-size: 0.88em;
+    color: #94A3B8;
+    line-height: 1.55;
+    margin-top: 8px;
+}
+
+/* Agreement meter inside the consensus card */
+.cs-agreement-box {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.cs-agreement-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.cs-agreement-track {
+    height: 12px;
+    background: #1E293B;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.cs-agreement-note {
+    font-size: 0.82em;
+    color: #94A3B8;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Emergency / honest fallback note inside the consensus card */
+.cs-fallback-note {
+    font-size: 0.9em;
+    color: #CBD5E1;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.08);
+    border-left: 4px solid #F59E0B;
+    margin-bottom: 4px;
+}
+
+/* Debate transcript timeline */
+.cs-debate-turn {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.cs-debate-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.cs-debate-stage {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.76em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 12px;
+    border-radius: 14px;
+}
+
+.cs-debate-message {
+    font-size: 0.95em;
+    line-height: 1.65;
+    color: #E2E8F0;
+}
+
+.cs-debate-verdict {
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 14px;
+}
+
+.cs-consensus-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(99, 102, 241, 0.14) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 16px;
+}
+
+.cs-consensus-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #34D399;
+    margin-bottom: 6px;
+}
+
+.cs-consensus-text {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.5;
+}
+

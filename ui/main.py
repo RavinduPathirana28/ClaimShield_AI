@@ -4,6 +4,7 @@ import os
 import json
 import time
 import datetime
+import html
 import textwrap
 import importlib
 from pathlib import Path
@@ -52,6 +53,16 @@ def render_html(html_str: str):
         st.html(dedented)
     else:
         st.markdown(dedented, unsafe_allow_html=True)
+
+
+def pdf_report_bytes(pipeline_result: dict):
+    """Builds PDF report bytes for a pipeline result; returns None if reportlab is missing."""
+    try:
+        from generate_pdf import build_verification_report_bytes
+        return build_verification_report_bytes(pipeline_result)
+    except Exception as e:
+        print(f"[UI] PDF report generation unavailable: {e}")
+        return None
 
 # System Initializations
 @st.cache_resource
@@ -207,7 +218,7 @@ with st.sidebar:
         engine_mode = st.selectbox(
             "Engine Protocol",
             ["Standard A2A Protocol", "LangGraph Stateful Workflow", "AutoGen Agent Debate"],
-            help="Choose between standard in-process A2A protocol, LangGraph stateful graph execution, or AutoGen multi-agent debate."
+            help="Choose between standard in-process A2A protocol, LangGraph stateful graph execution, or the multi-agent persona debate (FactChecker → Critic → Consensus)."
         )
         st.session_state.engine_mode = engine_mode
 
@@ -294,7 +305,7 @@ if not st.session_state.authenticated:
                         <li><strong>Unlimited</strong> claim checks</li>
                         <li>Priority LLM access queue</li>
                         <li>Retrieval expansion (Top 5)</li>
-                        <li>AutoGen Multi-Agent Debate</li>
+                        <li>Multi-Agent Persona Debate (FactChecker → Critic → Consensus)</li>
                     </ul>
                 </div>
             </div>
@@ -423,6 +434,19 @@ else:
                         citations = pipeline_result.get("citations", [])
                         engine = pipeline_result.get("engine", "Unknown")
                         ret_articles = pipeline_result.get("articles", [])
+
+                        # Per-model consensus metadata from the verification agent's latest run
+                        agreement_score = None
+                        model_breakdown = []
+                        try:
+                            last_result = getattr(orchestrator.verification_agent, "last_result", None)
+                            lc = (last_result or {}).get("claim", "").strip().lower()
+                            pc = pipeline_result.get("claim", "").strip().lower()
+                            if lc and (lc == pc or lc in pc or pc in lc):
+                                agreement_score = (last_result or {}).get("agreement_score")
+                                model_breakdown = (last_result or {}).get("model_results", []) or []
+                        except Exception:
+                            pass
                         
                         v_class = "verdict-unclear"
                         verdict_display = verdict
@@ -472,6 +496,93 @@ else:
                         </div>
                         """, unsafe_allow_html=True)
 
+                        # 2b. Multi-Model Consensus & Explainability
+                        verdict_icons = {"Supported": "✅", "Contradicted": "❌", "Answered": "💬", "Unverified": "❓"}
+                        verdict_colors = {"Supported": "#10B981", "Contradicted": "#EF4444", "Answered": "#818CF8", "Unverified": "#F59E0B"}
+                        provider_dots = {"Groq": "#F55036", "Gemini": "#4285F4", "Ollama": "#29BEB0"}
+
+                        def esc(s):
+                            return html.escape(str(s or ""), quote=True)
+
+                        consensus_body = ""
+                        if model_breakdown:
+                            row_html = []
+                            for mr in model_breakdown:
+                                eng = mr.get("engine", "LLM") or "LLM"
+                                prov = next((p for p in ("Groq", "Gemini", "Ollama") if p in eng), "LLM")
+                                dot = provider_dots.get(prov, "#94A3B8")
+                                v = mr.get("verdict", "Unverified")
+                                vcolor = verdict_colors.get(v, "#F59E0B")
+                                conf = int(mr.get("confidence", 0) * 100)
+                                snippet = (mr.get("straight_answer") or mr.get("summary") or "").strip()
+                                if len(snippet) > 200:
+                                    snippet = snippet[:200].rsplit(" ", 1)[0] + "…"
+                                snippet_html = f'<div class="cs-model-snippet">“{esc(snippet)}”</div>' if snippet else ""
+                                row_html.append(f"""
+                                <div class="cs-model-row">
+                                    <div class="cs-model-head">
+                                        <div class="cs-model-name"><span class="cs-provider-dot" style="background:{dot}"></span>{esc(eng)}</div>
+                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}1f; border:1px solid {vcolor}55;">{verdict_icons.get(v, "❓")} {v}</span>
+                                    </div>
+                                    <div class="cs-conf-track"><div class="cs-conf-fill" style="width:{min(max(conf, 4), 100)}%; background:linear-gradient(90deg,{vcolor},{dot});"></div></div>
+                                    <div class="cs-conf-note">{conf}% confidence</div>
+                                    {snippet_html}
+                                </div>""")
+                            consensus_body = "".join(row_html)
+                        else:
+                            consensus_body = """
+                                <div class="cs-fallback-note">
+                                    <strong>No live LLM models were available.</strong> This verdict was produced by the
+                                    built-in Local Heuristic Engine. Add working Groq / Gemini API keys or start Ollama
+                                    to see the per-model comparison below.
+                                </div>"""
+
+                        agreement_html = ""
+                        if agreement_score is not None:
+                            agr_pct = int(agreement_score * 100)
+                            converged = agreement_score >= 0.7
+                            fill_color = "linear-gradient(90deg,#10B981,#38BDF8)" if converged else "linear-gradient(90deg,#F59E0B,#EF4444)"
+                            note_color = "#10B981" if converged else "#F59E0B"
+                            note_text = ("✓ The models converged on this verdict." if converged
+                                         else "⚠ The models diverged — treat this verdict with lower confidence.")
+                            agreement_html = f"""
+                            <div class="cs-agreement-box">
+                                <div class="cs-agreement-label">
+                                    <span style="font-size:0.85em; color:#94A3B8; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Cross-Model Agreement</span>
+                                    <span style="font-size:1.4em; font-weight:700; color:#FFFFFF;">{agr_pct}%</span>
+                                </div>
+                                <div class="cs-agreement-track"><div class="cs-conf-fill" style="width:{agr_pct}%; background:{fill_color};"></div></div>
+                                <div class="cs-agreement-note" style="border-left:4px solid {note_color};">{note_text}</div>
+                            </div>"""
+
+                        render_html(f"""
+                        <div class="glass-card" style="border-left: 4px solid #F59E0B;">
+                            <div style="font-size: 0.85em; color: #F59E0B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                                🤝 Multi-Model Consensus &amp; Explainability
+                            </div>
+                            {consensus_body}
+                            {agreement_html}
+                            <div style="font-size: 0.75em; color: #64748B; margin-top: 12px;">
+                                Each model evaluates the same evidence independently; the verdict reflects their weighted consensus.
+                            </div>
+                        </div>
+                        """)
+
+                        # 2c. Downloadable PDF verification report
+                        try:
+                            report_bytes = pdf_report_bytes({**pipeline_result, "agreement_score": agreement_score})
+                            if report_bytes:
+                                st.download_button(
+                                    "📄 Download Verification Report (PDF)",
+                                    data=report_bytes,
+                                    file_name=f"claimshield_report_{time.strftime('%Y%m%d_%H%M%S')}.pdf",
+                                    mime="application/pdf",
+                                )
+                            else:
+                                st.caption("PDF report unavailable — install 'reportlab' (pip install reportlab).")
+                        except Exception as e:
+                            st.caption(f"PDF report unavailable: {e}")
+
                         # Evidence Summary
                         ev_summary = pipeline_result.get("evidence_summary", "")
                         if ev_summary:
@@ -493,14 +604,56 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
 
-                        # AutoGen Debate Transcript
+                        # Persona Debate Transcript
                         autogen_info = pipeline_result.get("autogen_debate", {})
                         if autogen_info:
-                            with st.expander("🗣️ AutoGen Multi-Agent Debate Transcript", expanded=True):
-                                st.markdown(f"**Engine:** {autogen_info.get('engine')}")
-                                for msg in autogen_info.get("debate_log", []):
-                                    st.markdown(f"**[{msg.get('agent')}]**: {msg.get('message')}")
-                                st.info(f"**Consensus Verdict:** {autogen_info.get('consensus')}")
+                            stage_cfg = {
+                                "FactCheckerAgent": {"icon": "🔍", "label": "Fact Checker", "color": "#38BDF8"},
+                                "CriticAgent": {"icon": "⚖️", "label": "Critic", "color": "#F59E0B"},
+                                "ConsensusAgent": {"icon": "🎯", "label": "Consensus", "color": "#10B981"},
+                            }
+                            turn_html = []
+                            for msg in autogen_info.get("debate_log", []):
+                                agent = msg.get("agent", "")
+                                cfg = stage_cfg.get(agent, {"icon": "💬", "label": agent or "Agent", "color": "#94A3B8"})
+                                color = cfg["color"]
+                                model_badge = ""
+                                if msg.get("model"):
+                                    model_badge = (f'<span class="cs-debate-verdict" style="color:#E2E8F0; background:rgba(255,255,255,0.06); '
+                                                   f'border:1px solid rgba(255,255,255,0.12);">{esc(msg["model"])}</span>')
+                                verdict_badge = ""
+                                if msg.get("verdict"):
+                                    vcolor = verdict_colors.get(msg["verdict"], "#94A3B8")
+                                    verdict_badge = (f'<span class="cs-debate-verdict" style="color:{vcolor}; background:{vcolor}1f; '
+                                                     f'border:1px solid {vcolor}55;">{verdict_icons.get(msg["verdict"], "❓")} {esc(msg["verdict"])}</span>')
+                                conf_badge = ""
+                                if msg.get("confidence") is not None:
+                                    conf_badge = (f'<span style="font-size:0.75em; color:#94A3B8; font-weight:600;">{int(msg["confidence"])}% confidence</span>')
+                                turn_html.append(f"""
+                                <div class="cs-debate-turn" style="border-left: 4px solid {color};">
+                                    <div class="cs-debate-head">
+                                        <span class="cs-debate-stage" style="color:{color}; background:{color}1f; border:1px solid {color}55;">{cfg["icon"]} {cfg["label"]}</span>
+                                        {model_badge}
+                                        {verdict_badge}
+                                        {conf_badge}
+                                    </div>
+                                    <div class="cs-debate-message">{esc(msg.get("message", ""))}</div>
+                                </div>""")
+
+                            consensus_verdict = autogen_info.get("consensus") or autogen_info.get("message", "")
+                            consensus_box = f"""
+                            <div class="cs-consensus-box">
+                                <div class="cs-consensus-title">🎯 Final Consensus</div>
+                                <div class="cs-consensus-text">{esc(consensus_verdict)}</div>
+                            </div>"""
+
+                            with st.expander("🗣️ Multi-Agent Debate Transcript", expanded=True):
+                                render_html(f"""
+                                <div style="font-size: 0.85em; color: #64748B; margin-bottom: 12px;">
+                                    Fueled by <strong style="color: #94A3B8;">{esc(autogen_info.get("engine"))}</strong> — every statement is grounded in an actual model response, never fabricated.
+                                </div>
+                                """)
+                                render_html("".join(turn_html) + consensus_box)
 
                         # Columns for concepts & quotes
                         c1, c2 = st.columns(2)
@@ -541,7 +694,19 @@ else:
                         st.markdown("---")
                         st.markdown("### 🔗 Referenced Sources & Verified Article Links")
                         if ret_articles:
-                            st.markdown("The following source articles were retrieved and cross-referenced by FAISS vector similarity:")
+                            live_web_articles = [a for a in ret_articles if "Live Web" in a.get("source", "")]
+                            db_articles = [a for a in ret_articles if "Live Web" not in a.get("source", "")]
+                            article_dates = [a.get("date", "") for a in ret_articles if a.get("date")]
+                            newest_date = max(article_dates) if article_dates else "unknown"
+                            render_html(f"""
+                            <div style="font-size: 0.82em; color: #94A3B8; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
+                                🧾 <strong style="color:#CBD5E1;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
+                            </div>
+                            """)
+                            if live_web_articles:
+                                st.markdown("The following live web sources were matched against the claim:")
+                            else:
+                                st.markdown("The following source articles were retrieved and cross-referenced by FAISS vector similarity:")
                             for idx, art in enumerate(ret_articles):
                                 url_link = art.get('url', '#')
                                 st.markdown(f"""
@@ -759,7 +924,7 @@ else:
                         <li>Bypassed token bucket rate limits</li>
                         <li>Priority LLM execution queue</li>
                         <li>Expanded FAISS search (Top 5)</li>
-                        <li>AutoGen Multi-Agent Debate</li>
+                        <li>Multi-Agent Persona Debate (FactChecker → Critic → Consensus)</li>
                     </ul>
                 </div>
             </div>
@@ -849,7 +1014,7 @@ else:
                     <td>Top 10 Articles + Live Crawler</td>
                 </tr>
                 <tr>
-                    <td><strong>AutoGen Multi-Agent Debate</strong></td>
+                    <td><strong>Persona Debate (FactChecker → Critic → Consensus)</strong></td>
                     <td>❌ Limited</td>
                     <td>✅ Full Consensus Debate</td>
                     <td>✅ Full Consensus Debate</td>
