@@ -311,7 +311,7 @@ with st.sidebar:
                                        "pro": "⭐ Pro Plan (Unlimited, 3–5 resources displayed)"}[x]
             )
 
-        btn_label = "🔐 Sign In" if auth_mode == "Login" else "🚀 Create Account"
+        btn_label = "🔐 Sign In"  if auth_mode == "Login" else "🚀 Create Account"
         if st.button(btn_label, use_container_width=True, type="primary"):
             auth_action = "login" if auth_mode == "Login" else "register"
             auth_msg = {
