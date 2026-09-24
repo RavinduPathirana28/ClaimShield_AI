@@ -30,7 +30,11 @@ class VerificationAgent(BaseAgent):
         if self.gemini_configured:
             try:
                 from google import genai
-                self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
+                from google.genai import types
+                self.gemini_client = genai.Client(
+                    api_key=config.GEMINI_API_KEY,
+                    http_options=types.HttpOptions(timeout=self.GEMINI_TIMEOUT_MS),
+                )
                 print("[Brain] Verification Agent: Gemini API configured successfully.")
             except Exception as e:
                 print(f"[Warning] Verification Agent: Gemini API init note: {e}")
@@ -66,6 +70,10 @@ class VerificationAgent(BaseAgent):
             }
 
     CONSENSUS_DEADLINE = 18.0  # total budget (seconds) for the multi-LLM consensus window
+    # Bound each Gemini call so an overloaded model can never hang a consensus
+    # worker thread past the deadline (leaking non-daemon executor threads per
+    # run). 15s keeps a straggler within the 18s consensus window.
+    GEMINI_TIMEOUT_MS = 15_000
 
     def _verify_claim(self, data: dict) -> dict:
         claim = data.get("claim", "").strip()
@@ -357,8 +365,12 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
         try:
             if self.gemini_client is None:
                 from google import genai
+                from google.genai import types
                 key = os.environ.get("GEMINI_API_KEY") or config.GEMINI_API_KEY
-                self.gemini_client = genai.Client(api_key=key)
+                self.gemini_client = genai.Client(
+                    api_key=key,
+                    http_options=types.HttpOptions(timeout=self.GEMINI_TIMEOUT_MS),
+                )
         except Exception as e:
             print(f"[Warning] Gemini client init note: {e}")
         if self.gemini_client is None:

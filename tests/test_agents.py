@@ -36,6 +36,15 @@ class TestNewsClaimVerifier(unittest.TestCase):
         # primary database. All reads/writes go to the isolated local SQLite.
         config.SUPABASE_URL = ""
         config.SUPABASE_KEY = ""
+        # config now loads app/.env (which sets os.environ). Blank the provider
+        # keys on BOTH sources so the verification tests keep running the
+        # offline heuristic instead of firing live Groq/Gemini calls.
+        cls._orig_env_groq = os.environ.pop("GROQ_API_KEY", None)
+        cls._orig_env_gemini = os.environ.pop("GEMINI_API_KEY", None)
+        cls._orig_cfg_groq = config.GROQ_API_KEY
+        cls._orig_cfg_gemini = config.GEMINI_API_KEY
+        config.GROQ_API_KEY = ""
+        config.GEMINI_API_KEY = ""
         print(f"[Test Setup] Isolated DB: {config.SQLITE_DB_PATH}")
 
         seed_database.seed()
@@ -45,11 +54,17 @@ class TestNewsClaimVerifier(unittest.TestCase):
 
     @classmethod
     def _restore_and_cleanup(cls):
-        """Restore the real DB paths and remove the temporary test directory."""
+        """Restore the real DB paths, provider keys and remove the temporary test directory."""
         config.SQLITE_DB_PATH = cls._orig_sqlite_path
         config.FAISS_INDEX_PATH = cls._orig_faiss_path
         config.SUPABASE_URL = cls._orig_supabase_url
         config.SUPABASE_KEY = cls._orig_supabase_key
+        if cls._orig_env_groq is not None:
+            os.environ["GROQ_API_KEY"] = cls._orig_env_groq
+        config.GROQ_API_KEY = cls._orig_cfg_groq
+        if cls._orig_env_gemini is not None:
+            os.environ["GEMINI_API_KEY"] = cls._orig_env_gemini
+        config.GEMINI_API_KEY = cls._orig_cfg_gemini
         shutil.rmtree(cls._tmpdir, ignore_errors=True)
 
     def test_01_password_hashing(self):
