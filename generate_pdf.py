@@ -143,11 +143,17 @@ def build_verification_report(result: dict) -> BytesIO:
 
     entities = result.get("entities", []) or []
     if entities:
-        story.append(Paragraph("Extracted Entities (spaCy NER)", h2))
-        entity_text = ", ".join(
-            f"{e.get('text', '')} ({e.get('label', '')})" for e in entities if e.get("text")
-        )
-        story.append(Paragraph(safe(entity_text), body))
+        formatted_entities = []
+        for e in entities:
+            if isinstance(e, dict):
+                txt = e.get("text", "")
+                lbl = e.get("label", "")
+                formatted_entities.append(f"{txt} ({lbl})" if lbl else txt)
+            elif isinstance(e, str):
+                formatted_entities.append(e)
+        entity_text = ", ".join(filter(None, formatted_entities))
+        if entity_text:
+            story.append(Paragraph(safe(entity_text), body))
 
     story.append(Spacer(1, 18))
     story.append(Paragraph(
