@@ -14,12 +14,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-import app.database.db_manager
-importlib.reload(app.database.db_manager)
 from app.database.db_manager import DBManager
-
-import app.utils.security
-importlib.reload(app.utils.security)
 from app.utils.security import verify_jwt, decrypt_data, hash_password, verify_password, generate_jwt
 
 from app.agents.orchestrator import Orchestrator
@@ -38,17 +33,25 @@ st.set_page_config(
 )
 
 # Load CSS Styles
-def load_css():
+@st.cache_data
+def get_cached_css():
     css_path = ROOT_DIR / "ui" / "style.css"
     if css_path.exists():
         with open(css_path, "r", encoding="utf-8") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            return f.read()
+    return ""
+
+def load_css():
+    css = get_cached_css()
+    if css:
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 load_css()
 
 # Logo path helper
 LOGO_PATH = ROOT_DIR / "ui" / "assets" / "logo.jpg"
 
+@st.cache_data
 def get_logo_base64():
     """Returns base64 encoded logo for embedding in HTML."""
     import base64
@@ -83,6 +86,7 @@ def pdf_report_bytes(pipeline_result: dict):
 def get_orchestrator():
     return Orchestrator(security_agent=None)  # Uses default subagents
 
+@st.cache_resource
 def get_db():
     db_inst = DBManager()
     # Auto-seed SQLite DB if empty to ensure instant out-of-the-box operation
@@ -109,12 +113,117 @@ if "agent_logs" not in st.session_state:
     st.session_state.agent_logs = []
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🛡️ Verification Dashboard"
+if "show_access_portal" not in st.session_state:
+    st.session_state.show_access_portal = False
 
 # Header is rendered inside page sections, suppressed at top level
+
+# Unauthenticated Landing Page: Access Portal Visibility & Apple VisionOS Slide Animation
+if not st.session_state.authenticated:
+    is_portal_open = st.session_state.get("show_access_portal", False)
+    transform_val = "translateX(0)" if is_portal_open else "translateX(-105%)"
+    opacity_val = "1" if is_portal_open else "0"
+    pointer_val = "auto" if is_portal_open else "none"
+
+    st.markdown(f"""
+    <style>
+    /* Ensure the landing page NEVER shifts, squeezes or jumps - ONLY portal slides */
+    div[data-testid="stAppViewContainer"] {{
+        display: block !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }}
+    div[data-testid="stAppViewContainer"] > section.main {{
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }}
+
+    /* Access Portal Panel: Smooth VisionOS Spatial Glass Drawer sliding LEFT to RIGHT */
+    section[data-testid="stSidebar"] {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 380px !important;
+        max-width: 88vw !important;
+        z-index: 999999 !important;
+        transform: {transform_val} !important;
+        opacity: {opacity_val} !important;
+        pointer-events: {pointer_val} !important;
+        transition: transform 0.40s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease !important;
+        will-change: transform, opacity !important;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(246, 248, 252, 0.70) 100%) !important;
+        backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow:
+            0 24px 60px -12px rgba(15, 23, 42, 0.18),
+            8px 0 36px -6px rgba(67, 56, 202, 0.14),
+            inset -1.5px 0 1.5px rgba(255, 255, 255, 0.95),
+            inset 1.5px 0 1.5px rgba(255, 255, 255, 0.70) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }}
+
+    /* Hide default sidebar controls on landing page */
+    div[data-testid="collapsedControl"],
+    button[data-testid="stExpandSidebarButton"],
+    button[data-testid="stSidebarCollapseButton"] {{
+        display: none !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Client-side instantaneous smooth slide trigger on click
+    st.markdown("""
+    <script>
+    (function() {
+        function attachPortalTrigger() {
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const txt = (btn.innerText || btn.textContent || '').trim();
+                if (txt.includes('Start Verifying Claims')) {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(0)', 'important');
+                        sb.style.setProperty('opacity', '1', 'important');
+                        sb.style.setProperty('pointer-events', 'auto', 'important');
+                    }
+                } else if (txt === '✕') {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(-105%)', 'important');
+                        sb.style.setProperty('opacity', '0', 'important');
+                        sb.style.setProperty('pointer-events', 'none', 'important');
+                    }
+                }
+            }, true);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachPortalTrigger);
+        } else {
+            attachPortalTrigger();
+        }
+    })();
+    </script>
+    """, unsafe_allow_html=True)
 
 # ----------------- SIDEBAR: Auth, Navigation & Rate Limits -----------------
 with st.sidebar:
     if not st.session_state.authenticated:
+        # Dismiss button (top-right of Access Portal)
+        col_portal_space, col_portal_close = st.columns([0.84, 0.16])
+        with col_portal_close:
+            if st.button("✕", key="btn_close_access_portal", help="Close Access Portal"):
+                st.session_state.show_access_portal = False
+                st.rerun()
+
         # ---- Branded Login Header ----
         st.markdown(f"""
         <div class='login-header'>
@@ -274,6 +383,7 @@ with st.sidebar:
             st.session_state.jwt_token = None
             st.session_state.agent_logs = []
             st.session_state.current_page = "🛡️ Verification Dashboard"
+            st.session_state.show_access_portal = False
             st.rerun()
 
 # ----------------- MAIN INTERFACE -----------------
@@ -300,12 +410,17 @@ if not st.session_state.authenticated:
             network of 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus
             — delivering transparent, evidence-backed verdicts instantly.
         </div>
-        <div class='hero-cta-row'>
-            <span class='hero-btn-primary'>🛡️ Start Verifying Claims</span>
-            <span class='hero-btn-secondary'>📖 View Architecture</span>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Hero CTA: Only [ 🛡️ Start Verifying Claims ]
+    _, col_hero_btn, _ = st.columns([1.2, 1.6, 1.2])
+    with col_hero_btn:
+        st.markdown("<div class='hero-btn-container'>", unsafe_allow_html=True)
+        if st.button("🛡️ Start Verifying Claims", key="btn_hero_start_verifying", type="primary", use_container_width=True):
+            st.session_state.show_access_portal = True
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # ---- STATS ROW ----
     st.markdown("""
