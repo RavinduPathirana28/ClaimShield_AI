@@ -331,7 +331,15 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"]>div {
     gap: 6px !important;
 }
 
-section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stWidgetLabel"],
+section[data-testid="stSidebar"] div[data-testid="stRadio"] > label {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     display: flex !important;
     align-items: center !important;
     padding: 10px 14px !important;

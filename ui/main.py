@@ -237,7 +237,7 @@ with st.sidebar:
 
         st.markdown("<div class='login-divider'>Access Portal</div>", unsafe_allow_html=True)
 
-        auth_mode = st.radio("Access Level", ["Login", "Register"], label_visibility="collapsed",
+        auth_mode = st.radio("", ["Login", "Register"], label_visibility="hidden",
                              horizontal=True)
 
         username_in = st.text_input("Username", placeholder="Enter your username")
@@ -276,7 +276,7 @@ with st.sidebar:
             else:
                 st.error(auth_resp.get("message", "Authentication failed."))
 
-        st.markdown("<div class='login-divider'>Demo Accounts</div>", unsafe_allow_html=True)
+        
         st.markdown(f"""
         <div class='demo-account-card'>
             <div class='demo-account-role'>🆓 Free Plan</div>
