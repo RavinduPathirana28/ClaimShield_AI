@@ -241,14 +241,15 @@ Evidence Rules (IMPORTANT):
 - If NO retrieved article directly addresses the claim, your verdict MUST be "Unverified" — NEVER answer yes/no about current or reported events from your training memory, which may be outdated.
 - If the retrieved articles are older than the event being asked about, state in the explanation that the evidence may be stale.
 - General, timeless educational questions (e.g. "What is quantum computing?") may be answered directly from knowledge.
+- Current-facts questions answered DIRECTLY from a retrieved source (e.g. a Wikipedia page naming the current office-holder) must be labelled "Supported" with a citation — "Answered" is reserved for answers that rely on general knowledge without retrieved evidence.
 
 Instructions:
 1. Understand the intent of the input:
    - General question or informational query -> answer it directly in plain, friendly language.
    - Factual claim or news rumour -> verify against the retrieved source articles (follow the Evidence Rules).
 2. Select a clear verdict:
-   - "Answered" (for general questions, definitions, or conceptual explanations)
-   - "Supported" (for true statements or verified factual claims)
+   - "Answered" (for general questions, definitions, or conceptual explanations answered from knowledge, without a retrieved source confirming them)
+   - "Supported" (for true statements, verified factual claims, or current-facts questions directly confirmed by a retrieved source)
    - "Contradicted" (for false claims, debunks, or refutations)
    - "Unverified" (when the claim is time-sensitive and no retrieved source article directly addresses it)
 3. Straight Answer: Provide a 1-sentence immediate direct verdict/answer.
@@ -349,29 +350,33 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
         # Short, tolerant model list; failures are fast 404/validate errors.
         # Latency is bounded by the consensus deadline, not per-call timeouts.
         for candidate_model in ["gemini-3.5-flash-lite", "gemini-3.5-flash"]:
-            try:
-                response = self.gemini_client.models.generate_content(
-                    model=candidate_model,
-                    contents=prompt
-                )
-                text_resp = response.text.strip()
+            for attempt in range(2):  # one retry rides out transient 429/malformed-JSON
+                try:
+                    response = self.gemini_client.models.generate_content(
+                        model=candidate_model,
+                        contents=prompt
+                    )
+                    text_resp = response.text.strip()
 
-                # Clean possible markdown block formatting from model
-                if text_resp.startswith("```"):
-                    lines = text_resp.split("\n")
-                    if lines[0].startswith("```"):
-                        lines = lines[1:]
-                    if lines and lines[-1].startswith("```"):
-                        lines = lines[:-1]
-                    text_resp = "\n".join(lines).strip()
+                    # Clean possible markdown block formatting from model
+                    if text_resp.startswith("```"):
+                        lines = text_resp.split("\n")
+                        if lines[0].startswith("```"):
+                            lines = lines[1:]
+                        if lines and lines[-1].startswith("```"):
+                            lines = lines[:-1]
+                        text_resp = "\n".join(lines).strip()
 
-                result = json.loads(text_resp)
-                result["sender"] = self.name
-                result["status"] = "success"
-                result["engine"] = f"Google Gemini AI Engine ({candidate_model})"
-                return result
-            except Exception as e:
-                print(f"[Warning] Gemini model '{candidate_model}' call note: {e}")
+                    result = json.loads(text_resp)
+                    result["sender"] = self.name
+                    result["status"] = "success"
+                    result["engine"] = f"Google Gemini AI Engine ({candidate_model})"
+                    return result
+                except Exception as e:
+                    if attempt == 0:
+                        print(f"[Warning] Gemini model '{candidate_model}' retrying after: {e}")
+                        continue
+                    print(f"[Warning] Gemini model '{candidate_model}' call note: {e}")
 
         return {"status": "error", "provider": "Gemini", "message": "All Gemini models failed."}
 

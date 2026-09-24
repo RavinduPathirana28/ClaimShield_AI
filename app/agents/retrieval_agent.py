@@ -57,10 +57,11 @@ class RetrievalAgent(BaseAgent):
                 if retrieved_articles:
                     top_score = retrieved_articles[0].get("score", 0.0)
 
-            # 2. Launch the live web crawler when the query is time-sensitive
-            #    (news, launches, reports) so fresh evidence always reaches the
-            #    verifier, OR when local results are insufficient.
-            query_is_news = WebCrawler.is_time_sensitive(query)
+            # 2. Launch the live web crawler when the query is time-sensitive (news,
+            #    launches, reports), asks who currently holds an office/role, OR when
+            #    local results are insufficient — so fresh evidence always reaches
+            #    the verifier instead of unrelated vector matches.
+            query_is_news = WebCrawler.is_time_sensitive(query) or WebCrawler.is_office_holder(query)
             if query_is_news or not retrieved_articles or top_score < 0.30:
                 print(f"[Retrieval Agent] {'Time-sensitive query -> ' if query_is_news else 'Local FAISS score (' + f'{top_score:.2f}' + ') insufficient -> '}Launching Live Web Crawler for '{query}'...")
                 web_results = self.web_crawler.search_and_crawl(query, limit=limit)
