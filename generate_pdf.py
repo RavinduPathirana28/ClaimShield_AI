@@ -7,6 +7,7 @@ even on machines where reportlab is not installed.
 """
 
 import datetime
+import os
 from io import BytesIO
 from xml.sax.saxutils import escape
 
@@ -29,6 +30,64 @@ VERDICT_COLORS = {
     "Unclear": "#64748b",
 }
 
+# Cache for the best-effort Unicode TTF lookup: None = not probed yet,
+# "" = probed but nothing usable found, otherwise the registered font name.
+_UNICODE_FONT_CACHE = None
+
+
+def _register_unicode_font() -> str:
+    """Best-effort registration of a broad-coverage TTF (DejaVuSans / Arial
+    Unicode) so non-WinAnsi text (CJK, emoji, Arabic, ...) renders instead of
+    crashing ``doc.build`` with a UnicodeEncodeError.
+
+    Returns the registered font name, or "" when no usable font is available
+    (the caller then degrades to a font-safe character filter).
+    """
+    global _UNICODE_FONT_CACHE
+    if _UNICODE_FONT_CACHE is not None:
+        return _UNICODE_FONT_CACHE
+
+    candidates = []
+    # matplotlib commonly bundles DejaVuSans; it is not a hard dependency here,
+    # so this probe is strictly best-effort.
+    try:
+        import matplotlib
+        candidates.append(os.path.join(
+            os.path.dirname(matplotlib.__file__),
+            "mpl-data", "fonts", "ttf", "DejaVuSans.ttf",
+        ))
+    except Exception:
+        pass
+    candidates += [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/local/share/fonts/ttf/DejaVuSans.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+    ]
+
+    for path in candidates:
+        if path and os.path.exists(path):
+            try:
+                from reportlab.pdfbase import pdfmetrics
+                from reportlab.pdfbase.ttfonts import TTFont
+                font_name = f"ClaimShieldUnicode_{abs(hash(path))}"
+                pdfmetrics.registerFont(TTFont(font_name, path))
+                # Map the whole family to the single registered face so any
+                # bold/italic style reference resolves instead of erroring.
+                pdfmetrics.registerFontFamily(
+                    font_name, normal=font_name, bold=font_name,
+                    italic=font_name, boldItalic=font_name,
+                )
+                _UNICODE_FONT_CACHE = font_name
+                return font_name
+            except Exception as e:
+                print(f"[PDF] Unicode font registration note: {e}")
+                continue
+
+    _UNICODE_FONT_CACHE = ""
+    return ""
+
 
 def build_verification_report(result: dict) -> BytesIO:
     """
@@ -45,6 +104,14 @@ def build_verification_report(result: dict) -> BytesIO:
         Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle,
     )
 
+    base_font = _register_unicode_font()
+    if base_font:
+        font_normal = base_font
+        font_bold = base_font  # single bundled face covers the whole family
+    else:
+        font_normal = "Helvetica"
+        font_bold = "Helvetica-Bold"
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -56,17 +123,22 @@ def build_verification_report(result: dict) -> BytesIO:
     )
 
     styles = getSampleStyleSheet()
-    h1 = ParagraphStyle("PageTitle", parent=styles["Title"], fontSize=18,
-                        spaceAfter=4, textColor=colors.HexColor("#1e293b"))
-    h2 = ParagraphStyle("SectionTitle", parent=styles["Heading2"], fontSize=12,
-                        spaceBefore=8, spaceAfter=4, textColor=colors.HexColor("#0f172a"))
-    body = ParagraphStyle("BodyCopy", parent=styles["BodyText"], fontSize=9.5,
-                          leading=13, textColor=colors.HexColor("#334155"))
-    small = ParagraphStyle("MetaCopy", parent=styles["BodyText"], fontSize=7.5,
-                           leading=10, textColor=colors.HexColor("#64748b"))
+    h1 = ParagraphStyle("PageTitle", parent=styles["Title"], fontName=font_bold,
+                        fontSize=18, spaceAfter=4, textColor=colors.HexColor("#1e293b"))
+    h2 = ParagraphStyle("SectionTitle", parent=styles["Heading2"], fontName=font_bold,
+                        fontSize=12, spaceBefore=8, spaceAfter=4, textColor=colors.HexColor("#0f172a"))
+    body = ParagraphStyle("BodyCopy", parent=styles["BodyText"], fontName=font_normal,
+                          fontSize=9.5, leading=13, textColor=colors.HexColor("#334155"))
+    small = ParagraphStyle("MetaCopy", parent=styles["BodyText"], fontName=font_normal,
+                           fontSize=7.5, leading=10, textColor=colors.HexColor("#64748b"))
 
     def safe(text):
-        return escape(str(text or ""))
+        safe_text = escape(str(text or ""))
+        if base_font:
+            return safe_text
+        # Built-in WinAnsi faces cannot encode arbitrary Unicode; silently
+        # degrade unsupported characters instead of crashing the whole report.
+        return safe_text.encode("cp1252", errors="replace").decode("cp1252")
 
     story = []
 
@@ -107,7 +179,7 @@ def build_verification_report(result: dict) -> BytesIO:
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f1f5f9")),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (0, -1), font_bold),
         ("FONTSIZE", (0, 0), (-1, -1), 9.5),
         ("LEFTPADDING", (0, 0), (-1, -1), 6),
         ("RIGHTPADDING", (0, 0), (-1, -1), 6),
@@ -131,6 +203,8 @@ def build_verification_report(result: dict) -> BytesIO:
     if citations:
         story.append(Paragraph("Cited Evidence", h2))
         for idx, cit in enumerate(citations, start=1):
+            if not isinstance(cit, dict):
+                continue
             article_id = cit.get("article_id")
             label = f"Article #{article_id}" if article_id not in (None, "") else "General Evidence"
             parts = [f"[{idx}] {label}"]

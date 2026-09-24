@@ -2,13 +2,18 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env file automatically
-load_dotenv()
-
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
+
+# Load .env automatically from an explicit list of locations. A bare
+# load_dotenv() only finds ".env" in the process working directory, so
+# launching the app from the repo root (streamlit run ui/main.py) silently
+# ran with empty provider keys and fell back to the Local Heuristic Engine.
+for _env_file in (BASE_DIR / ".env", BASE_DIR / "app" / ".env"):
+    if _env_file.is_file():
+        load_dotenv(_env_file)
 
 SQLITE_DB_PATH = str(DATA_DIR / "news_verifier.db")
 FAISS_INDEX_PATH = str(DATA_DIR / "faiss_index.bin")
@@ -28,7 +33,10 @@ ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "")
 
 # Security & JWT
 JWT_SECRET = os.environ.get("JWT_SECRET", "super_secret_jwt_key_for_news_verifier_agentic_system_2026")
-JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))
+try:
+    JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))
+except (TypeError, ValueError):
+    JWT_EXPIRY_MINUTES = 60
 
 # Rate Limiting: Token Bucket settings
 RATE_LIMIT_CAPACITY = 3  # Max 3 verification requests for Free tier

@@ -3,6 +3,8 @@ import sys
 import os
 import json
 import time
+import shutil
+import tempfile
 from pathlib import Path
 
 # Add root folder to sys.path to enable app module imports
@@ -13,17 +15,57 @@ if str(ROOT_DIR) not in sys.path:
 from app.database.db_manager import DBManager
 from app.agents.orchestrator import Orchestrator
 from app.utils import security
+from app import config
 import seed_database
 
 class TestNewsClaimVerifier(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """Initialise database and seed mock data once for the test session."""
-        print("[Test Setup] Initializing and Seeding Database...")
-        # Clear/seed database
+        """Run the suite against an isolated temporary database so the real
+        data/news_verifier.db (registered users + audit history) is never
+        wiped, reseeded, or polluted by these tests."""
+        print("[Test Setup] Creating isolated temporary database...")
+        cls._tmpdir = tempfile.mkdtemp(prefix="claimshield_tests_")
+        cls._orig_sqlite_path = config.SQLITE_DB_PATH
+        cls._orig_faiss_path = config.FAISS_INDEX_PATH
+        cls._orig_supabase_url = config.SUPABASE_URL
+        cls._orig_supabase_key = config.SUPABASE_KEY
+        config.SQLITE_DB_PATH = os.path.join(cls._tmpdir, "test_news_verifier.db")
+        config.FAISS_INDEX_PATH = os.path.join(cls._tmpdir, "test_faiss_index.bin")
+        # Keep the suite hermetic: never touch the configured (possibly cloud)
+        # primary database. All reads/writes go to the isolated local SQLite.
+        config.SUPABASE_URL = ""
+        config.SUPABASE_KEY = ""
+        # config now loads app/.env (which sets os.environ). Blank the provider
+        # keys on BOTH sources so the verification tests keep running the
+        # offline heuristic instead of firing live Groq/Gemini calls.
+        cls._orig_env_groq = os.environ.pop("GROQ_API_KEY", None)
+        cls._orig_env_gemini = os.environ.pop("GEMINI_API_KEY", None)
+        cls._orig_cfg_groq = config.GROQ_API_KEY
+        cls._orig_cfg_gemini = config.GEMINI_API_KEY
+        config.GROQ_API_KEY = ""
+        config.GEMINI_API_KEY = ""
+        print(f"[Test Setup] Isolated DB: {config.SQLITE_DB_PATH}")
+
         seed_database.seed()
         cls.db = DBManager()
         cls.orchestrator = Orchestrator()
+        cls.addClassCleanup(cls._restore_and_cleanup)
+
+    @classmethod
+    def _restore_and_cleanup(cls):
+        """Restore the real DB paths, provider keys and remove the temporary test directory."""
+        config.SQLITE_DB_PATH = cls._orig_sqlite_path
+        config.FAISS_INDEX_PATH = cls._orig_faiss_path
+        config.SUPABASE_URL = cls._orig_supabase_url
+        config.SUPABASE_KEY = cls._orig_supabase_key
+        if cls._orig_env_groq is not None:
+            os.environ["GROQ_API_KEY"] = cls._orig_env_groq
+        config.GROQ_API_KEY = cls._orig_cfg_groq
+        if cls._orig_env_gemini is not None:
+            os.environ["GEMINI_API_KEY"] = cls._orig_env_gemini
+        config.GEMINI_API_KEY = cls._orig_cfg_gemini
+        shutil.rmtree(cls._tmpdir, ignore_errors=True)
 
     def test_01_password_hashing(self):
         """Test secure password hashing and verification helper functions."""
@@ -136,7 +178,7 @@ class TestNewsClaimVerifier(unittest.TestCase):
         ret_agent = self.orchestrator.retrieval_agent
         res = ret_agent.handle_message({
             "action": "retrieve",
-            "data": {"query": "Apple stock revenue", "top_k": 3}
+            "data": {"query": "Apple stock revenue", "limit": 3}
         })
         self.assertEqual(res["status"], "success")
         self.assertIn("articles", res)

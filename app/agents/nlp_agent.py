@@ -170,7 +170,10 @@ class NLPAgent(BaseAgent):
     def _summarize(self, data: dict) -> dict:
         """Extractive summarization using spaCy sentence scoring based on keyword frequency."""
         text = data.get("text", "").strip()
-        max_sentences = int(data.get("max_sentences", 3))
+        try:
+            max_sentences = int(data.get("max_sentences", 3))
+        except (TypeError, ValueError):
+            max_sentences = 3
 
         if not text:
             return {

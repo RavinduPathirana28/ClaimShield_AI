@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 import datetime
@@ -29,22 +30,29 @@ class VerificationAgent(BaseAgent):
         if self.gemini_configured:
             try:
                 from google import genai
-                self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
+                from google.genai import types
+                self.gemini_client = genai.Client(
+                    api_key=config.GEMINI_API_KEY,
+                    http_options=types.HttpOptions(timeout=self.GEMINI_TIMEOUT_MS),
+                )
                 print("[Brain] Verification Agent: Gemini API configured successfully.")
             except Exception as e:
                 print(f"[Warning] Verification Agent: Gemini API init note: {e}")
                 self.gemini_configured = False
 
-        self.use_llm = self.groq_configured or self.gemini_configured
-        if not self.use_llm:
-            try:
-                r = httpx.get(f"{config.OLLAMA_HOST}/api/tags", timeout=1.5)
-                if r.status_code == 200:
-                    self.use_llm = True
-                    print(f"[Brain] Verification Agent: Local Ollama Free LLM detected ({config.OLLAMA_MODEL}).")
-            except Exception:
-                pass
+        # Probe local Ollama once (cheap). If it is offline we skip the Ollama
+        # task entirely, so a dead server never blocks the consensus window
+        # with its connection timeout.
+        self.ollama_available = False
+        try:
+            r = httpx.get(f"{config.OLLAMA_HOST}/api/tags", timeout=1.5)
+            if r.status_code == 200:
+                self.ollama_available = True
+                print(f"[Brain] Verification Agent: Local Ollama Free LLM detected ({config.OLLAMA_MODEL}).")
+        except Exception:
+            pass
 
+        self.use_llm = self.groq_configured or self.gemini_configured or self.ollama_available
         if not self.use_llm:
             print("[Brain] Verification Agent: Using Built-in Offline Local Solver.")
 
@@ -62,6 +70,10 @@ class VerificationAgent(BaseAgent):
             }
 
     CONSENSUS_DEADLINE = 18.0  # total budget (seconds) for the multi-LLM consensus window
+    # Bound each Gemini call so an overloaded model can never hang a consensus
+    # worker thread past the deadline (leaking non-daemon executor threads per
+    # run). 15s keeps a straggler within the 18s consensus window.
+    GEMINI_TIMEOUT_MS = 15_000
 
     def _verify_claim(self, data: dict) -> dict:
         claim = data.get("claim", "").strip()
@@ -74,8 +86,10 @@ class VerificationAgent(BaseAgent):
             tasks.append(("Groq", lambda: self._verify_with_groq(claim, articles, api_key=groq_key)))
         if gemini_key and str(gemini_key).strip():
             tasks.append(("Gemini", lambda: self._verify_with_gemini(claim, articles)))
-        # Ollama is always attempted; it fails fast when the local server is offline.
-        tasks.append(("Ollama", lambda: self._verify_with_ollama(claim, articles)))
+        # Ollama is only attempted when the local server was reachable at startup;
+        # otherwise its timeout would block the entire consensus window.
+        if self.ollama_available:
+            tasks.append(("Ollama", lambda: self._verify_with_ollama(claim, articles)))
 
         if not tasks:
             resp = self._verify_with_mock(claim, articles)
@@ -94,6 +108,7 @@ class VerificationAgent(BaseAgent):
 
         model_results = []
         provider_of = {fut: tasks[idx][0] for idx, fut in enumerate(futures)}
+        counted_providers = set()
         while time.time() < deadline and pending:
             remaining = max(0.0, deadline - time.time())
             finished, pending = wait(pending, timeout=remaining, return_when=FIRST_COMPLETED)
@@ -104,12 +119,18 @@ class VerificationAgent(BaseAgent):
                     print(f"[Consensus] Provider '{provider_of[fut]}' raised: {e}")
                     continue
                 if isinstance(res, dict) and res.get("status") == "success":
-                    res["provider"] = provider_of[fut]
+                    provider_name = provider_of[fut]
+                    if provider_name in counted_providers:
+                        continue
+                    counted_providers.add(provider_name)
+                    res["provider"] = provider_name
                     model_results.append(res)
             # Two agreeing-capable providers are enough; stop waiting for slow stragglers.
             if len(model_results) >= min(2, len(tasks)):
                 break
-        executor.shutdown(wait=False)  # never join stragglers — respect the latency budget
+        # Never join stragglers (respect the latency budget) and cancel any tasks
+        # that have not even started so their threads do not pile up.
+        executor.shutdown(wait=False, cancel_futures=True)
 
         if not model_results:
             # No LLM provider returned a usable answer -> offline heuristic solver.
@@ -149,8 +170,8 @@ class VerificationAgent(BaseAgent):
             groups.setdefault(verdict, []).append({
                 "verdict": verdict,
                 "confidence": conf,
-                "straight_answer": res.get("straight_answer", ""),
-                "summary": res.get("summary", ""),
+                "straight_answer": res.get("straight_answer") or "",
+                "summary": res.get("summary") or "",
                 "citations": res.get("citations", []) or [],
                 "engine": engine,
             })
@@ -187,7 +208,12 @@ class VerificationAgent(BaseAgent):
         citations = []
         seen = set()
         for r in winning:
-            for c in r["citations"]:
+            raw_citations = r.get("citations") or []
+            if not isinstance(raw_citations, list):
+                raw_citations = []
+            for c in raw_citations:
+                if not isinstance(c, dict):
+                    continue
                 key = (c.get("article_id"), str(c.get("quote")))
                 if key not in seen:
                     seen.add(key)
@@ -339,8 +365,12 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
         try:
             if self.gemini_client is None:
                 from google import genai
+                from google.genai import types
                 key = os.environ.get("GEMINI_API_KEY") or config.GEMINI_API_KEY
-                self.gemini_client = genai.Client(api_key=key)
+                self.gemini_client = genai.Client(
+                    api_key=key,
+                    http_options=types.HttpOptions(timeout=self.GEMINI_TIMEOUT_MS),
+                )
         except Exception as e:
             print(f"[Warning] Gemini client init note: {e}")
         if self.gemini_client is None:
@@ -499,7 +529,7 @@ Return ONLY a raw valid JSON object (no markdown code blocks, no ```json wrapper
                 "engine": "Local Heuristic Engine (No LLM)"
             }
 
-        if "artificial intelligence" in claim_lower or "ai" in claim_lower or "python" in claim_lower:
+        if "artificial intelligence" in claim_lower or re.search(r"\bai\b", claim_lower) or "python" in claim_lower:
             return {
                 "sender": self.name,
                 "status": "success",
