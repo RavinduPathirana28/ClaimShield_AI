@@ -41,7 +41,7 @@ st.set_page_config(
 def load_css():
     css_path = ROOT_DIR / "ui" / "style.css"
     if css_path.exists():
-        with open(css_path, "r") as f:
+        with open(css_path, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 load_css()
@@ -643,22 +643,25 @@ else:
                         if not straight_ans:
                             straight_ans = summary.split(". ")[0] + "." if summary else verdict_display
                             
+                        v_border = "#059669" if verdict in ["Supported", "True"] else "#DC2626" if verdict in ["Contradicted", "False"] else "#4F46E5" if verdict in ["Answered", "General Info"] else "#D97706"
+                        v_bg = "var(--glass-surface-tint-success)" if verdict in ["Supported", "True"] else "linear-gradient(135deg, rgba(254, 242, 242, 0.75) 0%, rgba(255, 255, 255, 0.35) 100%)" if verdict in ["Contradicted", "False"] else "var(--glass-surface-tint-primary)" if verdict in ["Answered", "General Info"] else "linear-gradient(135deg, rgba(254, 243, 199, 0.70) 0%, rgba(255, 255, 255, 0.35) 100%)"
+
                         # 1. Straight Answer Section
-                        st.markdown(f"""
-                        <div class="glass-card" style="border-left: 6px solid #4F46E5; background: var(--glass-surface-tint-primary);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        render_html(f"""
+                        <div class="glass-card" style="border-left: 6px solid {v_border}; background: {v_bg};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                                 <div class="verdict-badge {v_class}">{verdict_display}</div>
-                                <div>
-                                    <span style="font-size: 0.85em; color: #64748B;">Confidence Metric:</span>
-                                    <span style="font-size: 1.15em; font-weight: 800; color: #0F172A; margin-left: 5px;">{int(confidence*100)}%</span>
+                                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.75); padding: 5px 14px; border-radius: 9999px; border: 1px solid var(--glass-border); box-shadow: inset 0 1px 1px rgba(255,255,255,0.9);">
+                                    <span style="font-size: 0.76em; color: #64748B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;">Confidence</span>
+                                    <span style="font-size: 1.15em; font-weight: 800; color: #0F172A;">{int(confidence*100)}%</span>
                                 </div>
                             </div>
-                            <div style="font-size: 0.85em; color: #4F46E5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
+                            <div style="font-size: 0.82em; color: {v_border}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
                                 🎯 Straight Answer
                             </div>
-                            <h3 style="margin-top: 0; color: #0F172A; font-size: 1.3em;">{straight_ans}</h3>
+                            <h3 style="margin-top: 0; color: #0F172A; font-size: 1.35em; font-weight: 750; line-height: 1.4;">{straight_ans}</h3>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """)
                         
                         # 2. Detailed Explanation Section
                         st.markdown(f"""
@@ -1288,8 +1291,26 @@ else:
     # PAGE 3: SYSTEM AUDIT LOGS
     # -------------------------------------------------------------------------
     elif st.session_state.current_page == "📜 System Audit Logs":
-        st.markdown("### 📜 System Verification Audit Trail")
-        st.markdown("Responsible AI transparency log, auditing fact-check queries and verdict details. Audit data is **encrypted at rest** using Fernet symmetric encryption and decrypted on-the-fly for display.")
+        render_html("""
+        <div class='glass-card' style='border-left: 5px solid #10B981; margin-bottom: 22px; background: var(--glass-surface-tint-success);'>
+            <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;'>
+                <div>
+                    <h3 style='margin: 0 0 4px 0; color: #065F46; font-size: 1.25em;'>🛡️ Cryptographic Verification Ledger</h3>
+                    <p style='color: #047857; margin: 0; font-size: 0.88em; line-height: 1.5;'>
+                        Immutable audit trail. Every verified query, model reasoning trace, and citation is encrypted at rest using <strong>Fernet AES-128-CBC</strong>.
+                    </p>
+                </div>
+                <div style='display: flex; gap: 8px; flex-wrap: wrap;'>
+                    <span class='verdict-badge' style='background: rgba(16, 185, 129, 0.2); color: #047857; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.74em;'>
+                        🔒 Fernet AES-128-CBC
+                    </span>
+                    <span class='verdict-badge' style='background: rgba(79, 70, 229, 0.15); color: #4338CA; border: 1px solid rgba(79, 70, 229, 0.35); font-size: 0.74em;'>
+                        🪙 PBKDF2 Salted
+                    </span>
+                </div>
+            </div>
+        </div>
+        """)
         
         user_logs = db.get_logs_by_user(st.session_state.username)
         
@@ -1310,34 +1331,48 @@ else:
                 
                 verdict = l["verdict"]
                 v_class = "verdict-unclear"
-                if verdict == "Supported":
+                if verdict in ["Supported", "True"]:
                     v_class = "verdict-supported"
-                elif verdict == "Contradicted":
+                elif verdict in ["Contradicted", "False"]:
                     v_class = "verdict-contradicted"
+                elif verdict in ["Answered", "General Info"]:
+                    v_class = "verdict-answered"
                 
-                with st.expander(f"🕒 {l['timestamp']} — Claim: \"{l['claim'][:60]}...\""):
-                    st.markdown(f"""
-                    <div style="margin-bottom: 10px;">
-                        <span class="verdict-badge {v_class}">{verdict}</span>
-                        <span style="margin-left: 15px; font-size: 0.9em; color: #64748B;">Confidence: <strong>{int(l['confidence']*100)}%</strong></span>
+                expander_label = f"🕒 {l['timestamp']} ── Claim: \"{l['claim'][:65]}...\""
+                with st.expander(expander_label):
+                    render_html(f"""
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid rgba(226,232,240,0.8); padding-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="verdict-badge {v_class}">{verdict}</span>
+                            <span style="font-family:'JetBrains Mono',monospace; font-size: 0.78em; color: #64748B; background: rgba(241,245,249,0.85); padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(226,232,240,0.85);">
+                                UTC: {l['timestamp']}
+                            </span>
+                        </div>
+                        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.75); padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--glass-border); font-size: 0.85em;">
+                            <span style="color: #64748B; font-weight: 600;">Certainty:</span>
+                            <strong style="color: #0F172A;">{int(l['confidence']*100)}%</strong>
+                        </div>
                     </div>
-                    <div style="font-size: 0.95em; color: #1E293B; line-height: 1.5; margin-bottom: 12px;">
-                        <strong>Verdict Explanation:</strong><br>
-                        {details.get('summary', 'No reasoning logged.')}
+                    <div style="background: rgba(255, 255, 255, 0.5); border-left: 4px solid #4F46E5; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px;">
+                        <div style="font-size: 0.78em; color: #4F46E5; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Audited Model Rationale</div>
+                        <div style="font-size: 0.94em; color: #1E293B; line-height: 1.6;">
+                            {details.get('summary', 'No reasoning logged.')}
+                        </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """)
                     
                     if details.get("entities"):
-                        st.markdown("**Extracted Entities:**")
-                        ents_html = ""
+                        st.markdown("**🏷️ Extracted Named Entities:**")
+                        ents_html = "<div style='display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;'>"
                         for ent in details["entities"]:
-                            ents_html += f"<span class='verdict-badge badge-secondary' style='margin-right: 5px; font-size: 0.8em;'>{ent['text']} ({ent['label']})</span>"
-                        st.markdown(ents_html, unsafe_allow_html=True)
+                            ents_html += f"<span class='verdict-badge badge-secondary' style='font-size: 0.78em;'>{ent['text']} <span style='opacity: 0.7;'>({ent['label']})</span></span>"
+                        ents_html += "</div>"
+                        render_html(ents_html)
                         
                     if details.get("articles_retrieved"):
-                        st.markdown("**Retrieved Sources:**")
+                        st.markdown("**📰 Referenced Source Articles (FAISS Cosine Similarity):**")
                         for s in details["articles_retrieved"]:
-                            st.markdown(f"- **{s['source']}**: {s['title']} (Cosine Similarity: {s['score']:.4f})")
+                            st.markdown(f"- **{s['source']}**: {s['title']} `(Score: {s['score']:.4f})`")
 
     # -------------------------------------------------------------------------
     # PAGE 4: A2A PROTOCOL MONITOR
@@ -1406,106 +1441,137 @@ else:
         rai1, rai2 = st.columns(2)
 
         with rai1:
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #059669;'>🔍 Transparency</h4>
-                <p style='color: #334155; line-height: 1.7;'>
-                    Every verification decision is fully traceable. The system exposes:
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #059669;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #059669; margin: 0; font-size: 1.15em;'>🔍 Transparency & Auditability</h4>
+                    <span class='verdict-badge' style='background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.74em;'>
+                        ✅ Fully Traceable
+                    </span>
+                </div>
+                <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
+                    Every verification decision is completely auditable and end-to-end inspectable:
                 </p>
-                <ul style='color: #334155; line-height: 2;'>
+                <ul style='color: #334155; line-height: 1.8; font-size: 0.9em; padding-left: 20px; margin-bottom: 0;'>
                     <li>Complete agent-to-agent communication logs (A2A/1.0 protocol)</li>
-                    <li>Retrieved source articles with cosine similarity scores</li>
+                    <li>Retrieved source articles with cosine similarity scores & URLs</li>
                     <li>The exact LLM prompt and processing engine used</li>
                     <li>NER entities and search queries derived from claims</li>
                     <li>Extractive evidence summaries generated by the NLP pipeline</li>
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #D97706;'>⚖️ Fairness</h4>
-                <p style='color: #334155; line-height: 1.7;'>
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #D97706;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #D97706; margin: 0; font-size: 1.15em;'>⚖️ Algorithmic Fairness</h4>
+                    <span class='verdict-badge' style='background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.74em;'>
+                        ⚖️ Uniform Verification
+                    </span>
+                </div>
+                <p style='color: #334155; line-height: 1.65; font-size: 0.9em; margin-bottom: 0;'>
                     ClaimShield applies the <strong>same verification pipeline</strong> to all users regardless of subscription tier.
-                    Commercial plans differ by request capacity and display depth (Free Plan: 3 capacity displaying 2 resources, Pro Plan: unlimited displaying 3-5 resources), but the NLP analysis,
-                    FAISS retrieval algorithm, and LLM verification logic are identical for every query.
+                    Commercial plans differ only by request capacity and display depth (Free: 3 capacity displaying 2 resources; Pro: unlimited displaying 3–5 resources), but the NLP analysis,
+                    FAISS retrieval algorithm, and LLM verification logic are strictly identical for every query.
                     No user demographic data influences the fact-checking verdict.
                 </p>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #4F46E5;'>🧠 Bias Mitigation</h4>
-                <p style='color: #334155; line-height: 1.7;'>
-                    To minimize bias in verification outcomes:
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #4F46E5;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #4F46E5; margin: 0; font-size: 1.15em;'>🧠 Grounding & Bias Mitigation</h4>
+                    <span class='verdict-badge' style='background: rgba(79, 70, 229, 0.15); color: #4338CA; border: 1px solid rgba(79, 70, 229, 0.35); font-size: 0.74em;'>
+                        🛡️ Multi-LLM Consensus
+                    </span>
+                </div>
+                <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
+                    To systematically eliminate cognitive and model bias in verification outcomes:
                 </p>
-                <ul style='color: #334155; line-height: 2;'>
-                    <li>The LLM is <strong>grounded in retrieved evidence</strong> — verdicts must cite specific article quotes rather than relying on pre-trained knowledge</li>
-                    <li>Multi-source retrieval ensures diverse perspectives are considered</li>
-                    <li>Confidence scores quantify certainty, preventing overstatement</li>
-                    <li>Three-tier verdict system (Supported/Contradicted/Unclear) avoids binary bias</li>
+                <ul style='color: #334155; line-height: 1.8; font-size: 0.9em; padding-left: 20px; margin-bottom: 0;'>
+                    <li>The LLM is <strong>grounded in retrieved evidence</strong> — verdicts must cite specific article quotes rather than unverified pre-trained memory</li>
+                    <li>Multi-source retrieval ensures diverse, authoritative perspectives are considered</li>
+                    <li>Confidence metrics mathematically quantify certainty, preventing overconfident claims</li>
+                    <li>Categorical classification (Supported/Contradicted/Unclear) avoids binary bias</li>
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         with rai2:
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #7C3AED;'>💡 Explainability</h4>
-                <p style='color: #334155; line-height: 1.7;'>
-                    Every fact-check verdict includes:
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #7C3AED;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #7C3AED; margin: 0; font-size: 1.15em;'>💡 Multi-Layer Explainability</h4>
+                    <span class='verdict-badge' style='background: rgba(124, 58, 237, 0.15); color: #6D28D9; border: 1px solid rgba(124, 58, 237, 0.35); font-size: 0.74em;'>
+                        📖 Transparent Rationale
+                    </span>
+                </div>
+                <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
+                    Every fact-check verdict generated by ClaimShield AI includes complete transparency attributes:
                 </p>
-                <ul style='color: #334155; line-height: 2;'>
-                    <li><strong>Verdict</strong> — Supported, Contradicted, or Unclear</li>
-                    <li><strong>Confidence Score</strong> — Quantified certainty (0–100%)</li>
-                    <li><strong>Summary Reasoning</strong> — 2–3 sentence explanation of the verdict rationale</li>
-                    <li><strong>Inline Citations</strong> — Exact quotes from source articles with article IDs</li>
-                    <li><strong>Named Entities</strong> — spaCy NER extractions showing what the system identified</li>
-                    <li><strong>Evidence Summary</strong> — Extractive summarization of retrieved documents</li>
-                    <li><strong>Processing Engine</strong> — Whether Gemini API or local heuristic was used</li>
+                <ul style='color: #334155; line-height: 1.8; font-size: 0.9em; padding-left: 20px; margin-bottom: 0;'>
+                    <li><strong>Categorical Verdict</strong> — Supported, Contradicted, Direct Answer, or Unclear</li>
+                    <li><strong>Confidence Score</strong> — Quantified probabilistic certainty (0–100%)</li>
+                    <li><strong>Summary Reasoning</strong> — Multi-sentence explanation of the verdict rationale</li>
+                    <li><strong>Inline Citations</strong> — Exact verbatim quotes from verified source articles</li>
+                    <li><strong>Named Entities</strong> — spaCy NER extractions showing concepts parsed by AI</li>
+                    <li><strong>Extractive Evidence Highlights</strong> — Key supporting statements synthesized</li>
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #DC2626;'>🔒 Data Protection & Security</h4>
-                <p style='color: #334155; line-height: 1.7;'>
-                    User data is safeguarded through multiple layers:
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #DC2626;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #DC2626; margin: 0; font-size: 1.15em;'>🔒 Cryptographic Security</h4>
+                    <span class='verdict-badge' style='background: rgba(239, 68, 68, 0.15); color: #B91C1C; border: 1px solid rgba(239, 68, 68, 0.35); font-size: 0.74em;'>
+                        🛡️ Defense in Depth
+                    </span>
+                </div>
+                <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
+                    User session and telemetry data are safeguarded through multi-layered defenses:
                 </p>
-                <ul style='color: #334155; line-height: 2;'>
+                <ul style='color: #334155; line-height: 1.8; font-size: 0.9em; padding-left: 20px; margin-bottom: 0;'>
                     <li><strong>Password Hashing</strong> — PBKDF2-SHA256 with random salt (100,000 iterations)</li>
-                    <li><strong>Session Tokens</strong> — JWT (HS256) with configurable expiry</li>
-                    <li><strong>Encryption at Rest</strong> — Fernet symmetric encryption for audit log details</li>
-                    <li><strong>Input Sanitization</strong> — HTML/script injection stripping + length truncation</li>
-                    <li><strong>Rate Limiting</strong> — Token-bucket algorithm prevents API abuse</li>
-                    <li><strong>Audit Trail</strong> — Immutable, encrypted verification logs for accountability</li>
+                    <li><strong>Session Tokens</strong> — Signed JWT (HS256) with 60-minute automated expiry</li>
+                    <li><strong>Encryption at Rest</strong> — Fernet symmetric AES encryption for audit log payloads</li>
+                    <li><strong>Input Sanitization</strong> — XSS, HTML, and script injection stripping with length bounds</li>
+                    <li><strong>Rate Limiting</strong> — Token-bucket capacity enforcement prevents API denial-of-service</li>
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #059669;'>👤 User Rights</h4>
-                <p style='color: #334155; line-height: 1.7;'>
-                    In compliance with data protection principles:
+            render_html("""
+            <div class='glass-card' style='border-left: 5px solid #0284C7;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
+                    <h4 style='color: #0284C7; margin: 0; font-size: 1.15em;'>👤 User Data Rights & Privacy</h4>
+                    <span class='verdict-badge' style='background: rgba(2, 132, 199, 0.15); color: #0369A1; border: 1px solid rgba(2, 132, 199, 0.35); font-size: 0.74em;'>
+                        📋 Privacy Protected
+                    </span>
+                </div>
+                <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
+                    In strict alignment with ethical data governance principles:
                 </p>
-                <ul style='color: #334155; line-height: 2;'>
-                    <li>Users can view their complete verification history in the Audit Logs tab</li>
-                    <li>All personal data is stored locally (SQLite) or in user-controlled cloud (Supabase)</li>
-                    <li>No user data is shared with third parties beyond LLM API calls (claim text only)</li>
-                    <li>Users can request account deletion by contacting the system administrator</li>
+                <ul style='color: #334155; line-height: 1.8; font-size: 0.9em; padding-left: 20px; margin-bottom: 0;'>
+                    <li>Users retain full visibility into their verification history via encrypted audit logs</li>
+                    <li>All personal data is persisted in private storage (SQLite local / Supabase cloud)</li>
+                    <li>Zero user telemetry is commercialized or sold to third-party data brokers</li>
+                    <li>Users may update credentials or request purge of verification logs at any time</li>
                 </ul>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
-        st.markdown("""
-        <div class='glass-card' style='border: 1px solid rgba(16, 185, 129, 0.35); text-align: center;'>
-            <p style='color: #059669; font-size: 1.1em; font-weight: 700; margin-bottom: 5px;'>🌍 Responsible AI Commitment</p>
-            <p style='color: #475569; font-size: 0.95em;'>
-                ClaimShield AI is committed to ethical AI development. We prioritize human oversight, evidence-based verdicts,
-                and transparent decision-making. Our system augments — never replaces — human editorial judgment.
+        render_html("""
+        <div class='glass-card' style='border: 1px solid rgba(16, 185, 129, 0.45); background: var(--glass-surface-tint-success); text-align: center; padding: 28px 24px; margin-top: 10px;'>
+            <div style='display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #059669); color: white; font-size: 1.3em; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(16,185,129,0.3);'>
+                🌍
+            </div>
+            <h3 style='color: #065F46; font-size: 1.3em; margin: 0 0 8px 0;'>Responsible AI Commitment</h3>
+            <p style='color: #047857; font-size: 0.95em; line-height: 1.65; max-width: 780px; margin: 0 auto;'>
+                ClaimShield AI is built from the ground up for ethical, evidence-based verification. We prioritize human editorial oversight,
+                transparent provenance, and algorithmic integrity. Our multi-agent system empowers human judgment — it never supplants it.
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """)
