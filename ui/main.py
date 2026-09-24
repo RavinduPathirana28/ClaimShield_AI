@@ -198,6 +198,15 @@ if "current_page" not in st.session_state:
     st.session_state.current_page = PAGE_VERIFICATION
 if "nav_radio" not in st.session_state:
     st.session_state.nav_radio = PAGE_VERIFICATION
+if "flash" not in st.session_state:
+    st.session_state.flash = None
+
+# One-shot feedback surfaced across the st.rerun that set it (a success message
+# printed right before st.rerun() would otherwise be discarded by the reload).
+_flash_msg = st.session_state.get("flash")
+if _flash_msg:
+    st.session_state.flash = None
+    st.success(_flash_msg)
 if "show_access_portal" not in st.session_state:
     st.session_state.show_access_portal = False
 
@@ -370,7 +379,7 @@ with st.sidebar:
                 st.session_state.jwt_token = auth_resp["token"]
                 st.session_state.current_page = PAGE_VERIFICATION
                 st.session_state.nav_radio = PAGE_VERIFICATION
-                st.success(f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}")
+                st.session_state.flash = f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}"
                 st.rerun()
             else:
                 st.error(auth_resp.get("message", "Authentication failed."))
@@ -1331,7 +1340,7 @@ else:
                     db.update_user_role(st.session_state.username, "user")
                     st.session_state.role = "user"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "user")
-                    st.success("Successfully switched to Free Plan!")
+                    st.session_state.flash = "Successfully switched to Free Plan!"
                     st.rerun()
 
         # Plan 2: Pro Plan
@@ -1365,7 +1374,7 @@ else:
                     db.update_user_role(st.session_state.username, "pro")
                     st.session_state.role = "pro"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "pro")
-                    st.success("Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled.")
+                    st.session_state.flash = "Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled."
                     st.rerun()
 
         st.markdown("---")
@@ -1521,7 +1530,7 @@ else:
                     )
                     if st.button("Apply Plan Change", key="admin_apply_role"):
                         db.update_user_role(selected_target_user, selected_new_role)
-                        st.success(f"Updated user '{selected_target_user}' plan to '{'Pro Plan' if selected_new_role == 'pro' else 'Free Plan'}'.")
+                        st.session_state.flash = f"Updated user '{selected_target_user}' plan to '{'Pro Plan' if selected_new_role == 'pro' else 'Free Plan'}'."
                         st.rerun()
 
     # -------------------------------------------------------------------------
