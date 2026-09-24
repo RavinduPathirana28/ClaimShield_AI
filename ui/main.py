@@ -121,97 +121,98 @@ if "show_access_portal" not in st.session_state:
 # Unauthenticated Landing Page: Access Portal Visibility & Apple VisionOS Slide Animation
 if not st.session_state.authenticated:
     is_portal_open = st.session_state.get("show_access_portal", False)
-    if is_portal_open:
-        st.markdown("""
-        <style>
-        /* Unauthenticated: Access Portal Slid In (VisionOS Spatial Glass Drawer) */
-        section[data-testid="stSidebar"] {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            bottom: 0 !important;
-            height: 100vh !important;
-            width: 380px !important;
-            max-width: 88vw !important;
-            z-index: 99999 !important;
-            pointer-events: auto !important;
-            visibility: visible !important;
-            transform: translateX(0) !important;
-            opacity: 1 !important;
-            animation: visionPortalSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(246, 248, 252, 0.65) 100%) !important;
-            backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
-            -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
-            box-shadow:
-                0 24px 60px -12px rgba(15, 23, 42, 0.16),
-                8px 0 36px -6px rgba(67, 56, 202, 0.14),
-                inset -1.5px 0 1.5px rgba(255, 255, 255, 0.95),
-                inset 1.5px 0 1.5px rgba(255, 255, 255, 0.70) !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
+    transform_val = "translateX(0)" if is_portal_open else "translateX(-105%)"
+    opacity_val = "1" if is_portal_open else "0"
+    pointer_val = "auto" if is_portal_open else "none"
+
+    st.markdown(f"""
+    <style>
+    /* Ensure the landing page NEVER shifts, squeezes or jumps - ONLY portal slides */
+    div[data-testid="stAppViewContainer"] {{
+        display: block !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }}
+    div[data-testid="stAppViewContainer"] > section.main {{
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }}
+
+    /* Access Portal Panel: Smooth VisionOS Spatial Glass Drawer sliding LEFT to RIGHT */
+    section[data-testid="stSidebar"] {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 380px !important;
+        max-width: 88vw !important;
+        z-index: 999999 !important;
+        transform: {transform_val} !important;
+        opacity: {opacity_val} !important;
+        pointer-events: {pointer_val} !important;
+        transition: transform 0.40s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease !important;
+        will-change: transform, opacity !important;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(246, 248, 252, 0.70) 100%) !important;
+        backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow:
+            0 24px 60px -12px rgba(15, 23, 42, 0.18),
+            8px 0 36px -6px rgba(67, 56, 202, 0.14),
+            inset -1.5px 0 1.5px rgba(255, 255, 255, 0.95),
+            inset 1.5px 0 1.5px rgba(255, 255, 255, 0.70) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }}
+
+    /* Hide default sidebar controls on landing page */
+    div[data-testid="collapsedControl"],
+    button[data-testid="stExpandSidebarButton"],
+    button[data-testid="stSidebarCollapseButton"] {{
+        display: none !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Client-side instantaneous smooth slide trigger on click
+    st.markdown("""
+    <script>
+    (function() {
+        function attachPortalTrigger() {
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const txt = (btn.innerText || btn.textContent || '').trim();
+                if (txt.includes('Start Verifying Claims')) {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(0)', 'important');
+                        sb.style.setProperty('opacity', '1', 'important');
+                        sb.style.setProperty('pointer-events', 'auto', 'important');
+                    }
+                } else if (txt === '✕') {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(-105%)', 'important');
+                        sb.style.setProperty('opacity', '0', 'important');
+                        sb.style.setProperty('pointer-events', 'none', 'important');
+                    }
+                }
+            }, true);
         }
-        @keyframes visionPortalSlideIn {
-            0% {
-                transform: translateX(-100%);
-                opacity: 0.2;
-            }
-            100% {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachPortalTrigger);
+        } else {
+            attachPortalTrigger();
         }
-        div[data-testid="stAppViewContainer"] {
-            margin-left: 0 !important;
-            width: 100% !important;
-        }
-        div[data-testid="stAppViewContainer"] > section.main {
-            margin-left: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        div[data-testid="collapsedControl"],
-        button[data-testid="stExpandSidebarButton"],
-        button[data-testid="stSidebarCollapseButton"] {
-            display: none !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <style>
-        /* Unauthenticated: Access Portal Initially Hidden Off-Screen */
-        section[data-testid="stSidebar"] {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            bottom: 0 !important;
-            height: 100vh !important;
-            width: 380px !important;
-            max-width: 88vw !important;
-            transform: translateX(-105%) !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            z-index: 99999 !important;
-            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, visibility 0.38s !important;
-        }
-        div[data-testid="stAppViewContainer"] {
-            margin-left: 0 !important;
-            width: 100% !important;
-        }
-        div[data-testid="stAppViewContainer"] > section.main {
-            margin-left: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        div[data-testid="collapsedControl"],
-        button[data-testid="stExpandSidebarButton"],
-        button[data-testid="stSidebarCollapseButton"] {
-            display: none !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    })();
+    </script>
+    """, unsafe_allow_html=True)
 
 # ----------------- SIDEBAR: Auth, Navigation & Rate Limits -----------------
 with st.sidebar:

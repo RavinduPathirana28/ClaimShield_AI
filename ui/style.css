@@ -1319,6 +1319,8 @@ div[data-testid="stJson"] * {
     width: 100%;
 }
 
+div[data-testid="column"] div.hero-btn-container div.stButton > button,
+div[data-testid="stHorizontalBlock"] div.hero-btn-container div.stButton > button,
 .hero-btn-container div.stButton > button,
 button[key="btn_hero_start_verifying"] {
     display: inline-flex !important;
@@ -1346,6 +1348,8 @@ button[key="btn_hero_start_verifying"] {
     min-height: 48px !important;
 }
 
+div[data-testid="column"] div.hero-btn-container div.stButton > button:hover,
+div[data-testid="stHorizontalBlock"] div.hero-btn-container div.stButton > button:hover,
 .hero-btn-container div.stButton > button:hover,
 button[key="btn_hero_start_verifying"]:hover {
     transform: translateY(-2px) scale(1.008) !important;
