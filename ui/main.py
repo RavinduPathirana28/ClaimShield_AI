@@ -15,12 +15,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-import app.database.db_manager
-importlib.reload(app.database.db_manager)
 from app.database.db_manager import DBManager
-
-import app.utils.security
-importlib.reload(app.utils.security)
 from app.utils.security import verify_jwt, decrypt_data, hash_password, verify_password, generate_jwt
 
 from app.agents.orchestrator import Orchestrator
@@ -42,17 +37,25 @@ st.set_page_config(
 )
 
 # Load CSS Styles
-def load_css():
+@st.cache_data
+def get_cached_css():
     css_path = ROOT_DIR / "ui" / "style.css"
     if css_path.exists():
         with open(css_path, "r", encoding="utf-8") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            return f.read()
+    return ""
+
+def load_css():
+    css = get_cached_css()
+    if css:
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 load_css()
 
 # Logo path helper
 LOGO_PATH = ROOT_DIR / "ui" / "assets" / "logo.jpg"
 
+@st.cache_data
 def get_logo_base64():
     """Returns base64 encoded logo for embedding in HTML."""
     import base64
@@ -87,6 +90,7 @@ def pdf_report_bytes(pipeline_result: dict):
 def get_orchestrator():
     return Orchestrator(security_agent=None)  # Uses default subagents
 
+@st.cache_resource
 def get_db():
     db_inst = DBManager()
     # Auto-seed SQLite DB if empty to ensure instant out-of-the-box operation
@@ -125,12 +129,117 @@ _flash_msg = st.session_state.get("flash")
 if _flash_msg:
     st.session_state.flash = None
     st.success(_flash_msg)
+if "show_access_portal" not in st.session_state:
+    st.session_state.show_access_portal = False
 
 # Header is rendered inside page sections, suppressed at top level
+
+# Unauthenticated Landing Page: Access Portal Visibility & Apple VisionOS Slide Animation
+if not st.session_state.authenticated:
+    is_portal_open = st.session_state.get("show_access_portal", False)
+    transform_val = "translateX(0)" if is_portal_open else "translateX(-105%)"
+    opacity_val = "1" if is_portal_open else "0"
+    pointer_val = "auto" if is_portal_open else "none"
+
+    st.markdown(f"""
+    <style>
+    /* Ensure the landing page NEVER shifts, squeezes or jumps - ONLY portal slides */
+    div[data-testid="stAppViewContainer"] {{
+        display: block !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }}
+    div[data-testid="stAppViewContainer"] > section.main {{
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }}
+
+    /* Access Portal Panel: Smooth VisionOS Spatial Glass Drawer sliding LEFT to RIGHT */
+    section[data-testid="stSidebar"] {{
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 380px !important;
+        max-width: 88vw !important;
+        z-index: 999999 !important;
+        transform: {transform_val} !important;
+        opacity: {opacity_val} !important;
+        pointer-events: {pointer_val} !important;
+        transition: transform 0.40s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease !important;
+        will-change: transform, opacity !important;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(246, 248, 252, 0.70) 100%) !important;
+        backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(102%) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow:
+            0 24px 60px -12px rgba(15, 23, 42, 0.18),
+            8px 0 36px -6px rgba(67, 56, 202, 0.14),
+            inset -1.5px 0 1.5px rgba(255, 255, 255, 0.95),
+            inset 1.5px 0 1.5px rgba(255, 255, 255, 0.70) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }}
+
+    /* Hide default sidebar controls on landing page */
+    div[data-testid="collapsedControl"],
+    button[data-testid="stExpandSidebarButton"],
+    button[data-testid="stSidebarCollapseButton"] {{
+        display: none !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Client-side instantaneous smooth slide trigger on click
+    st.markdown("""
+    <script>
+    (function() {
+        function attachPortalTrigger() {
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const txt = (btn.innerText || btn.textContent || '').trim();
+                if (txt.includes('Start Verifying Claims')) {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(0)', 'important');
+                        sb.style.setProperty('opacity', '1', 'important');
+                        sb.style.setProperty('pointer-events', 'auto', 'important');
+                    }
+                } else if (txt === '✕') {
+                    const sb = document.querySelector('section[data-testid="stSidebar"]');
+                    if (sb) {
+                        sb.style.setProperty('transform', 'translateX(-105%)', 'important');
+                        sb.style.setProperty('opacity', '0', 'important');
+                        sb.style.setProperty('pointer-events', 'none', 'important');
+                    }
+                }
+            }, true);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachPortalTrigger);
+        } else {
+            attachPortalTrigger();
+        }
+    })();
+    </script>
+    """, unsafe_allow_html=True)
 
 # ----------------- SIDEBAR: Auth, Navigation & Rate Limits -----------------
 with st.sidebar:
     if not st.session_state.authenticated:
+        # Dismiss button (top-right of Access Portal)
+        col_portal_space, col_portal_close = st.columns([0.84, 0.16])
+        with col_portal_close:
+            if st.button("✕", key="btn_close_access_portal", help="Close Access Portal"):
+                st.session_state.show_access_portal = False
+                st.rerun()
+
         # ---- Branded Login Header ----
         st.markdown(f"""
         <div class='login-header'>
@@ -208,11 +317,11 @@ with st.sidebar:
         # Sidebar brand header (authenticated)
         st.markdown(f"""
         <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.45);'>
-            <div style='display:inline-flex; padding: 6px; border-radius: 20px; background: rgba(255,255,255,0.45); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 8px 20px rgba(99,102,241,0.2), inset 0 1px 2px rgba(255,255,255,0.9); margin-bottom: 6px;'>
+            <div style='display:inline-flex; padding: 6px; border-radius: 20px; background: rgba(255,255,255,0.45); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 6px 18px rgba(15,23,42,0.04), inset 0 1px 2px rgba(255,255,255,0.9); margin-bottom: 6px;'>
                 <img src='{LOGO_SRC}' style='width:44px; height:44px; border-radius:14px; object-fit:cover; display:block;'/>
             </div>
             <div style='font-family:"Outfit",sans-serif; font-weight:800; font-size:1.05em;
-                background:linear-gradient(135deg,#312E81,#4F46E5); -webkit-background-clip:text;
+                background:linear-gradient(135deg,#1E1B4B,#4338CA); -webkit-background-clip:text;
                 -webkit-text-fill-color:transparent; background-clip:text;'>ClaimShield AI</div>
         </div>
         """, unsafe_allow_html=True)
@@ -220,14 +329,14 @@ with st.sidebar:
         st.markdown(f"""
         <div class='glass-card' style='padding: 16px; margin-bottom: 15px;'>
             <div style='display: flex; align-items: center; gap: 12px;'>
-                <div style='width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #A855F7);
+                <div style='width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #4338CA, #2563EB);
                     display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.25em;
-                    box-shadow: 0 4px 14px rgba(99,102,241,0.3); flex-shrink:0;'>
+                    box-shadow: 0 4px 14px rgba(67,56,202,0.25); flex-shrink:0;'>
                     {initial_letter}
                 </div>
                 <div>
-                    <div style='font-size: 1.05em; font-weight: 700; color: #0F172A;'>{st.session_state.username}</div>
-                    <div style='font-size: 0.76em; color: #4F46E5; font-weight: 600;'>{role_icon} {role_display}</div>
+                    <div style='font-size: 1.05em; font-weight: 700; color: #0A0F1D;'>{st.session_state.username}</div>
+                    <div style='font-size: 0.76em; color: #4338CA; font-weight: 600;'>{role_icon} {role_display}</div>
                 </div>
             </div>
         </div>
@@ -290,6 +399,7 @@ with st.sidebar:
             st.session_state.jwt_token = None
             st.session_state.agent_logs = []
             st.session_state.current_page = "🛡️ Verification Dashboard"
+            st.session_state.show_access_portal = False
             st.rerun()
 
 # ----------------- MAIN INTERFACE -----------------
@@ -302,7 +412,7 @@ if not st.session_state.authenticated:
     st.markdown(f"""
     <div class='hero-section'>
         <div class='hero-logo-wrap'>
-            <div style='display:inline-flex; padding: 10px; border-radius: 36px; background: linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.20) 100%); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 20px 45px -10px rgba(99,102,241,0.25), inset 0 2px 2px rgba(255,255,255,0.95);'>
+            <div style='display:inline-flex; padding: 10px; border-radius: 36px; background: linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.20) 100%); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 16px 40px -10px rgba(15,23,42,0.08), inset 0 2px 2px rgba(255,255,255,0.95);'>
                 <img src='{LOGO_SRC}' class='hero-logo-img' style='margin:0;' alt='ClaimShield AI'/>
             </div>
         </div>
@@ -316,12 +426,17 @@ if not st.session_state.authenticated:
             network of 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus
             — delivering transparent, evidence-backed verdicts instantly.
         </div>
-        <div class='hero-cta-row'>
-            <span class='hero-btn-primary'>🛡️ Start Verifying Claims</span>
-            <span class='hero-btn-secondary'>📖 View Architecture</span>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Hero CTA: Only [ 🛡️ Start Verifying Claims ]
+    _, col_hero_btn, _ = st.columns([1.2, 1.6, 1.2])
+    with col_hero_btn:
+        st.markdown("<div class='hero-btn-container'>", unsafe_allow_html=True)
+        if st.button("🛡️ Start Verifying Claims", key="btn_hero_start_verifying", type="primary", use_container_width=True):
+            st.session_state.show_access_portal = True
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # ---- STATS ROW ----
     st.markdown("""
@@ -366,8 +481,8 @@ if not st.session_state.authenticated:
     fc1, fc2, fc3 = st.columns(3)
     with fc1:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #6366F1, #818CF8);'>
-            <div class='feature-icon-wrap' style='background: rgba(99,102,241,0.15);'>🧠</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #4338CA, #2563EB);'>
+            <div class='feature-icon-wrap' style='background: rgba(67,56,202,0.10);'>🧠</div>
             <div class='feature-card-title'>Multi-Agent Orchestration</div>
             <div class='feature-card-desc'>
                 Security, NLP, Retrieval, Verification, and Explainer agents collaborate
@@ -377,8 +492,8 @@ if not st.session_state.authenticated:
         """, unsafe_allow_html=True)
     with fc2:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #38BDF8, #7DD3FC);'>
-            <div class='feature-icon-wrap' style='background: rgba(56,189,248,0.15);'>⚡</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #0284C7, #38BDF8);'>
+            <div class='feature-icon-wrap' style='background: rgba(2,132,199,0.10);'>⚡</div>
             <div class='feature-card-title'>Vector RAG & FAISS Index</div>
             <div class='feature-card-desc'>
                 Semantic similarity retrieval over curated news repositories with cosine
@@ -388,8 +503,8 @@ if not st.session_state.authenticated:
         """, unsafe_allow_html=True)
     with fc3:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #A855F7, #D946EF);'>
-            <div class='feature-icon-wrap' style='background: rgba(168,85,247,0.15);'>🤖</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #4F46E5, #6D28D9);'>
+            <div class='feature-icon-wrap' style='background: rgba(79,70,229,0.10);'>🤖</div>
             <div class='feature-card-title'>Multi-LLM Consensus</div>
             <div class='feature-card-desc'>
                 Three independent LLMs independently evaluate claims, then vote on a consensus
@@ -401,8 +516,8 @@ if not st.session_state.authenticated:
     fc4, fc5, fc6 = st.columns(3)
     with fc4:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #10B981, #34D399);'>
-            <div class='feature-icon-wrap' style='background: rgba(16,185,129,0.15);'>🔒</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #059669, #10B981);'>
+            <div class='feature-icon-wrap' style='background: rgba(5,150,105,0.10);'>🔒</div>
             <div class='feature-card-title'>Enterprise-Grade Security</div>
             <div class='feature-card-desc'>
                 PBKDF2-SHA256 password hashing, signed JWT tokens, token-bucket
@@ -412,8 +527,8 @@ if not st.session_state.authenticated:
         """, unsafe_allow_html=True)
     with fc5:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #F59E0B, #FBBF24);'>
-            <div class='feature-icon-wrap' style='background: rgba(245,158,11,0.15);'>🗺️</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #D97706, #F59E0B);'>
+            <div class='feature-icon-wrap' style='background: rgba(217,119,6,0.10);'>🗺️</div>
             <div class='feature-card-title'>LangGraph Stateful Workflow</div>
             <div class='feature-card-desc'>
                 Optional LangGraph execution mode provides a stateful graph-based pipeline
@@ -423,8 +538,8 @@ if not st.session_state.authenticated:
         """, unsafe_allow_html=True)
     with fc6:
         st.markdown("""
-        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #EF4444, #F87171);'>
-            <div class='feature-icon-wrap' style='background: rgba(239,68,68,0.15);'>📊</div>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #DC2626, #EF4444);'>
+            <div class='feature-icon-wrap' style='background: rgba(220,38,38,0.10);'>📊</div>
             <div class='feature-card-title'>Explainability & Reports</div>
             <div class='feature-card-desc'>
                 Every verdict comes with a cited evidence summary, confidence scores,
@@ -1604,8 +1719,8 @@ else:
             """)
 
         render_html("""
-        <div class='glass-card' style='border: 1px solid rgba(16, 185, 129, 0.45); background: var(--glass-surface-tint-success); text-align: center; padding: 28px 24px; margin-top: 10px;'>
-            <div style='display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #059669); color: white; font-size: 1.3em; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(16,185,129,0.3);'>
+        <div class='glass-card' style='border: 1px solid rgba(5, 150, 105, 0.40); background: var(--glass-surface-tint-success); text-align: center; padding: 28px 24px; margin-top: 10px;'>
+            <div style='display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #059669, #047857); color: white; font-size: 1.3em; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(5,150,105,0.25);'>
                 🌍
             </div>
             <h3 style='color: #065F46; font-size: 1.3em; margin: 0 0 8px 0;'>Responsible AI Commitment</h3>
