@@ -1,6 +1,6 @@
 /* ==========================================================================
-   CLAIMSHIELD AI — APPLE VISIONOS SPATIAL GLASSMORPHISM DESIGN SYSTEM
-   Refractive Frosted Glass, Specular Highlights, Chromatic Ambiance, & Optical Depth
+   CLAIMSHIELD AI — APPLE VISIONOS SPATIAL GLASS DESIGN SYSTEM (V2 REFINED)
+   True Optical Refraction, Physical Translucency, Specular Fresnel Rim, & Layered Depth
    ========================================================================== */
 
 /* Import Premium Typography */
@@ -10,20 +10,20 @@
    DESIGN TOKENS & SPATIAL VARIABLES
    ========================================================================== */
 :root {
-    /* Color Palette: VisionOS Apple Spatial Jewel & Slate */
-    --vision-bg: #F4F6FC;
+    /* Color Palette: VisionOS Spatial Canvas */
+    --vision-bg: #EEF2F9;
     --vision-bg-canvas: #090D16;
     
-    /* Text Hierarchy */
-    --text-primary: #0F172A;
+    /* Text Hierarchy (High Contrast Slate for 100% Crisp Legibility) */
+    --text-primary: #0A0F1D;
     --text-body: #1E293B;
-    --text-secondary: #475569;
+    --text-secondary: #334155;
     --text-muted: #64748B;
     --text-light: #94A3B8;
     --text-on-dark: #F8FAFC;
-    --text-on-dark-sub: #94A3B8;
+    --text-on-dark-sub: #CBD5E1;
 
-    /* Jewel Accent Colors */
+    /* Jewel Brand Accents */
     --apple-blue: #3B82F6;
     --apple-indigo: #4F46E5;
     --apple-indigo-hover: #4338CA;
@@ -36,52 +36,68 @@
     --apple-rose: #EF4444;
     --apple-rose-dark: #DC2626;
 
-    /* Spatial Frosted Glass Surfaces (Level 0 - Level 3) */
-    --glass-level-1: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.35) 100%);
-    --glass-level-1-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.45) 100%);
-    --glass-level-2: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.42) 100%);
-    --glass-level-2-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.52) 100%);
-    --glass-level-3: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.65) 100%);
+    /* ==========================================================================
+       TRUE VISIONOS GLASS MATERIAL HIERARCHY
+       Translucent liquid base + high-refraction blur + specular rim
+       ========================================================================== */
     
-    /* Dark VisionOS Developer Console Glass */
-    --glass-dark-surface: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.70) 100%);
-    --glass-dark-surface-elevated: linear-gradient(145deg, rgba(30, 41, 59, 0.90) 0%, rgba(15, 23, 42, 0.80) 100%);
-    --glass-dark-border: rgba(255, 255, 255, 0.12);
-    --glass-dark-border-highlight: rgba(255, 255, 255, 0.25);
+    /* Level 1: Large Floating Glass Panels (Main containers, cards, sections) */
+    --glass-level-1: linear-gradient(135deg, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0.16) 100%);
+    --glass-level-1-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.24) 100%);
+    
+    /* Level 2: Elevated Interactive Cards & Controls (Model rows, profile, metrics) */
+    --glass-level-2: linear-gradient(135deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.22) 100%);
+    --glass-level-2-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.70) 0%, rgba(255, 255, 255, 0.32) 100%);
+    
+    /* Level 3: Focused Buttons, Pills, Dialogs, & Small Glass Elements */
+    --glass-level-3: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.34) 100%);
+    
+    /* Tinted Translucent Refractions (Allows underlying background light to blend) */
+    --glass-surface-tint-primary: linear-gradient(135deg, rgba(238, 242, 255, 0.58) 0%, rgba(255, 255, 255, 0.18) 100%);
+    --glass-surface-tint-success: linear-gradient(135deg, rgba(236, 253, 245, 0.58) 0%, rgba(255, 255, 255, 0.18) 100%);
+    --glass-surface-tint-warning: linear-gradient(135deg, rgba(254, 243, 199, 0.58) 0%, rgba(255, 255, 255, 0.18) 100%);
+    --glass-surface-tint-danger: linear-gradient(135deg, rgba(254, 242, 242, 0.58) 0%, rgba(255, 255, 255, 0.18) 100%);
 
-    /* Specular Borders & Rim Lighting */
-    --glass-border: rgba(255, 255, 255, 0.65);
+    /* Dark VisionOS Developer Console Glass */
+    --glass-dark-surface: linear-gradient(145deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 41, 59, 0.68) 100%);
+    --glass-dark-surface-elevated: linear-gradient(145deg, rgba(30, 41, 59, 0.88) 0%, rgba(15, 23, 42, 0.78) 100%);
+    --glass-dark-border: rgba(255, 255, 255, 0.14);
+    --glass-dark-border-highlight: rgba(255, 255, 255, 0.28);
+
+    /* Specular Borders & Fresnel Rim Lighting */
+    --glass-border: rgba(255, 255, 255, 0.68);
     --glass-border-subtle: rgba(255, 255, 255, 0.45);
     --glass-border-highlight: rgba(255, 255, 255, 0.95);
     --glass-border-active: rgba(99, 102, 241, 0.55);
 
-    /* Optical Shadows (Ambient Occlusion + Caustic Lift + Inset Specular Bevel) */
+    /* Multi-Tiered Depth Shadows (Ambient Occlusion + Caustic Lift + Inset Specular Bevel) */
     --glass-shadow: 
-        0 16px 36px -10px rgba(15, 23, 42, 0.06),
-        0 4px 12px -2px rgba(15, 23, 42, 0.03),
-        inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+        0 20px 48px -12px rgba(15, 23, 42, 0.08),
+        0 6px 16px -4px rgba(15, 23, 42, 0.03),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
         inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.03);
 
     --glass-shadow-hover: 
-        0 24px 50px -12px rgba(79, 70, 229, 0.14),
-        0 8px 20px -4px rgba(15, 23, 42, 0.05),
-        inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+        0 28px 60px -14px rgba(79, 70, 229, 0.16),
+        0 10px 24px -4px rgba(15, 23, 42, 0.06),
+        inset 0 2px 2px 0 rgba(255, 255, 255, 1),
         inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.04);
 
     --glass-shadow-float: 
-        0 30px 65px -15px rgba(79, 70, 229, 0.20),
+        0 32px 70px -15px rgba(79, 70, 229, 0.18),
         0 12px 28px -6px rgba(15, 23, 42, 0.08),
-        inset 0 2px 2px 0 rgba(255, 255, 255, 1);
+        inset 0 2px 2px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03);
 
     --glass-dark-shadow:
-        0 20px 45px -10px rgba(0, 0, 0, 0.45),
-        inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
+        0 24px 50px -10px rgba(0, 0, 0, 0.50),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.20),
         inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
 
-    /* Blur & Refraction Filters */
-    --blur-glass: blur(28px) saturate(190%) brightness(102%);
-    --blur-control: blur(18px) saturate(180%);
-    --blur-backdrop: blur(36px) saturate(210%);
+    /* Blur & Refraction Filters (Visibly Diffuses Underlying Light) */
+    --blur-glass: blur(28px) saturate(210%) brightness(103%);
+    --blur-control: blur(20px) saturate(190%) brightness(102%);
+    --blur-backdrop: blur(36px) saturate(220%) brightness(104%);
     
     /* Radii Tokens */
     --radius-pill: 9999px;
@@ -95,26 +111,25 @@
     --glass-surface: var(--glass-level-1);
     --glass-surface-hover: var(--glass-level-1-hover);
     --glass-surface-active: var(--glass-level-2);
-    --glass-surface-tint-primary: linear-gradient(135deg, rgba(238, 242, 255, 0.70) 0%, rgba(255, 255, 255, 0.35) 100%);
-    --glass-surface-tint-success: linear-gradient(135deg, rgba(236, 253, 245, 0.70) 0%, rgba(255, 255, 255, 0.35) 100%);
     --primary: var(--apple-indigo);
     --primary-light: #6366F1;
 }
 
 /* ==========================================================================
-   AMBIENT VISIONOS AURORA CANVAS
-   Living, breathing, subtle multi-chromatic lighting
+   DYNAMIC SPATIAL BACKGROUND & AMBIENT AURORA
+   Richer, carefully balanced chromatic light pools visible through glass
    ========================================================================== */
 
 .stApp {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     background-color: var(--vision-bg) !important;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(199, 210, 254, 0.45) 0px, transparent 48%),
-        radial-gradient(at 100% 0%, rgba(224, 231, 255, 0.45) 0px, transparent 45%),
-        radial-gradient(at 50% 30%, rgba(255, 255, 255, 0.85) 0px, transparent 55%),
-        radial-gradient(at 15% 75%, rgba(191, 219, 254, 0.35) 0px, transparent 45%),
-        radial-gradient(at 85% 80%, rgba(233, 213, 255, 0.40) 0px, transparent 48%) !important;
+        radial-gradient(circle at 10% 12%, rgba(165, 180, 252, 0.52) 0px, transparent 46%),
+        radial-gradient(circle at 90% 8%, rgba(216, 180, 254, 0.48) 0px, transparent 44%),
+        radial-gradient(circle at 50% 36%, rgba(255, 255, 255, 0.90) 0px, transparent 58%),
+        radial-gradient(circle at 16% 68%, rgba(147, 197, 253, 0.45) 0px, transparent 48%),
+        radial-gradient(circle at 84% 74%, rgba(244, 114, 182, 0.32) 0px, transparent 44%),
+        radial-gradient(circle at 50% 92%, rgba(199, 210, 254, 0.46) 0px, transparent 52%) !important;
     background-attachment: fixed !important;
     color: var(--text-body) !important;
     position: relative;
@@ -125,43 +140,43 @@
 .stApp::before {
     content: '';
     position: fixed;
-    top: -140px;
-    left: -100px;
-    width: 650px;
-    height: 650px;
-    background: radial-gradient(circle, rgba(165, 180, 252, 0.32) 0%, rgba(199, 210, 254, 0.12) 50%, transparent 72%);
+    top: -120px;
+    left: -80px;
+    width: 680px;
+    height: 680px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.36) 0%, rgba(165, 180, 252, 0.16) 45%, transparent 70%);
     border-radius: 50%;
-    filter: blur(75px);
+    filter: blur(80px);
     z-index: 0;
     pointer-events: none;
-    animation: vision-orb-1 26s ease-in-out infinite alternate;
+    animation: vision-orb-1 24s ease-in-out infinite alternate;
 }
 
 .stApp::after {
     content: '';
     position: fixed;
-    bottom: -150px;
-    right: -100px;
-    width: 700px;
-    height: 700px;
-    background: radial-gradient(circle, rgba(216, 180, 254, 0.28) 0%, rgba(244, 114, 182, 0.10) 45%, transparent 70%);
+    bottom: -120px;
+    right: -80px;
+    width: 720px;
+    height: 720px;
+    background: radial-gradient(circle, rgba(192, 132, 252, 0.32) 0%, rgba(244, 114, 182, 0.14) 45%, transparent 70%);
     border-radius: 50%;
-    filter: blur(85px);
+    filter: blur(90px);
     z-index: 0;
     pointer-events: none;
-    animation: vision-orb-2 30s ease-in-out infinite alternate;
+    animation: vision-orb-2 28s ease-in-out infinite alternate;
 }
 
 @keyframes vision-orb-1 {
     0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(80px, 60px) scale(1.08); }
-    100% { transform: translate(30px, 110px) scale(0.96); }
+    50% { transform: translate(70px, 50px) scale(1.08); }
+    100% { transform: translate(25px, 95px) scale(0.96); }
 }
 
 @keyframes vision-orb-2 {
     0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-90px, -60px) scale(1.06); }
-    100% { transform: translate(-40px, -110px) scale(0.94); }
+    50% { transform: translate(-80px, -50px) scale(1.06); }
+    100% { transform: translate(-30px, -95px) scale(0.94); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -176,9 +191,9 @@ div[data-testid="stAppViewContainer"] {
     z-index: 1;
 }
 
-/* Streamlit Top Header Bar */
+/* Streamlit Top Header Bar (Ultra-Frosted Minimal Strip) */
 header[data-testid="stHeader"] {
-    background: rgba(255, 255, 255, 0.40) !important;
+    background: rgba(255, 255, 255, 0.28) !important;
     backdrop-filter: var(--blur-backdrop) !important;
     -webkit-backdrop-filter: var(--blur-backdrop) !important;
     border-bottom: 1px solid var(--glass-border-subtle) !important;
@@ -218,7 +233,7 @@ p, span, label, div {
 }
 
 /* ==========================================================================
-   VISIONOS FROSTED GLASS CARDS & PANELS
+   PHYSICAL SPECULAR GLASS CARDS & PANELS
    ========================================================================== */
 
 .glass-card {
@@ -235,15 +250,15 @@ p, span, label, div {
     overflow: hidden;
 }
 
-/* Specular Fresnel Top Rim on Panels */
+/* Specular Fresnel Top-Edge Reflection */
 .glass-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 42%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.01) 100%);
+    height: 48%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -256,17 +271,18 @@ p, span, label, div {
 }
 
 /* ==========================================================================
-   VISIONOS FLOATING SIDEBAR DOCK
+   VISIONOS TRANSLUCENT SPATIAL SIDEBAR
+   Visibly diffused background light, thin luminous rim, inner specular edge
    ========================================================================== */
 
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(246, 248, 253, 0.55) 100%) !important;
-    backdrop-filter: blur(32px) saturate(220%) !important;
-    -webkit-backdrop-filter: blur(32px) saturate(220%) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(246, 248, 253, 0.20) 100%) !important;
+    backdrop-filter: blur(36px) saturate(220%) brightness(103%) !important;
+    -webkit-backdrop-filter: blur(36px) saturate(220%) brightness(103%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.65) !important;
     box-shadow: 
-        12px 0 35px -10px rgba(99, 102, 241, 0.06),
-        inset -1px 0 1.5px rgba(255, 255, 255, 0.9) !important;
+        inset -1.5px 0 2px rgba(255, 255, 255, 0.9),
+        16px 0 45px -10px rgba(79, 70, 229, 0.06) !important;
 }
 
 section[data-testid="stSidebar"] div.block-container {
@@ -286,40 +302,44 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
     align-items: center !important;
     padding: 10px 14px !important;
     border-radius: var(--radius-md) !important;
-    background: rgba(255, 255, 255, 0.35) !important;
+    background: rgba(255, 255, 255, 0.32) !important;
+    backdrop-filter: var(--blur-control) !important;
+    -webkit-backdrop-filter: var(--blur-control) !important;
     border: 1px solid rgba(255, 255, 255, 0.55) !important;
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
     margin-bottom: 4px !important;
     cursor: pointer !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.015), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.015), inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
-    background: rgba(255, 255, 255, 0.65) !important;
+    background: rgba(255, 255, 255, 0.58) !important;
     border-color: rgba(99, 102, 241, 0.35) !important;
     transform: translateX(3px) !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-checked="true"],
 section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(99, 102, 241, 0.06) 100%) !important;
-    border: 1px solid rgba(79, 70, 229, 0.45) !important;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.14) 0%, rgba(99, 102, 241, 0.08) 100%) !important;
+    border: 1px solid rgba(79, 70, 229, 0.50) !important;
     color: var(--apple-indigo) !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.10), inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12), inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
 }
 
 /* ==========================================================================
-   VISIONOS BUTTONS & INTERACTIVE CONTROLS
+   VISIONOS BUTTONS & LUMINOUS GLASS CONTROLS
    ========================================================================== */
 
-/* Primary Action Button (Jewel Gradient with Specular Rim) */
+/* Primary Action Button: Luminous Jewel Glass with Specular Edge */
 div.stButton > button,
 button[kind="primary"],
 button[data-testid="baseButton-primary"] {
-    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #7C3AED 100%) !important;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.92) 0%, rgba(99, 102, 241, 0.86) 50%, rgba(124, 58, 237, 0.90) 100%) !important;
+    backdrop-filter: blur(16px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
     color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
     border-radius: var(--radius-md) !important;
     padding: 10px 24px !important;
     font-weight: 600 !important;
@@ -327,9 +347,9 @@ button[data-testid="baseButton-primary"] {
     letter-spacing: -0.01em !important;
     transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: 
-        0 10px 24px -6px rgba(79, 70, 229, 0.42),
-        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.15) !important;
+        0 12px 28px -6px rgba(79, 70, 229, 0.45),
+        inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.65),
+        inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.20) !important;
     cursor: pointer !important;
 }
 
@@ -337,20 +357,21 @@ div.stButton > button:hover,
 button[kind="primary"]:hover {
     transform: translateY(-2px) scale(1.008) !important;
     box-shadow: 
-        0 16px 32px -6px rgba(79, 70, 229, 0.55),
-        inset 0 2px 2px 0 rgba(255, 255, 255, 0.75) !important;
-    background: linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6D28D9 100%) !important;
+        0 18px 36px -6px rgba(79, 70, 229, 0.60),
+        inset 0 2px 2px 0 rgba(255, 255, 255, 0.85) !important;
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.95) 0%, rgba(79, 70, 229, 0.90) 50%, rgba(109, 40, 217, 0.95) 100%) !important;
     color: #FFFFFF !important;
 }
 
 div.stButton > button:active {
     transform: translateY(1px) scale(0.99) !important;
+    box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.4) !important;
 }
 
-/* Secondary Button Reset: Frosted VisionOS Capsule */
+/* Secondary Button Reset: Visibly Translucent Frosted Glass Capsule */
 div[data-testid="column"] div.stButton > button:not([kind="primaryFormSubmit"]):not([kind="primary"]),
 div[data-testid="stHorizontalBlock"] div.stButton > button {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.40) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.18) 100%) !important;
     backdrop-filter: var(--blur-control) !important;
     -webkit-backdrop-filter: var(--blur-control) !important;
     color: var(--text-primary) !important;
@@ -366,44 +387,46 @@ div[data-testid="stHorizontalBlock"] div.stButton > button {
 
 div[data-testid="column"] div.stButton > button:not([kind="primaryFormSubmit"]):not([kind="primary"]):hover,
 div[data-testid="stHorizontalBlock"] div.stButton > button:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.65) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.32) 100%) !important;
     border-color: rgba(99, 102, 241, 0.5) !important;
     color: var(--apple-indigo) !important;
     transform: translateY(-2px) !important;
     box-shadow: 
-        0 8px 20px rgba(99, 102, 241, 0.15),
+        0 8px 22px rgba(99, 102, 241, 0.18),
         inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1) !important;
 }
 
 /* Download Report Button: Emerald VisionOS Jewel */
 div.stDownloadButton > button {
-    background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.92) 0%, rgba(16, 185, 129, 0.88) 100%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
     border-radius: var(--radius-md) !important;
     padding: 10px 22px !important;
     font-weight: 600 !important;
     box-shadow: 
-        0 10px 24px -6px rgba(16, 185, 129, 0.4),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.55) !important;
+        0 10px 24px -6px rgba(16, 185, 129, 0.45),
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.65) !important;
     transition: all 0.28s ease !important;
 }
 
 div.stDownloadButton > button:hover {
     transform: translateY(-2px) !important;
     box-shadow: 
-        0 16px 30px -6px rgba(16, 185, 129, 0.55),
-        inset 0 2px 2px rgba(255, 255, 255, 0.75) !important;
+        0 16px 30px -6px rgba(16, 185, 129, 0.60),
+        inset 0 2px 2px rgba(255, 255, 255, 0.85) !important;
 }
 
 /* ==========================================================================
-   VISIONOS INPUT CONTROLS & SPATIAL SEARCH BAR
+   TRANSLUCENT GLASS INPUTS & CONTROLS
    ========================================================================== */
 
 div[data-testid="stTextInput"] input,
 div[data-testid="stTextArea"] textarea,
 div[data-testid="stSelectbox"] > div > div {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.38) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.18) 100%) !important;
     backdrop-filter: var(--blur-control) !important;
     -webkit-backdrop-filter: var(--blur-control) !important;
     border: 1px solid var(--glass-border) !important;
@@ -411,15 +434,21 @@ div[data-testid="stSelectbox"] > div > div {
     color: var(--text-primary) !important;
     font-family: 'Inter', sans-serif !important;
     box-shadow: 
-        inset 0 1px 2px rgba(15, 23, 42, 0.04),
-        inset 0 -1px 1px rgba(255, 255, 255, 0.85),
-        0 2px 8px rgba(99, 102, 241, 0.03) !important;
+        inset 0 1.5px 2px rgba(15, 23, 42, 0.03),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.9),
+        0 4px 12px rgba(99, 102, 241, 0.02) !important;
     transition: all 0.25s ease !important;
+}
+
+div[data-testid="stTextInput"] input:hover,
+div[data-testid="stTextArea"] textarea:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.28) 100%) !important;
+    border-color: var(--glass-border-highlight) !important;
 }
 
 div[data-testid="stTextInput"] input:focus,
 div[data-testid="stTextArea"] textarea:focus {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.60) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.38) 100%) !important;
     border-color: var(--apple-indigo) !important;
     box-shadow: 
         0 0 0 3px rgba(99, 102, 241, 0.22),
@@ -434,7 +463,7 @@ div[data-testid="stProgress"] > div > div > div > div {
 }
 
 div[data-testid="stProgress"] > div > div {
-    background: rgba(226, 232, 240, 0.6) !important;
+    background: rgba(226, 232, 240, 0.55) !important;
     border-radius: var(--radius-pill) !important;
     height: 9px !important;
 }
@@ -455,47 +484,47 @@ div[data-testid="stProgress"] > div > div {
     letter-spacing: 0.05em;
     backdrop-filter: blur(14px) saturate(190%);
     -webkit-backdrop-filter: blur(14px) saturate(190%);
-    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.85), 0 3px 10px rgba(0, 0, 0, 0.04);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9), 0 3px 10px rgba(0, 0, 0, 0.04);
     transition: all 0.25s ease;
 }
 
 .verdict-supported {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(16, 185, 129, 0.08) 100%);
     color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.45);
+    border: 1px solid rgba(16, 185, 129, 0.50);
     box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9), 0 4px 14px rgba(16, 185, 129, 0.18);
 }
 
 .verdict-answered {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.20) 0%, rgba(99, 102, 241, 0.08) 100%);
     color: #4338CA;
-    border: 1px solid rgba(99, 102, 241, 0.45);
+    border: 1px solid rgba(99, 102, 241, 0.50);
     box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9), 0 4px 14px rgba(99, 102, 241, 0.18);
 }
 
 .verdict-contradicted {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.20) 0%, rgba(239, 68, 68, 0.08) 100%);
     color: #B91C1C;
-    border: 1px solid rgba(239, 68, 68, 0.45);
+    border: 1px solid rgba(239, 68, 68, 0.50);
     box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9), 0 4px 14px rgba(239, 68, 68, 0.18);
 }
 
 .verdict-unclear {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.20) 0%, rgba(245, 158, 11, 0.08) 100%);
     color: #B45309;
-    border: 1px solid rgba(245, 158, 11, 0.45);
+    border: 1px solid rgba(245, 158, 11, 0.50);
     box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9), 0 4px 14px rgba(245, 158, 11, 0.18);
 }
 
 .badge-secondary {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(99, 102, 241, 0.05) 100%) !important;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(99, 102, 241, 0.06) 100%) !important;
     color: #4338CA !important;
-    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+    border: 1px solid rgba(99, 102, 241, 0.38) !important;
     border-radius: var(--radius-pill) !important;
     padding: 3px 12px !important;
     font-size: 0.82em !important;
     font-weight: 600 !important;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
 }
 
 /* ==========================================================================
@@ -503,19 +532,19 @@ div[data-testid="stProgress"] > div > div {
    ========================================================================== */
 
 .cs-model-row {
-    background: var(--glass-level-1);
+    background: var(--glass-level-2);
     backdrop-filter: var(--blur-control);
     -webkit-backdrop-filter: var(--blur-control);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: 14px 18px;
     margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.95);
     transition: all 0.25s ease;
 }
 
 .cs-model-row:hover {
-    background: var(--glass-level-1-hover);
+    background: var(--glass-level-2-hover);
     border-color: var(--glass-border-highlight);
     transform: translateY(-1px);
 }
@@ -618,7 +647,7 @@ div[data-testid="stProgress"] > div > div {
     margin-top: 10px;
     padding: 10px 14px;
     border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.60);
+    background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border-subtle);
 }
@@ -629,7 +658,7 @@ div[data-testid="stProgress"] > div > div {
     line-height: 1.6;
     padding: 14px 16px;
     border-radius: var(--radius-md);
-    background: rgba(245, 158, 11, 0.10);
+    background: rgba(245, 158, 11, 0.12);
     border-left: 4px solid #D97706;
     margin-bottom: 6px;
 }
@@ -639,14 +668,14 @@ div[data-testid="stProgress"] > div > div {
    ========================================================================== */
 
 .cs-debate-turn {
-    background: var(--glass-level-1);
+    background: var(--glass-level-2);
     backdrop-filter: var(--blur-control);
     -webkit-backdrop-filter: var(--blur-control);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: 16px 18px;
     margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.95);
 }
 
 .cs-debate-head {
@@ -685,14 +714,14 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .cs-consensus-box {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(99, 102, 241, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(99, 102, 241, 0.10) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(16, 185, 129, 0.45);
+    border: 1px solid rgba(16, 185, 129, 0.50);
     border-radius: var(--radius-md);
     padding: 18px 20px;
     margin-top: 16px;
-    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
 }
 
 .cs-consensus-title {
@@ -737,8 +766,8 @@ div[data-testid="stProgress"] > div > div {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 45%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.02) 100%);
+    height: 48%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
@@ -764,14 +793,14 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .citation-box {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px dashed rgba(124, 58, 237, 0.4);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.09) 0%, rgba(124, 58, 237, 0.03) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px dashed rgba(124, 58, 237, 0.45);
     border-radius: var(--radius-md);
     padding: 14px 16px;
     margin-top: 10px;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75);
+    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, 0.85);
 }
 
 /* ==========================================================================
@@ -799,7 +828,7 @@ div[data-testid="stProgress"] > div > div {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 50%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.02) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -836,10 +865,10 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .status-active {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(16, 185, 129, 0.06) 100%);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(16, 185, 129, 0.08) 100%);
     color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.35);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(16, 185, 129, 0.40);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
 .status-indicator-dot {
@@ -870,8 +899,8 @@ div[data-testid="stProgress"] > div > div {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 45%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.02) 100%);
+    height: 48%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -922,8 +951,8 @@ div[data-testid="stProgress"] > div > div {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 45%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.02) 100%);
+    height: 48%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -936,7 +965,7 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .plan-card-active {
-    background: linear-gradient(135deg, rgba(238, 242, 255, 0.75) 0%, rgba(255, 255, 255, 0.40) 100%) !important;
+    background: linear-gradient(135deg, rgba(238, 242, 255, 0.65) 0%, rgba(255, 255, 255, 0.28) 100%) !important;
     border: 2px solid rgba(79, 70, 229, 0.65) !important;
     box-shadow: 
         0 24px 50px -10px rgba(79, 70, 229, 0.22),
@@ -1021,7 +1050,7 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .matrix-table th {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(14px);
     padding: 14px 16px;
     font-family: 'Outfit', sans-serif;
@@ -1033,17 +1062,17 @@ div[data-testid="stProgress"] > div > div {
 
 .matrix-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.65);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.55);
     color: var(--text-secondary);
 }
 
 .matrix-table tr:hover td {
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.40);
 }
 
 /* Admin User Management Directory */
 .admin-user-card {
-    background: var(--glass-level-1);
+    background: var(--glass-level-2);
     backdrop-filter: var(--blur-control);
     -webkit-backdrop-filter: var(--blur-control);
     border: 1px solid var(--glass-border);
@@ -1058,15 +1087,15 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .admin-user-card:hover {
-    background: var(--glass-level-1-hover);
+    background: var(--glass-level-2-hover);
     transform: translateY(-2px);
     border-color: var(--glass-border-highlight);
 }
 
 .role-tag-user {
-    background: rgba(100, 116, 139, 0.1);
+    background: rgba(100, 116, 139, 0.12);
     color: #475569;
-    border: 1px solid rgba(100, 116, 139, 0.25);
+    border: 1px solid rgba(100, 116, 139, 0.28);
     padding: 3px 10px;
     border-radius: var(--radius-pill);
     font-size: 0.75em;
@@ -1074,9 +1103,9 @@ div[data-testid="stProgress"] > div > div {
 }
 
 .role-tag-premium {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.08) 100%);
     color: #4338CA;
-    border: 1px solid rgba(99, 102, 241, 0.35);
+    border: 1px solid rgba(99, 102, 241, 0.40);
     padding: 3px 10px;
     border-radius: var(--radius-pill);
     font-size: 0.75em;
@@ -1085,7 +1114,6 @@ div[data-testid="stProgress"] > div > div {
 
 /* ==========================================================================
    DEVELOPER & SECURITY CONSOLE (AUDIT LOGS & A2A MONITOR)
-   Sleek dark-translucent glass panels for technical telemetry
    ========================================================================== */
 
 /* Expanders in Audit Logs and A2A Monitor */
@@ -1120,10 +1148,10 @@ div[data-testid="stExpander"] summary:hover {
 
 /* JSON Presentation: VisionOS Dark Translucent Glass Terminal */
 div[data-testid="stJson"] {
-    background: rgba(15, 23, 42, 0.88) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(15, 23, 42, 0.82) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     border-radius: var(--radius-md) !important;
     padding: 16px !important;
     box-shadow: var(--glass-dark-shadow) !important;
@@ -1135,7 +1163,7 @@ div[data-testid="stJson"] * {
 }
 
 /* ==========================================================================
-   LANDING HOME PAGE STYLES
+   HERO SECTION & PUBLIC SHOWCASE
    ========================================================================== */
 
 .hero-section {
@@ -1156,9 +1184,11 @@ div[data-testid="stJson"] * {
     height: 104px;
     border-radius: 28px;
     object-fit: cover;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(20px);
     box-shadow: 
-        0 16px 40px rgba(99, 102, 241, 0.28),
-        inset 0 1px 2px rgba(255, 255, 255, 0.85);
+        0 18px 42px rgba(99, 102, 241, 0.30),
+        inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
     border: 2px solid rgba(255, 255, 255, 0.95);
 }
 
@@ -1166,9 +1196,10 @@ div[data-testid="stJson"] * {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(99, 102, 241, 0.05) 100%);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(99, 102, 241, 0.35);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(238, 242, 255, 0.30) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
     color: #4338CA;
     font-size: 0.78em;
     font-weight: 700;
@@ -1177,7 +1208,7 @@ div[data-testid="stJson"] * {
     padding: 6px 18px;
     border-radius: var(--radius-pill);
     margin-bottom: 20px;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85), 0 4px 14px rgba(99, 102, 241, 0.1);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.95), 0 4px 14px rgba(99, 102, 241, 0.12);
 }
 
 .hero-badge-dot {
@@ -1223,34 +1254,36 @@ div[data-testid="stJson"] * {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.92) 0%, rgba(124, 58, 237, 0.90) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     color: #FFFFFF !important;
     font-weight: 700;
     font-size: 0.98em;
     padding: 14px 30px;
     border-radius: var(--radius-md);
     text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.45);
     cursor: pointer;
     box-shadow: 
-        0 12px 28px -4px rgba(79, 70, 229, 0.45),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.55);
+        0 14px 30px -4px rgba(79, 70, 229, 0.48),
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.65);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-btn-primary:hover {
     transform: translateY(-3px) scale(1.01);
     box-shadow: 
-        0 18px 36px -4px rgba(79, 70, 229, 0.55),
-        inset 0 2px 2px rgba(255, 255, 255, 0.75);
-    background: linear-gradient(135deg, #4338CA 0%, #6D28D9 100%);
+        0 20px 38px -4px rgba(79, 70, 229, 0.58),
+        inset 0 2px 2px rgba(255, 255, 255, 0.85);
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.96) 0%, rgba(109, 40, 217, 0.95) 100%);
 }
 
 .hero-btn-secondary {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.45) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.20) 100%);
     backdrop-filter: var(--blur-control);
     -webkit-backdrop-filter: var(--blur-control);
     color: var(--text-primary) !important;
@@ -1262,37 +1295,44 @@ div[data-testid="stJson"] * {
     border: 1px solid var(--glass-border-highlight);
     cursor: pointer;
     box-shadow: 
-        0 6px 18px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.04),
         inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
     transition: all 0.3s ease;
 }
 
 .hero-btn-secondary:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.35) 100%);
     border-color: #818CF8;
     color: #4338CA !important;
     transform: translateY(-2px);
     box-shadow: 
-        0 12px 28px rgba(99, 102, 241, 0.16),
+        0 14px 30px rgba(99, 102, 241, 0.18),
         inset 0 1.5px 1.5px rgba(255, 255, 255, 1);
 }
 
-/* Stats Row: VisionOS Floating Capsule Island */
+/* ==========================================================================
+   STATISTICS ROW — TRUE FLOATING VISIONOS GLASS PANEL
+   Visible background diffusion, subtle rim lighting, and seamless content
+   ========================================================================== */
+
 .stats-row {
     position: relative;
     display: flex;
     justify-content: center;
     gap: 0;
     flex-wrap: wrap;
-    background: var(--glass-level-2);
-    backdrop-filter: var(--blur-glass);
-    -webkit-backdrop-filter: var(--blur-glass);
-    border: 1px solid var(--glass-border-highlight);
-    border-radius: var(--radius-xl);
-    padding: 26px 10px;
-    margin: 0 auto 50px;
-    max-width: 780px;
-    box-shadow: var(--glass-shadow-float);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.14) 100%) !important;
+    backdrop-filter: blur(32px) saturate(210%) brightness(104%) !important;
+    -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(104%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    border-radius: var(--radius-xl) !important;
+    padding: 26px 10px !important;
+    margin: 0 auto 50px !important;
+    max-width: 780px !important;
+    box-shadow: 
+        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.03),
+        0 30px 65px -15px rgba(79, 70, 229, 0.14) !important;
     overflow: hidden;
 }
 
@@ -1301,7 +1341,7 @@ div[data-testid="stJson"] * {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 48%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.02) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
@@ -1406,8 +1446,8 @@ div[data-testid="stJson"] * {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 45%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.02) 100%);
+    height: 48%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.02) 100%);
     pointer-events: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
@@ -1486,8 +1526,8 @@ div[data-testid="stJson"] * {
     justify-content: center;
     font-size: 1.5em;
     border: 2px solid;
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(14px) !important;
+    background: rgba(255, 255, 255, 0.70) !important;
+    backdrop-filter: blur(16px) !important;
     box-shadow: 
         0 6px 18px rgba(0, 0, 0, 0.05),
         inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
@@ -1572,19 +1612,19 @@ div[data-testid="stJson"] * {
 }
 
 .demo-account-card {
-    background: var(--glass-level-1);
+    background: var(--glass-level-2);
     backdrop-filter: var(--blur-control);
     -webkit-backdrop-filter: var(--blur-control);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
     padding: 10px 12px;
     margin-bottom: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.9);
     transition: all 0.2s ease;
 }
 
 .demo-account-card:hover {
-    background: var(--glass-level-1-hover);
+    background: var(--glass-level-2-hover);
     border-color: var(--glass-border-highlight);
     transform: translateY(-1px);
 }
