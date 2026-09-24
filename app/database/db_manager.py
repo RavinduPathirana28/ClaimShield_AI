@@ -79,46 +79,47 @@ class DBManager:
         """Initializes local SQLite database tables if they do not exist."""
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        
-        # Users table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL,
-                tokens REAL DEFAULT 10.0,
-                last_request_time REAL DEFAULT 0.0
-            )
-        """)
-        
-        # Articles table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS articles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL,
-                source TEXT NOT NULL,
-                url TEXT,
-                date TEXT NOT NULL
-            )
-        """)
-        
-        # Verification Logs table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS verification_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT NOT NULL,
-                claim TEXT NOT NULL,
-                verdict TEXT NOT NULL,
-                confidence REAL NOT NULL,
-                timestamp TEXT NOT NULL,
-                details_json TEXT NOT NULL
-            )
-        """)
-        
-        conn.commit()
-        conn.close()
+        try:
+            # Users table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    tokens REAL DEFAULT 10.0,
+                    last_request_time REAL DEFAULT 0.0
+                )
+            """)
+
+            # Articles table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS articles (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    source TEXT NOT NULL,
+                    url TEXT,
+                    date TEXT NOT NULL
+                )
+            """)
+
+            # Verification Logs table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS verification_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    claim TEXT NOT NULL,
+                    verdict TEXT NOT NULL,
+                    confidence REAL NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    details_json TEXT NOT NULL
+                )
+            """)
+
+            conn.commit()
+        finally:
+            conn.close()
 
     # User Management
     def get_user(self, username: str):
@@ -172,12 +173,11 @@ class DBManager:
                 (username, password_hash, role, float(config.RATE_LIMIT_CAPACITY), float(time.time()))
             )
             conn.commit()
-            user_id = cursor.lastrowid
-            conn.close()
-            return self.get_user(username)
         except sqlite3.IntegrityError:
-            conn.close()
             raise ValueError(f"Username '{username}' already exists.")
+        finally:
+            conn.close()
+        return self.get_user(username)
 
     def update_user_tokens(self, username: str, tokens: float, last_request_time: float):
         if self.use_supabase:
@@ -186,20 +186,23 @@ class DBManager:
                     "tokens": tokens,
                     "last_request_time": last_request_time
                 }).eq("username", username).execute()
-                return True
+                return bool(res.data)
             except Exception as e:
                 print(f"[Warning] Supabase update_user_tokens error: {e}. Trying SQLite fallback.")
-                
+
         # SQLite fallback/primary
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET tokens = ?, last_request_time = ? WHERE username = ?",
-            (tokens, last_request_time, username)
-        )
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            cursor.execute(
+                "UPDATE users SET tokens = ?, last_request_time = ? WHERE username = ?",
+                (tokens, last_request_time, username)
+            )
+            updated = cursor.rowcount > 0
+            conn.commit()
+            return updated
+        finally:
+            conn.close()
 
     def update_user_role(self, username: str, role: str):
         if self.use_supabase:
@@ -207,20 +210,23 @@ class DBManager:
                 res = self.supabase_client.table("users").update({
                     "role": role
                 }).eq("username", username).execute()
-                return True
+                return bool(res.data)
             except Exception as e:
                 print(f"[Warning] Supabase update_user_role error: {e}. Trying SQLite fallback.")
-                
+
         # SQLite fallback/primary
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET role = ? WHERE username = ?",
-            (role, username)
-        )
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            cursor.execute(
+                "UPDATE users SET role = ? WHERE username = ?",
+                (role, username)
+            )
+            updated = cursor.rowcount > 0
+            conn.commit()
+            return updated
+        finally:
+            conn.close()
 
     def update_user_password(self, username: str, password_hash: str):
         if self.use_supabase:
@@ -228,20 +234,23 @@ class DBManager:
                 res = self.supabase_client.table("users").update({
                     "password_hash": password_hash
                 }).eq("username", username).execute()
-                return True
+                return bool(res.data)
             except Exception as e:
                 print(f"[Warning] Supabase update_user_password error: {e}. Trying SQLite fallback.")
-                
+
         # SQLite fallback/primary
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET password_hash = ? WHERE username = ?",
-            (password_hash, username)
-        )
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            cursor.execute(
+                "UPDATE users SET password_hash = ? WHERE username = ?",
+                (password_hash, username)
+            )
+            updated = cursor.rowcount > 0
+            conn.commit()
+            return updated
+        finally:
+            conn.close()
 
     def get_all_users(self):
         if self.use_supabase:
@@ -300,13 +309,15 @@ class DBManager:
         # SQLite fallback/primary
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO articles (title, content, source, url, date) VALUES (?, ?, ?, ?, ?)",
-            (title, content, source, url, date)
-        )
-        conn.commit()
-        article_id = cursor.lastrowid
-        conn.close()
+        try:
+            cursor.execute(
+                "INSERT INTO articles (title, content, source, url, date) VALUES (?, ?, ?, ?, ?)",
+                (title, content, source, url, date)
+            )
+            article_id = cursor.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
         return {
             "id": article_id,
             "title": title,
@@ -357,13 +368,15 @@ class DBManager:
         # SQLite fallback/primary
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO verification_logs (user_id, claim, verdict, confidence, timestamp, details_json) VALUES (?, ?, ?, ?, ?, ?)",
-            (user_id, claim, verdict, confidence, timestamp, details_json)
-        )
-        conn.commit()
-        log_id = cursor.lastrowid
-        conn.close()
+        try:
+            cursor.execute(
+                "INSERT INTO verification_logs (user_id, claim, verdict, confidence, timestamp, details_json) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_id, claim, verdict, confidence, timestamp, details_json)
+            )
+            log_id = cursor.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
         return {
             "id": log_id,
             "user_id": user_id,

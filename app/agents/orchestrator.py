@@ -131,6 +131,7 @@ class Orchestrator(BaseAgent):
 
         entities = nlp_resp.get("entities", [])
         search_query = nlp_resp.get("search_query", clean_claim)
+        ml_classification = nlp_resp.get("ml_classification", {})
 
         # Step 4: Retrieve Supporting Documents (Retrieval Agent)
         is_pro = user_role in ["pro", "premium", "newsroom_admin"]
@@ -207,6 +208,8 @@ class Orchestrator(BaseAgent):
             ],
             "citations": citations,
             "engine": engine,
+            "summary": summary,
+            "straight_answer": straight_answer,
             "tokens_remaining": remaining_tokens
         }
         
@@ -248,6 +251,7 @@ class Orchestrator(BaseAgent):
             "articles": display_articles,
             "total_resources_found": len(articles),
             "is_pro_plan": is_pro,
+            "ml_classification": ml_classification,
             "engine": engine,
             "tokens_remaining": remaining_tokens
         }

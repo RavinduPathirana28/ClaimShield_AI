@@ -10,18 +10,21 @@ from app import config
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def clear_sqlite_db():
-    """Clears SQLite data for a fresh seeding cycle."""
+    """Removes previously seeded articles so the corpus can be re-indexed.
+
+    Deliberately does NOT touch the ``users`` or ``verification_logs`` tables:
+    clearing those on every reseed would silently destroy registered accounts
+    and the audit trail. Demo accounts are (re)created idempotently by seed().
+    """
     try:
         conn = sqlite3.connect(config.SQLITE_DB_PATH)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM articles")
-        cursor.execute("DELETE FROM users")
-        cursor.execute("DELETE FROM verification_logs")
         conn.commit()
         conn.close()
-        print("[Seed] Local Database: Cleared existing tables.")
+        print("[Seed] Local Database: Cleared existing articles for re-seeding.")
     except Exception as e:
-        print(f"[Seed] Local Database: Failed to clear SQLite tables: {e}")
+        print(f"[Seed] Local Database: Failed to clear SQLite table: {e}")
 
 def seed():
     print("[Seed] Starting database seeding process...")
