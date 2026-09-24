@@ -118,7 +118,9 @@ with st.sidebar:
         # ---- Branded Login Header ----
         st.markdown(f"""
         <div class='login-header'>
-            <img src='{LOGO_SRC}' class='login-logo' alt='ClaimShield AI Logo'/>
+            <div style='display:inline-flex; padding: 8px; border-radius: 24px; background: rgba(255,255,255,0.45); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 10px 24px rgba(99,102,241,0.22), inset 0 1px 2px rgba(255,255,255,0.9); margin-bottom: 10px;'>
+                <img src='{LOGO_SRC}' class='login-logo' style='margin:0;' alt='ClaimShield AI Logo'/>
+            </div>
             <div class='login-brand-name'>ClaimShield AI</div>
             <div class='login-brand-sub'>Multi-Agent Fact Verification</div>
         </div>
@@ -189,9 +191,10 @@ with st.sidebar:
 
         # Sidebar brand header (authenticated)
         st.markdown(f"""
-        <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(226,232,240,0.85);'>
-            <img src='{LOGO_SRC}' style='width:48px; height:48px; border-radius:14px; object-fit:cover;
-                box-shadow: 0 4px 16px rgba(99,102,241,0.25); margin-bottom:6px; display:block; margin-left:auto; margin-right:auto;'/>
+        <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.45);'>
+            <div style='display:inline-flex; padding: 6px; border-radius: 20px; background: rgba(255,255,255,0.45); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 8px 20px rgba(99,102,241,0.2), inset 0 1px 2px rgba(255,255,255,0.9); margin-bottom: 6px;'>
+                <img src='{LOGO_SRC}' style='width:44px; height:44px; border-radius:14px; object-fit:cover; display:block;'/>
+            </div>
             <div style='font-family:"Outfit",sans-serif; font-weight:800; font-size:1.05em;
                 background:linear-gradient(135deg,#312E81,#4F46E5); -webkit-background-clip:text;
                 -webkit-text-fill-color:transparent; background-clip:text;'>ClaimShield AI</div>
@@ -283,7 +286,9 @@ if not st.session_state.authenticated:
     st.markdown(f"""
     <div class='hero-section'>
         <div class='hero-logo-wrap'>
-            <img src='{LOGO_SRC}' class='hero-logo-img' alt='ClaimShield AI'/>
+            <div style='display:inline-flex; padding: 10px; border-radius: 36px; background: linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.20) 100%); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 20px 45px -10px rgba(99,102,241,0.25), inset 0 2px 2px rgba(255,255,255,0.95);'>
+                <img src='{LOGO_SRC}' class='hero-logo-img' style='margin:0;' alt='ClaimShield AI'/>
+            </div>
         </div>
         <div class='hero-badge'>
             <span class='hero-badge-dot'></span>
