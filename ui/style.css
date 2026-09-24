@@ -3,8 +3,28 @@
    True Optical Refraction, Physical Translucency, Specular Fresnel Rim, & Layered Depth
    ========================================================================== */
 
-/* Import Premium Typography */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Import Premium Typography & Material Symbols */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+.material-symbols-rounded,
+.icon-symbol {
+    font-family: 'Material Symbols Rounded' !important;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1.12em;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: -0.15em;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
 
 /* ==========================================================================
    DESIGN TOKENS & SPATIAL VARIABLES (SPATIAL PEARL PALETTE)
@@ -379,6 +399,7 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] > label {
 section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     display: flex !important;
     align-items: center !important;
+    width: 100% !important;
     padding: 10px 14px !important;
     border-radius: var(--radius-md) !important;
     background: rgba(255, 255, 255, 0.36) !important;
@@ -388,6 +409,7 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
     margin-bottom: 4px !important;
     cursor: pointer !important;
+    user-select: none !important;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
 }
 
@@ -1196,7 +1218,7 @@ div[data-testid="stProgress"]>div>div {
 }
 
 .plan-feature-list li::before {
-    content: "✓";
+    content: "\2713";
     color: #059669;
     font-weight: bold;
     display: inline-block;

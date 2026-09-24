@@ -22,6 +22,41 @@ from app.agents.orchestrator import Orchestrator
 from app.agents.base_agent import BaseAgent
 from app import config
 import seed_database
+from ui.icons import (
+    SHIELD, LOCK, KEY, TOKEN, BOLT, ASSIGNMENT, PUBLIC, PSYCHOLOGY,
+    SMART_TOY, ALT_ROUTE, BAR_CHART, BIOTECH, SEARCH, BALANCE, LIGHTBULB,
+    CHECK_CIRCLE, CANCEL, CHAT, HELP, TRACK_CHANGES, MENU_BOOK, HANDSHAKE,
+    DESCRIPTION, EDIT_NOTE, RECORD_VOICE_OVER, SELL, PUSH_PIN, LINK,
+    RECEIPT_LONG, NEWSPAPER, CALENDAR_TODAY, PERSON, GROUP, CONSTRUCTION,
+    HISTORY_EDU, SETTINGS, SCHEDULE, OUTBOX, INBOX, DIAMOND, STAR,
+    CARD_MEMBERSHIP, ROCKET_LAUNCH, SMARTPHONE, NIGHTLIGHT, COFFEE,
+    HOURGLASS_TOP, EXPLORE, CELEBRATION, ARROW_FORWARD, CHECK, WARNING,
+    CLOSE, FACT_CHECK, SECURITY, FINGERPRINT, HUB,
+    icon_html, icon_md,
+    ICON_SHIELD, ICON_LOCK, ICON_KEY, ICON_TOKEN, ICON_BOLT,
+    ICON_ASSIGNMENT, ICON_PUBLIC, ICON_PSYCHOLOGY, ICON_SMART_TOY,
+    ICON_ALT_ROUTE, ICON_BAR_CHART, ICON_BIOTECH, ICON_SEARCH,
+    ICON_BALANCE, ICON_LIGHTBULB, ICON_CHECK_CIRCLE, ICON_CANCEL,
+    ICON_CHAT, ICON_HELP, ICON_TRACK_CHANGES, ICON_MENU_BOOK,
+    ICON_HANDSHAKE, ICON_DESCRIPTION, ICON_EDIT_NOTE,
+    ICON_RECORD_VOICE_OVER, ICON_SELL, ICON_PUSH_PIN, ICON_LINK,
+    ICON_RECEIPT_LONG, ICON_NEWSPAPER, ICON_CALENDAR_TODAY,
+    ICON_PERSON, ICON_GROUP, ICON_CONSTRUCTION, ICON_HISTORY_EDU,
+    ICON_SETTINGS, ICON_SCHEDULE, ICON_OUTBOX, ICON_INBOX,
+    ICON_DIAMOND, ICON_STAR, ICON_CARD_MEMBERSHIP, ICON_ROCKET_LAUNCH,
+    ICON_SMARTPHONE, ICON_NIGHTLIGHT, ICON_COFFEE, ICON_HOURGLASS_TOP,
+    ICON_EXPLORE, ICON_CELEBRATION, ICON_ARROW_FORWARD, ICON_CHECK,
+    ICON_WARNING, ICON_CLOSE, ICON_FACT_CHECK, ICON_SECURITY,
+    ICON_FINGERPRINT, ICON_HUB
+)
+
+# Page Name Constants for consistent iconized navigation
+PAGE_VERIFICATION = f"{icon_md(SHIELD)} Verification Dashboard"
+PAGE_ACCOUNT = f"{icon_md(PERSON)} Account & Plan Management"
+PAGE_AUDIT = f"{icon_md(HISTORY_EDU)} System Audit Logs"
+PAGE_A2A = f"{icon_md(SETTINGS)} A2A Protocol Monitor"
+PAGE_RESPONSIBLE_AI = f"{icon_md(SMART_TOY)} Responsible AI & Governance"
+
 
 _ORIGINAL_BASE_SEND = BaseAgent.send_message
 # Serialize pipeline runs so the class-level tracing monkeypatch below can never
@@ -31,7 +66,7 @@ _PIPELINE_LOCK = threading.RLock()
 # Page Config
 st.set_page_config(
     page_title="ClaimShield AI — Fact Checker & User Management",
-    page_icon="🛡️",
+    page_icon=":material/shield:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -167,7 +202,9 @@ if "jwt_token" not in st.session_state:
 if "agent_logs" not in st.session_state:
     st.session_state.agent_logs = []
 if "current_page" not in st.session_state:
-    st.session_state.current_page = "🛡️ Verification Dashboard"
+    st.session_state.current_page = PAGE_VERIFICATION
+if "nav_radio" not in st.session_state:
+    st.session_state.nav_radio = PAGE_VERIFICATION
 if "flash" not in st.session_state:
     st.session_state.flash = None
 
@@ -270,7 +307,7 @@ if not st.session_state.authenticated:
                         sb.style.setProperty('opacity', '1', 'important');
                         sb.style.setProperty('pointer-events', 'auto', 'important');
                     }
-                } else if (txt === '✕') {
+                } else if (txt.toLowerCase().includes('close') || btn.getAttribute('key') === 'btn_close_access_portal') {
                     const sb = document.querySelector('section[data-testid="stSidebar"]');
                     if (sb) {
                         sb.style.setProperty('transform', 'translateX(-105%)', 'important');
@@ -295,7 +332,7 @@ with st.sidebar:
         # Dismiss button (top-right of Access Portal)
         col_portal_space, col_portal_close = st.columns([0.84, 0.16])
         with col_portal_close:
-            if st.button("✕", key="btn_close_access_portal", help="Close Access Portal"):
+            if st.button("", icon=":material/close:", key="btn_close_access_portal", help="Close Access Portal"):
                 st.session_state.show_access_portal = False
                 st.rerun()
 
@@ -323,12 +360,13 @@ with st.sidebar:
             role_select = st.selectbox(
                 "Subscription Plan",
                 ["user", "pro"],
-                format_func=lambda x: {"user": "🆓 Free Plan (3 requests, 2 resources displayed)",
-                                       "pro": "⭐ Pro Plan (Unlimited, 3–5 resources displayed)"}[x]
+                format_func=lambda x: {"user": "Free Plan (3 requests, 2 resources displayed)",
+                                       "pro": "Pro Plan (Unlimited, 3–5 resources displayed)"}[x]
             )
 
-        btn_label = "🔐 Sign In"  if auth_mode == "Login" else "🚀 Create Account"
-        if st.button(btn_label, use_container_width=True, type="primary"):
+        btn_label = "Sign In" if auth_mode == "Login" else "Create Account"
+        btn_icon = f":material/{LOCK}:" if auth_mode == "Login" else f":material/{ROCKET_LAUNCH}:"
+        if st.button(btn_label, icon=btn_icon, use_container_width=True, type="primary"):
             auth_action = "login" if auth_mode == "Login" else "register"
             auth_msg = {
                 "action": "authenticate",
@@ -346,7 +384,9 @@ with st.sidebar:
                 st.session_state.username = auth_resp["user"]["username"]
                 st.session_state.role = auth_resp["user"]["role"]
                 st.session_state.jwt_token = auth_resp["token"]
-                st.session_state.flash = f"Welcome, {st.session_state.username}! 🎉"
+                st.session_state.current_page = PAGE_VERIFICATION
+                st.session_state.nav_radio = PAGE_VERIFICATION
+                st.session_state.flash = f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}"
                 st.rerun()
             else:
                 st.error(auth_resp.get("message", "Authentication failed."))
@@ -354,11 +394,11 @@ with st.sidebar:
         
         st.markdown(f"""
         <div class='demo-account-card'>
-            <div class='demo-account-role'>🆓 Free Plan</div>
+            <div class='demo-account-role'><span class="material-symbols-rounded">card_membership</span> Free Plan</div>
             <div class='demo-account-creds'>user / password (3 tokens, 2 resources displayed)</div>
         </div>
         <div class='demo-account-card'>
-            <div class='demo-account-role'>⭐ Pro Plan</div>
+            <div class='demo-account-role'><span class="material-symbols-rounded">star</span> Pro Plan</div>
             <div class='demo-account-creds'>pro / password (Unlimited, 3–5 resources displayed)</div>
         </div>
         """, unsafe_allow_html=True)
@@ -370,7 +410,7 @@ with st.sidebar:
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
 
         role_display = "Free Plan" if current_role == "user" else "Pro Plan"
-        role_icon = "🆓" if current_role == "user" else "⭐"
+        role_icon = ICON_CARD_MEMBERSHIP if current_role == "user" else ICON_STAR
 
 
         # Sidebar brand header (authenticated)
@@ -401,22 +441,30 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("### 🧭 Navigation Menu")
+        st.markdown(f"### {icon_md(EXPLORE)} Navigation Menu")
 
         nav_options = [
-            "🛡️ Verification Dashboard",
-            "👤 Account & Plan Management",
-            "📜 System Audit Logs",
-            "⚙️ A2A Protocol Monitor",
-            "🤖 Responsible AI & Governance"
+            PAGE_VERIFICATION,
+            PAGE_ACCOUNT,
+            PAGE_AUDIT,
+            PAGE_A2A,
+            PAGE_RESPONSIBLE_AI
         ]
         
-        # Keep track of active page
+        # Ensure session state radio key matches current page
+        if "nav_radio" not in st.session_state or st.session_state.nav_radio not in nav_options:
+            st.session_state.nav_radio = st.session_state.current_page if st.session_state.current_page in nav_options else PAGE_VERIFICATION
+
+        def _on_nav_change():
+            st.session_state.current_page = st.session_state.nav_radio
+
+        # Keep track of active page with direct key binding for immediate single-click navigation
         selected_page = st.radio(
             "Go to Page",
             nav_options,
             label_visibility="collapsed",
-            index=nav_options.index(st.session_state.current_page) if st.session_state.current_page in nav_options else 0
+            key="nav_radio",
+            on_change=_on_nav_change
         )
         st.session_state.current_page = selected_page
 
@@ -424,11 +472,11 @@ with st.sidebar:
         
         # Display current rate limit tokens (Quick Widget in Sidebar)
         if user_info:
-            st.markdown("#### ⚡ Plan Quota")
+            st.markdown(f"#### {icon_md(BOLT)} Plan Quota")
             if current_role in ["pro", "premium", "newsroom_admin"]:
                 st.markdown("""
                 <div style='background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 12px; border-radius: 8px; font-size: 0.82em; color: #047857; margin-bottom: 12px;'>
-                    🚀 Pro Plan: Unlimited Access Active
+                    <span class="material-symbols-rounded">rocket_launch</span> Pro Plan: Unlimited Access Active
                 </div>
                 """, unsafe_allow_html=True)
             else:
@@ -443,7 +491,7 @@ with st.sidebar:
                 st.caption(f"Tokens: **{tokens:.1f} / {config.RATE_LIMIT_CAPACITY}** ({config.RATE_LIMIT_REFILL_AMOUNT}/hr) · Displays 2 resources")
 
         st.markdown("---")
-        st.markdown("### 🤖 Multi-Agent Engine")
+        st.markdown(f"### {icon_md(SMART_TOY)} Multi-Agent Engine")
         engine_mode = st.selectbox(
             "Engine Protocol",
             ["Standard A2A Protocol", "LangGraph Stateful Workflow", "AutoGen Agent Debate"],
@@ -457,7 +505,8 @@ with st.sidebar:
             st.session_state.role = "user"
             st.session_state.jwt_token = None
             st.session_state.agent_logs = []
-            st.session_state.current_page = "🛡️ Verification Dashboard"
+            st.session_state.current_page = PAGE_VERIFICATION
+            st.session_state.nav_radio = PAGE_VERIFICATION
             st.session_state.show_access_portal = False
             st.rerun()
 
@@ -492,11 +541,11 @@ if not st.session_state.authenticated:
     """
     render_clean_html(hero_markup)
 
-    # Hero CTA: Only [ 🛡️ Start Verifying Claims ]
+    # Hero CTA: Only [ Start Verifying Claims ]
     _, col_hero_btn, _ = st.columns([1.2, 1.6, 1.2])
     with col_hero_btn:
         render_clean_html("<div id='hero-btn-anchor' class='hero-btn-container'></div>")
-        if st.button("🛡️ Start Verifying Claims", key="btn_hero_start_verifying", type="primary", use_container_width=True):
+        if st.button("Start Verifying Claims", icon=":material/shield:", key="btn_hero_start_verifying", type="primary", use_container_width=True):
             st.session_state.show_access_portal = True
             st.rerun()
 
@@ -525,11 +574,11 @@ if not st.session_state.authenticated:
     # ---- TRUST BAR ----
     st.markdown("""
     <div class='trust-bar'>
-        <div class='trust-item'><span class='trust-icon'>🔐</span> PBKDF2-SHA256 Hashing</div>
-        <div class='trust-item'><span class='trust-icon'>🪙</span> JWT Session Tokens</div>
-        <div class='trust-item'><span class='trust-icon'>⚡</span> Token-Bucket Rate Limiting</div>
-        <div class='trust-item'><span class='trust-icon'>📋</span> Encrypted Audit Trails</div>
-        <div class='trust-item'><span class='trust-icon'>🌐</span> LangGraph Stateful Workflow</div>
+        <div class='trust-item'><span class='trust-icon'><span class="material-symbols-rounded">key</span></span> PBKDF2-SHA256 Hashing</div>
+        <div class='trust-item'><span class='trust-icon'><span class="material-symbols-rounded">generating_tokens</span></span> JWT Session Tokens</div>
+        <div class='trust-item'><span class='trust-icon'><span class="material-symbols-rounded">bolt</span></span> Token-Bucket Rate Limiting</div>
+        <div class='trust-item'><span class='trust-icon'><span class="material-symbols-rounded">assignment</span></span> Encrypted Audit Trails</div>
+        <div class='trust-item'><span class='trust-icon'><span class="material-symbols-rounded">public</span></span> LangGraph Stateful Workflow</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -544,7 +593,7 @@ if not st.session_state.authenticated:
     with fc1:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #4338CA, #2563EB);'>
-            <div class='feature-icon-wrap' style='background: rgba(67,56,202,0.10);'>🧠</div>
+            <div class='feature-icon-wrap' style='background: rgba(67,56,202,0.10);'><span class="material-symbols-rounded">psychology</span></div>
             <div class='feature-card-title'>Multi-Agent Orchestration</div>
             <div class='feature-card-desc'>
                 Security, NLP, Retrieval, Verification, and Explainer agents collaborate
@@ -555,7 +604,7 @@ if not st.session_state.authenticated:
     with fc2:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #0284C7, #38BDF8);'>
-            <div class='feature-icon-wrap' style='background: rgba(2,132,199,0.10);'>⚡</div>
+            <div class='feature-icon-wrap' style='background: rgba(2,132,199,0.10);'><span class="material-symbols-rounded">bolt</span></div>
             <div class='feature-card-title'>Vector RAG & FAISS Index</div>
             <div class='feature-card-desc'>
                 Semantic similarity retrieval over curated news repositories with cosine
@@ -566,7 +615,7 @@ if not st.session_state.authenticated:
     with fc3:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #4F46E5, #6D28D9);'>
-            <div class='feature-icon-wrap' style='background: rgba(79,70,229,0.10);'>🤖</div>
+            <div class='feature-icon-wrap' style='background: rgba(79,70,229,0.10);'><span class="material-symbols-rounded">smart_toy</span></div>
             <div class='feature-card-title'>Multi-LLM Consensus</div>
             <div class='feature-card-desc'>
                 Three independent LLMs independently evaluate claims, then vote on a consensus
@@ -579,7 +628,7 @@ if not st.session_state.authenticated:
     with fc4:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #059669, #10B981);'>
-            <div class='feature-icon-wrap' style='background: rgba(5,150,105,0.10);'>🔒</div>
+            <div class='feature-icon-wrap' style='background: rgba(5,150,105,0.10);'><span class="material-symbols-rounded">lock</span></div>
             <div class='feature-card-title'>Enterprise-Grade Security</div>
             <div class='feature-card-desc'>
                 PBKDF2-SHA256 password hashing, signed JWT tokens, token-bucket
@@ -590,7 +639,7 @@ if not st.session_state.authenticated:
     with fc5:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #D97706, #F59E0B);'>
-            <div class='feature-icon-wrap' style='background: rgba(217,119,6,0.10);'>🗺️</div>
+            <div class='feature-icon-wrap' style='background: rgba(217,119,6,0.10);'><span class="material-symbols-rounded">alt_route</span></div>
             <div class='feature-card-title'>LangGraph Stateful Workflow</div>
             <div class='feature-card-desc'>
                 Optional LangGraph execution mode provides a stateful graph-based pipeline
@@ -601,7 +650,7 @@ if not st.session_state.authenticated:
     with fc6:
         st.markdown("""
         <div class='feature-card' style='--card-accent: linear-gradient(90deg, #DC2626, #EF4444);'>
-            <div class='feature-icon-wrap' style='background: rgba(220,38,38,0.10);'>📊</div>
+            <div class='feature-icon-wrap' style='background: rgba(220,38,38,0.10);'><span class="material-symbols-rounded">bar_chart</span></div>
             <div class='feature-card-title'>Explainability & Reports</div>
             <div class='feature-card-desc'>
                 Every verdict comes with a cited evidence summary, confidence scores,
@@ -625,32 +674,32 @@ if not st.session_state.authenticated:
     <div class='glass-card'>
         <div class='pipeline-flow'>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(239,68,68,0.15); border-color: #EF4444; color: #EF4444;'>🔐</div>
+                <div class='pipeline-agent-icon' style='background: rgba(239,68,68,0.15); border-color: #EF4444; color: #EF4444;'><span class="material-symbols-rounded">key</span></div>
                 <div class='pipeline-agent-label'>Security<br/>Agent</div>
             </div>
             <div class='pipeline-arrow'>→</div>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(56,189,248,0.15); border-color: #38BDF8; color: #38BDF8;'>🧬</div>
+                <div class='pipeline-agent-icon' style='background: rgba(56,189,248,0.15); border-color: #38BDF8; color: #38BDF8;'><span class="material-symbols-rounded">biotech</span></div>
                 <div class='pipeline-agent-label'>NLP<br/>Agent</div>
             </div>
             <div class='pipeline-arrow'>→</div>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(245,158,11,0.15); border-color: #F59E0B; color: #F59E0B;'>🔍</div>
+                <div class='pipeline-agent-icon' style='background: rgba(245,158,11,0.15); border-color: #F59E0B; color: #F59E0B;'><span class="material-symbols-rounded">search</span></div>
                 <div class='pipeline-agent-label'>Retrieval<br/>Agent</div>
             </div>
             <div class='pipeline-arrow'>→</div>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(168,85,247,0.15); border-color: #A855F7; color: #A855F7;'>⚖️</div>
+                <div class='pipeline-agent-icon' style='background: rgba(168,85,247,0.15); border-color: #A855F7; color: #A855F7;'><span class="material-symbols-rounded">balance</span></div>
                 <div class='pipeline-agent-label'>Verification<br/>Agent</div>
             </div>
             <div class='pipeline-arrow'>→</div>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(16,185,129,0.15); border-color: #10B981; color: #10B981;'>💡</div>
+                <div class='pipeline-agent-icon' style='background: rgba(16,185,129,0.15); border-color: #10B981; color: #10B981;'><span class="material-symbols-rounded">lightbulb</span></div>
                 <div class='pipeline-agent-label'>Explainer<br/>Agent</div>
             </div>
             <div class='pipeline-arrow'>→</div>
             <div class='pipeline-agent'>
-                <div class='pipeline-agent-icon' style='background: rgba(99,102,241,0.2); border-color: #6366F1; color: #818CF8;'>✅</div>
+                <div class='pipeline-agent-icon' style='background: rgba(99,102,241,0.2); border-color: #6366F1; color: #818CF8;'><span class="material-symbols-rounded">check_circle</span></div>
                 <div class='pipeline-agent-label'>Verdict<br/>& Report</div>
             </div>
         </div>
@@ -659,7 +708,7 @@ if not st.session_state.authenticated:
 
     # ---- PRICING TABS ----
     st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
-    landing_tabs = st.tabs(["💎 Subscription Plans", "🤖 Responsible AI & Ethics"])
+    landing_tabs = st.tabs([f"{icon_md(DIAMOND)} Subscription Plans", f"{icon_md(SMART_TOY)} Responsible AI & Ethics"])
 
     with landing_tabs[0]:
         st.markdown("""
@@ -705,7 +754,7 @@ if not st.session_state.authenticated:
             """)
 
     with landing_tabs[1]:
-        st.markdown("### 🤖 Responsible AI — Ethics & Governance")
+        st.markdown(f"### {icon_md(SMART_TOY)} Responsible AI — Ethics & Governance")
         st.markdown("ClaimShield AI enforces fairness, explainability, transparency, and data protection across all tiers.")
 
 else:
@@ -719,8 +768,8 @@ else:
     # -------------------------------------------------------------------------
     # PAGE 1: CLAIM VERIFICATION DASHBOARD
     # -------------------------------------------------------------------------
-    if st.session_state.current_page == "🛡️ Verification Dashboard":
-        st.markdown("### 🔍 Ask a Question or Verify a Claim")
+    if st.session_state.current_page == PAGE_VERIFICATION:
+        st.markdown(f"### {icon_md(SEARCH)} Ask a Question or Verify a Claim")
         st.markdown("Type any general question or factual statement below. Our multi-agent AI system will evaluate it and provide a realistic, easy-to-understand explanation.")
 
         # Preset sample query buttons for quick testing
@@ -728,16 +777,16 @@ else:
         col_s1, col_s2, col_s3, col_s4 = st.columns(4)
         sample_query = None
         with col_s1:
-            if st.button("🤖 What is AI?", use_container_width=True):
+            if st.button("What is AI?", icon=f":material/{SMART_TOY}:", use_container_width=True):
                 sample_query = "What is Artificial Intelligence?"
         with col_s2:
-            if st.button("📱 iPhone 18 in 2026?", use_container_width=True):
+            if st.button("iPhone 18 in 2026?", icon=f":material/{SMARTPHONE}:", use_container_width=True):
                 sample_query = "Apple will launch the iPhone 18 in July 2026."
         with col_s3:
-            if st.button("🌌 Why is sky blue?", use_container_width=True):
+            if st.button("Why is sky blue?", icon=f":material/{NIGHTLIGHT}:", use_container_width=True):
                 sample_query = "Why is the sky blue?"
         with col_s4:
-            if st.button("☕ Is coffee healthy?", use_container_width=True):
+            if st.button("Is coffee healthy?", icon=f":material/{COFFEE}:", use_container_width=True):
                 sample_query = "Is drinking coffee good for heart health?"
 
         if "claim_text_val" not in st.session_state:
@@ -811,7 +860,7 @@ else:
                         st.error(pipeline_result.get("message"))
                         st.info(f"Please wait {pipeline_result.get('retry_after_seconds')} seconds, or upgrade to the Pro Plan on the Account page.")
                     elif pipeline_result.get("status") == "success":
-                        st.markdown("### 📊 AI Analysis Report")
+                        st.markdown(f"### {icon_md(BAR_CHART)} AI Analysis Report")
                         
                         verdict = pipeline_result["verdict"]
                         confidence = pipeline_result["confidence"]
@@ -839,16 +888,16 @@ else:
                         verdict_display = verdict
                         if verdict in ["Supported", "True"]:
                             v_class = "verdict-supported"
-                            verdict_display = "✅ Verified True"
+                            verdict_display = f"{ICON_CHECK_CIRCLE} Verified True"
                         elif verdict in ["Contradicted", "False"]:
                             v_class = "verdict-contradicted"
-                            verdict_display = "❌ Debunked / False"
+                            verdict_display = f"{ICON_CANCEL} Debunked / False"
                         elif verdict in ["Answered", "General Info"]:
                             v_class = "verdict-answered"
-                            verdict_display = "💬 Direct Answer"
+                            verdict_display = f"{ICON_CHAT} Direct Answer"
                         elif verdict in ["Unverified", "Unclear"]:
                             v_class = "verdict-unclear"
-                            verdict_display = "❓ Unverified"
+                            verdict_display = f"{ICON_HELP} Unverified"
 
                         if not straight_ans:
                             straight_ans = summary.split(". ")[0] + "." if summary else verdict_display
@@ -867,7 +916,7 @@ else:
                                 </div>
                             </div>
                             <div style="font-size: 0.82em; color: {v_border}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
-                                🎯 Straight Answer
+                                <span class="material-symbols-rounded">track_changes</span> Straight Answer
                             </div>
                             <h3 style="margin-top: 0; color: #0F172A; font-size: 1.35em; font-weight: 750; line-height: 1.4;">{straight_ans}</h3>
                         </div>
@@ -877,7 +926,7 @@ else:
                         st.markdown(f"""
                         <div class="glass-card">
                             <div style="font-size: 0.85em; color: #0284C7; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-                                📖 Detailed Explanation
+                                <span class="material-symbols-rounded">menu_book</span> Detailed Explanation
                             </div>
                             <p style="font-size: 1.05em; line-height: 1.6; color: #1E293B; margin-bottom: 15px;">{summary}</p>
                             <div style="font-size: 0.8em; color: #64748B;">
@@ -887,7 +936,7 @@ else:
                         """, unsafe_allow_html=True)
 
                         # 2b. Multi-Model Consensus & Explainability
-                        verdict_icons = {"Supported": "✅", "Contradicted": "❌", "Answered": "💬", "Unverified": "❓"}
+                        verdict_icons = {"Supported": ICON_CHECK_CIRCLE, "Contradicted": ICON_CANCEL, "Answered": ICON_CHAT, "Unverified": ICON_HELP}
                         verdict_colors = {"Supported": "#059669", "Contradicted": "#DC2626", "Answered": "#4F46E5", "Unverified": "#D97706"}
                         provider_dots = {"Groq": "#F55036", "Gemini": "#4285F4", "Ollama": "#0D9488"}
 
@@ -912,7 +961,7 @@ else:
                                 <div class="cs-model-row">
                                     <div class="cs-model-head">
                                         <div class="cs-model-name"><span class="cs-provider-dot" style="background:{dot}"></span>{esc(eng)}</div>
-                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}18; border:1px solid {vcolor}44;">{verdict_icons.get(v, "❓")} {v}</span>
+                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}18; border:1px solid {vcolor}44;">{verdict_icons.get(v, ICON_HELP)} {v}</span>
                                     </div>
                                     <div class="cs-conf-track"><div class="cs-conf-fill" style="width:{min(max(conf, 4), 100)}%; background:linear-gradient(90deg,{vcolor},{dot});"></div></div>
                                     <div class="cs-conf-note">{conf}% confidence</div>
@@ -933,8 +982,8 @@ else:
                             converged = agreement_score >= 0.7
                             fill_color = "linear-gradient(90deg,#059669,#0284C7)" if converged else "linear-gradient(90deg,#D97706,#DC2626)"
                             note_color = "#059669" if converged else "#D97706"
-                            note_text = ("✓ The models converged on this verdict." if converged
-                                         else "⚠ The models diverged — treat this verdict with lower confidence.")
+                            note_text = (f"{ICON_CHECK} The models converged on this verdict." if converged
+                                         else f"{ICON_WARNING} The models diverged — treat this verdict with lower confidence.")
                             agreement_html = f"""
                             <div class="cs-agreement-box">
                                 <div class="cs-agreement-label">
@@ -948,7 +997,7 @@ else:
                         render_html(f"""
                         <div class="glass-card" style="border-left: 4px solid #D97706;">
                             <div style="font-size: 0.85em; color: #D97706; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
-                                🤝 Multi-Model Consensus &amp; Explainability
+                                <span class="material-symbols-rounded">handshake</span> Multi-Model Consensus &amp; Explainability
                             </div>
                             {consensus_body}
                             {agreement_html}
@@ -963,7 +1012,8 @@ else:
                             report_bytes = pdf_report_bytes({**pipeline_result, "agreement_score": agreement_score})
                             if report_bytes:
                                 st.download_button(
-                                    "📄 Download Verification Report (PDF)",
+                                    "Download Verification Report (PDF)",
+                                    icon=f":material/{DESCRIPTION}:",
                                     data=report_bytes,
                                     file_name=f"claimshield_report_{time.strftime('%Y%m%d_%H%M%S')}.pdf",
                                     mime="application/pdf",
@@ -978,7 +1028,7 @@ else:
                         if ev_summary:
                             st.markdown(f"""
                             <div class="glass-card" style="border-left: 4px solid #4F46E5;">
-                                <div style="font-size: 0.85em; color: #4F46E5; font-weight: 700; margin-bottom: 8px;">📝 Extractive Evidence Highlights</div>
+                                <div style="font-size: 0.85em; color: #4F46E5; font-weight: 700; margin-bottom: 8px;"><span class="material-symbols-rounded">edit_note</span> Extractive Evidence Highlights</div>
                                 <p style="font-size: 1.0em; line-height: 1.6; color: #1E293B;">{ev_summary}</p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -988,7 +1038,7 @@ else:
                         if ml_info:
                             st.markdown(f"""
                             <div class="glass-card" style="border-left: 4px solid #059669;">
-                                <div style="font-size: 0.85em; color: #059669; font-weight: 700; margin-bottom: 4px;">⚡ Scikit-Learn ML Credibility Analysis</div>
+                                <div style="font-size: 0.85em; color: #059669; font-weight: 700; margin-bottom: 4px;"><span class="material-symbols-rounded">bolt</span> Scikit-Learn ML Credibility Analysis</div>
                                 <div style="color: #1E293B;">Prediction Label: <strong>{ml_info.get('label', 'N/A')}</strong> | Confidence: <strong>{int(ml_info.get('confidence', 0)*100)}%</strong></div>
                                 <div style="font-size: 0.8em; color: #64748B;">Engine: {ml_info.get('engine', 'TF-IDF Vectorizer')}</div>
                             </div>
@@ -998,14 +1048,14 @@ else:
                         autogen_info = pipeline_result.get("autogen_debate", {})
                         if autogen_info:
                             stage_cfg = {
-                                "FactCheckerAgent": {"icon": "🔍", "label": "Fact Checker", "color": "#0284C7"},
-                                "CriticAgent": {"icon": "⚖️", "label": "Critic", "color": "#D97706"},
-                                "ConsensusAgent": {"icon": "🎯", "label": "Consensus", "color": "#059669"},
+                                "FactCheckerAgent": {"icon": ICON_SEARCH, "label": "Fact Checker", "color": "#0284C7"},
+                                "CriticAgent": {"icon": ICON_BALANCE, "label": "Critic", "color": "#D97706"},
+                                "ConsensusAgent": {"icon": ICON_TRACK_CHANGES, "label": "Consensus", "color": "#059669"},
                             }
                             turn_html = []
                             for msg in autogen_info.get("debate_log", []):
                                 agent = msg.get("agent", "")
-                                cfg = stage_cfg.get(agent, {"icon": "💬", "label": agent or "Agent", "color": "#64748B"})
+                                cfg = stage_cfg.get(agent, {"icon": ICON_CHAT, "label": agent or "Agent", "color": "#64748B"})
                                 color = cfg["color"]
                                 model_badge = ""
                                 if msg.get("model"):
@@ -1015,7 +1065,7 @@ else:
                                 if msg.get("verdict"):
                                     vcolor = verdict_colors.get(msg["verdict"], "#64748B")
                                     verdict_badge = (f'<span class="cs-debate-verdict" style="color:{vcolor}; background:{vcolor}18; '
-                                                     f'border:1px solid {vcolor}44;">{verdict_icons.get(msg["verdict"], "❓")} {esc(msg["verdict"])}</span>')
+                                                     f'border:1px solid {vcolor}44;">{verdict_icons.get(msg["verdict"], ICON_HELP)} {esc(msg["verdict"])}</span>')
                                 conf_badge = ""
                                 if msg.get("confidence") is not None:
                                     conf_badge = (f'<span style="font-size:0.75em; color:#64748B; font-weight:600;">{int(msg["confidence"])}% confidence</span>')
@@ -1033,11 +1083,11 @@ else:
                             consensus_verdict = autogen_info.get("consensus") or autogen_info.get("message", "")
                             consensus_box = f"""
                             <div class="cs-consensus-box">
-                                <div class="cs-consensus-title">🎯 Final Consensus</div>
+                                <div class="cs-consensus-title"><span class="material-symbols-rounded">track_changes</span> Final Consensus</div>
                                 <div class="cs-consensus-text">{esc(consensus_verdict)}</div>
                             </div>"""
 
-                            with st.expander("🗣️ Multi-Agent Debate Transcript", expanded=True):
+                            with st.expander(f"{icon_md(RECORD_VOICE_OVER)} Multi-Agent Debate Transcript", expanded=True):
                                 render_html(f"""
                                 <div style="font-size: 0.85em; color: #64748B; margin-bottom: 12px;">
                                     Fueled by <strong style="color: #4F46E5;">{esc(autogen_info.get("engine"))}</strong> — every statement is grounded in an actual model response, never fabricated.
@@ -1048,7 +1098,7 @@ else:
                         # Columns for concepts & quotes
                         c1, c2 = st.columns(2)
                         with c1:
-                            st.markdown("#### 🏷️ Key Extracted Concepts (spaCy NER)")
+                            st.markdown(f"#### {icon_md(SELL)} Key Extracted Concepts (spaCy NER)")
                             if entities:
                                 for ent in entities:
                                     if not isinstance(ent, dict):
@@ -1064,7 +1114,7 @@ else:
                                 st.caption("No specific named entities extracted.")
                                 
                         with c2:
-                            st.markdown("#### 📌 Key Takeaways & Quotes")
+                            st.markdown(f"#### {icon_md(PUSH_PIN)} Key Takeaways & Quotes")
                             if citations:
                                 for cit in citations:
                                     if not isinstance(cit, dict):
@@ -1090,7 +1140,7 @@ else:
                                 
                         # Referenced Links
                         st.markdown("---")
-                        st.markdown("### 🔗 Referenced Sources & Verified Article Links")
+                        st.markdown(f"### {icon_md(LINK)} Referenced Sources & Verified Article Links")
                         if ret_articles:
                             live_web_articles = [a for a in ret_articles if "Live Web" in a.get("source", "")]
                             db_articles = [a for a in ret_articles if "Live Web" not in a.get("source", "")]
@@ -1102,19 +1152,19 @@ else:
                             if not is_pro:
                                 render_html(f"""
                                 <div style="font-size: 0.84em; background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
-                                    🔒 <strong style="color: #4F46E5;">Free Plan Display:</strong> Showing <strong>{len(ret_articles)}</strong> resources (Free plan displays maximum 2 of {total_found} retrieved). <span style="color: #64748B;">Upgrade to <strong>Pro Plan</strong> to view at least 3 (if available) and up to 5 maximum resources!</span>
+                                    <span class="material-symbols-rounded">lock</span> <strong style="color: #4F46E5;">Free Plan Display:</strong> Showing <strong>{len(ret_articles)}</strong> resources (Free plan displays maximum 2 of {total_found} retrieved). <span style="color: #64748B;">Upgrade to <strong>Pro Plan</strong> to view at least 3 (if available) and up to 5 maximum resources!</span>
                                 </div>
                                 """)
                             else:
                                 render_html(f"""
                                 <div style="font-size: 0.84em; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
-                                    ⭐ <strong style="color: #059669;">Pro Plan Active:</strong> Displaying <strong>{len(ret_articles)}</strong> verified resources (Pro tier displays at least 3 if available, up to 5 maximum).
+                                    <span class="material-symbols-rounded">star</span> <strong style="color: #059669;">Pro Plan Active:</strong> Displaying <strong>{len(ret_articles)}</strong> verified resources (Pro tier displays at least 3 if available, up to 5 maximum).
                                 </div>
                                 """)
 
                             render_html(f"""
                             <div style="font-size: 0.82em; color: #475569; background: rgba(241, 245, 249, 0.8); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
-                                🧾 <strong style="color:#0F172A;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
+                                <span class="material-symbols-rounded">receipt_long</span> <strong style="color:#0F172A;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
                             </div>
                             """)
                             if live_web_articles:
@@ -1134,18 +1184,18 @@ else:
                                         </span>
                                     </div>
                                     <div class="article-meta" style="margin-top: 4px; margin-bottom: 8px; color: #64748B; font-size: 0.85em;">
-                                        📰 <strong>Source:</strong> {art['source']} | 📅 <strong>Date:</strong> {art['date']}
+                                        <span class="material-symbols-rounded">newspaper</span> <strong>Source:</strong> {art['source']} | <span class="material-symbols-rounded">calendar_today</span> <strong>Date:</strong> {art['date']}
                                     </div>
                                     <div style="font-size: 0.9em; color: #334155; line-height: 1.5; margin-bottom: 10px;">
                                         {art['content']}
                                     </div>
                                     <div style="background: rgba(241, 245, 249, 0.85); border: 1px solid rgba(226, 232, 240, 0.85); padding: 8px 12px; border-radius: 8px; font-size: 0.85em;">
-                                        🔗 <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline;">{url_link}</a>
+                                        <span class="material-symbols-rounded">link</span> <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline;">{url_link}</a>
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
                         else:
-                            st.info("💡 General knowledge query: No local database links were required. Answer generated using internal facts.")
+                            st.info(f"{icon_md(LIGHTBULB)} General knowledge query: No local database links were required. Answer generated using internal facts.")
                             
                     else:
                         st.error(f"Fact checking pipeline failed: {pipeline_result.get('message')}")
@@ -1153,8 +1203,8 @@ else:
     # -------------------------------------------------------------------------
     # PAGE 2: USER ACCOUNT & PLAN MANAGEMENT (DEDICATED PAGE)
     # -------------------------------------------------------------------------
-    elif st.session_state.current_page == "👤 Account & Plan Management":
-        st.markdown("## 👤 User Account & Subscription Management")
+    elif st.session_state.current_page == PAGE_ACCOUNT:
+        st.markdown(f"## {icon_md(PERSON)} User Account & Subscription Management")
         st.markdown("Manage your profile, monitor real-time token quotas, and switch subscription plans seamlessly.")
 
         # Fetch latest user data from DB
@@ -1233,13 +1283,13 @@ else:
         st.markdown("---")
 
         # 3. Real-Time Token & Quota Management Section
-        st.markdown("### ⚡ Real-Time Plan Quotas & Token Bucket Status")
+        st.markdown(f"### {icon_md(BOLT)} Real-Time Plan Quotas & Token Bucket Status")
         st.markdown("ClaimShield AI enforces commercial plan quotas: **Free Plan** has a 3-token capacity with 2 displayed resources, while **Pro Plan** enjoys unlimited verification quota and up to 5 verified resources displayed.")
 
         if current_role in ["pro", "premium", "newsroom_admin"]:
             render_html(f"""
             <div class='glass-card' style='border-left: 6px solid #059669; background: var(--glass-surface-tint-success);'>
-                <h4 style='color: #059669; margin-top: 0;'>🚀 Unlimited Pro Plan Active</h4>
+                <h4 style='color: #059669; margin-top: 0;'><span class="material-symbols-rounded">rocket_launch</span> Unlimited Pro Plan Active</h4>
                 <p style='color: #334155; line-height: 1.6; margin-bottom: 0;'>
                     Your account is subscribed to the <strong>Pro Plan</strong>. You have zero request throttles, priority execution in the verification queue, and display of at least 3 (if available) and up to 5 maximum verified resources per query.
                 </p>
@@ -1267,14 +1317,14 @@ else:
                     needed = config.RATE_LIMIT_CAPACITY - tokens
                     seconds_to_full = needed * (config.RATE_LIMIT_REFILL_PERIOD / config.RATE_LIMIT_REFILL_AMOUNT)
                     mins_to_full = int(seconds_to_full / 60)
-                    st.info(f"⏳ Estimated time until 100% capacity: **~{mins_to_full} minutes**.")
+                    st.info(f"{icon_md(HOURGLASS_TOP)} Estimated time until 100% capacity: **~{mins_to_full} minutes**.")
                 else:
-                    st.success("✅ Your token bucket is currently at **100% full capacity (3 tokens)**.")
+                    st.success(f"{icon_md(CHECK_CIRCLE)} Your token bucket is currently at **100% full capacity (3 tokens)**.")
 
         st.markdown("---")
 
         # 4. Plan Changing & Subscription Switcher
-        st.markdown("### 💎 Subscription Plan Switcher")
+        st.markdown(f"### {icon_md(DIAMOND)} Subscription Plan Switcher")
         st.markdown("Switch between plans instantly with real-time role updates and quota privileges.")
 
         p_col1, p_col2 = st.columns(2)
@@ -1305,7 +1355,7 @@ else:
             """)
             
             if is_active_free:
-                st.button("✅ Current Active Plan", key="btn_free_active", disabled=True, use_container_width=True)
+                st.button("Current Active Plan", icon=f":material/{CHECK_CIRCLE}:", key="btn_free_active", disabled=True, use_container_width=True)
             else:
                 if st.button("Downgrade to Free Plan", key="btn_free_downgrade", use_container_width=True):
                     db.update_user_tokens(st.session_state.username, float(config.RATE_LIMIT_CAPACITY), time.time())
@@ -1340,9 +1390,9 @@ else:
             """)
             
             if is_active_pro:
-                st.button("✅ Current Active Plan", key="btn_pro_active", disabled=True, use_container_width=True)
+                st.button("Current Active Plan", icon=f":material/{CHECK_CIRCLE}:", key="btn_pro_active", disabled=True, use_container_width=True)
             else:
-                if st.button("⚡ Upgrade to Pro Plan", key="btn_pro_upgrade", use_container_width=True):
+                if st.button("Upgrade to Pro Plan", icon=f":material/{BOLT}:", key="btn_pro_upgrade", use_container_width=True):
                     db.update_user_role(st.session_state.username, "pro")
                     st.session_state.role = "pro"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "pro")
@@ -1352,7 +1402,7 @@ else:
         st.markdown("---")
 
         # 5. Plan Comparison Matrix Table
-        st.markdown("### 📊 Subscription Plan Comparison Matrix")
+        st.markdown(f"### {icon_md(BAR_CHART)} Subscription Plan Comparison Matrix")
         render_html("""
         <table class='matrix-table'>
             <thead>
@@ -1391,12 +1441,12 @@ else:
                 <tr>
                     <td><strong>Persona Debate (FactChecker → Critic → Consensus)</strong></td>
                     <td>Standard Sequential</td>
-                    <td>✅ Full Consensus Debate</td>
+                    <td><span class="material-symbols-rounded">check_circle</span> Full Consensus Debate</td>
                 </tr>
                 <tr>
                     <td><strong>LangGraph Stateful Graph</strong></td>
                     <td>Standard Graph</td>
-                    <td>✅ Full Graph Execution</td>
+                    <td><span class="material-symbols-rounded">check_circle</span> Full Graph Execution</td>
                 </tr>
                 <tr>
                     <td><strong>Audit Trail Encryption</strong></td>
@@ -1410,14 +1460,14 @@ else:
         st.markdown("---")
 
         # 6. Security & Session Credentials Section
-        st.markdown("### 🔒 Security, Credentials & Session Management")
+        st.markdown(f"### {icon_md(LOCK)} Security, Credentials & Session Management")
         
         sec_col1, sec_col2 = st.columns(2)
 
         with sec_col1:
             render_html("""
             <div class='glass-card'>
-                <h4 style='color: #4F46E5; margin-top: 0;'>🛡️ Session JWT Token Inspector</h4>
+                <h4 style='color: #4F46E5; margin-top: 0;'><span class="material-symbols-rounded">shield</span> Session JWT Token Inspector</h4>
                 <p style='font-size: 0.88em; color: #475569;'>
                     Your session is protected with JSON Web Tokens (JWT) signed via HMAC-SHA256 with 60-minute automated expiration.
                 </p>
@@ -1428,7 +1478,7 @@ else:
         with sec_col2:
             render_html("""
             <div class='glass-card'>
-                <h4 style='color: #059669; margin-top: 0;'>🔑 Update Account Password</h4>
+                <h4 style='color: #059669; margin-top: 0;'><span class="material-symbols-rounded">key</span> Update Account Password</h4>
                 <p style='font-size: 0.88em; color: #475569;'>
                     Passwords are encrypted with PBKDF2-SHA256 with 100,000 salt iterations before storage.
                 </p>
@@ -1461,7 +1511,7 @@ else:
         # 7. Member Directory & Role Manager (Visible to newsroom_admin)
         if current_role == "newsroom_admin":
             st.markdown("---")
-            st.markdown("### 👥 Member Directory & Access Management")
+            st.markdown(f"### {icon_md(GROUP)} Member Directory & Access Management")
             st.markdown("Administrator console for reviewing registered member accounts and managing their subscription plan.")
 
             all_users = db.get_all_users()
@@ -1492,7 +1542,7 @@ else:
                     """)
                 
                 # Admin Fast Role Editor
-                with st.expander("🛠️ Member Plan Modifier"):
+                with st.expander(f"{icon_md(CONSTRUCTION)} Member Plan Modifier"):
                     usernames_list = [u["username"] for u in all_users]
                     selected_target_user = st.selectbox("Select User Account", usernames_list)
                     selected_new_role = st.selectbox(
@@ -1508,22 +1558,22 @@ else:
     # -------------------------------------------------------------------------
     # PAGE 3: SYSTEM AUDIT LOGS
     # -------------------------------------------------------------------------
-    elif st.session_state.current_page == "📜 System Audit Logs":
+    elif st.session_state.current_page == PAGE_AUDIT:
         render_html("""
         <div class='glass-card' style='border-left: 5px solid #10B981; margin-bottom: 22px; background: var(--glass-surface-tint-success);'>
             <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;'>
                 <div>
-                    <h3 style='margin: 0 0 4px 0; color: #065F46; font-size: 1.25em;'>🛡️ Cryptographic Verification Ledger</h3>
+                    <h3 style='margin: 0 0 4px 0; color: #065F46; font-size: 1.25em;'><span class="material-symbols-rounded">shield</span> Cryptographic Verification Ledger</h3>
                     <p style='color: #047857; margin: 0; font-size: 0.88em; line-height: 1.5;'>
                         Immutable audit trail. Every verified query, model reasoning trace, and citation is encrypted at rest using <strong>Fernet AES-128-CBC</strong>.
                     </p>
                 </div>
                 <div style='display: flex; gap: 8px; flex-wrap: wrap;'>
                     <span class='verdict-badge' style='background: rgba(16, 185, 129, 0.2); color: #047857; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.74em;'>
-                        🔒 Fernet AES-128-CBC
+                        <span class="material-symbols-rounded">lock</span> Fernet AES-128-CBC
                     </span>
                     <span class='verdict-badge' style='background: rgba(79, 70, 229, 0.15); color: #4338CA; border: 1px solid rgba(79, 70, 229, 0.35); font-size: 0.74em;'>
-                        🪙 PBKDF2 Salted
+                        <span class="material-symbols-rounded">generating_tokens</span> PBKDF2 Salted
                     </span>
                 </div>
             </div>
@@ -1556,7 +1606,7 @@ else:
                 elif verdict in ["Answered", "General Info"]:
                     v_class = "verdict-answered"
                 
-                expander_label = f"🕒 {l['timestamp']} ── Claim: \"{l['claim'][:65]}...\""
+                expander_label = f"{icon_md(SCHEDULE)} {l['timestamp']} ── Claim: \"{l['claim'][:65]}...\""
                 with st.expander(expander_label):
                     render_html(f"""
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid rgba(226,232,240,0.8); padding-bottom: 10px;">
@@ -1580,7 +1630,7 @@ else:
                     """)
                     
                     if details.get("entities"):
-                        st.markdown("**🏷️ Extracted Named Entities:**")
+                        st.markdown(f"**{icon_md(SELL)} Extracted Named Entities:**")
                         ents_html = "<div style='display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;'>"
                         for ent in details["entities"]:
                             if not isinstance(ent, dict):
@@ -1590,7 +1640,7 @@ else:
                         render_html(ents_html)
 
                     if details.get("articles_retrieved"):
-                        st.markdown("**📰 Referenced Source Articles (FAISS Cosine Similarity):**")
+                        st.markdown(f"**{icon_md(NEWSPAPER)} Referenced Source Articles (FAISS Cosine Similarity):**")
                         for s in details["articles_retrieved"]:
                             if not isinstance(s, dict):
                                 continue
@@ -1599,8 +1649,8 @@ else:
     # -------------------------------------------------------------------------
     # PAGE 4: A2A PROTOCOL MONITOR
     # -------------------------------------------------------------------------
-    elif st.session_state.current_page == "⚙️ A2A Protocol Monitor":
-        st.markdown("### ⚙️ Multi-Agent A2A/1.0 Protocol Message Tracing")
+    elif st.session_state.current_page == PAGE_A2A:
+        st.markdown(f"### {icon_md(SETTINGS)} Multi-Agent A2A/1.0 Protocol Message Tracing")
         st.markdown("""
         Inspect the real-time JSON communications occurring between subagents using the **A2A/1.0 (Agent-to-Agent)** protocol.
         Each message includes a protocol version, unique message ID (UUID4), Unix timestamp, sender/recipient identifiers, action verb, and structured data payload.
@@ -1608,7 +1658,7 @@ else:
 
         st.markdown("""
         <div class='glass-card' style='border-left: 4px solid #4F46E5;'>
-            <h4 style='color: #4F46E5; margin-bottom: 10px;'>📋 A2A/1.0 Protocol Specification</h4>
+            <h4 style='color: #4F46E5; margin-bottom: 10px;'><span class="material-symbols-rounded">assignment</span> A2A/1.0 Protocol Specification</h4>
             <table style='width: 100%; border-collapse: collapse; color: #1E293B; font-size: 0.9em;'>
                 <tr style='border-bottom: 1px solid rgba(226,232,240,0.85);'>
                     <td style='padding: 8px; font-weight: 600; color: #4F46E5; width: 25%;'>Protocol</td>
@@ -1638,10 +1688,10 @@ else:
             st.info("No query logs in buffer. Run a claim check from the Verification Dashboard to monitor agent communication flows.")
         else:
             for idx, log in enumerate(st.session_state.agent_logs):
-                with st.expander(f"🌐 Trace #{idx+1} [{log['timestamp']}]: {log['from']} ➔ {log['to']} (Action: {log['action']})"):
+                with st.expander(f"{icon_md(PUBLIC)} Trace #{idx+1} [{log['timestamp']}]: {log['from']} {icon_md(ARROW_FORWARD)} {log['to']} (Action: {log['action']})"):
                     col_sent, col_recv = st.columns(2)
                     with col_sent:
-                        st.markdown("📤 **Outgoing A2A/1.0 Message:**")
+                        st.markdown(f"{icon_md(OUTBOX)} **Outgoing A2A/1.0 Message:**")
                         st.json({
                             "protocol": "A2A/1.0",
                             "sender": log["from"],
@@ -1650,14 +1700,14 @@ else:
                             "data": log["data_sent"]
                         })
                     with col_recv:
-                        st.markdown("📥 **Received Response Payload:**")
+                        st.markdown(f"{icon_md(INBOX)} **Received Response Payload:**")
                         st.json(log["response_received"])
 
     # -------------------------------------------------------------------------
     # PAGE 5: RESPONSIBLE AI & GOVERNANCE
     # -------------------------------------------------------------------------
-    elif st.session_state.current_page == "🤖 Responsible AI & Governance":
-        st.markdown("### 🤖 Responsible AI — Ethics, Transparency & Data Protection")
+    elif st.session_state.current_page == PAGE_RESPONSIBLE_AI:
+        st.markdown(f"### {icon_md(SMART_TOY)} Responsible AI — Ethics, Transparency & Data Protection")
         st.markdown("ClaimShield AI is built with Responsible AI principles at its core. This section documents how our system addresses fairness, explainability, transparency, and user data protection.")
 
         rai1, rai2 = st.columns(2)
@@ -1666,9 +1716,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #059669;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #059669; margin: 0; font-size: 1.15em;'>🔍 Transparency & Auditability</h4>
+                    <h4 style='color: #059669; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">search</span> Transparency & Auditability</h4>
                     <span class='verdict-badge' style='background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.74em;'>
-                        ✅ Fully Traceable
+                        <span class="material-symbols-rounded">check_circle</span> Fully Traceable
                     </span>
                 </div>
                 <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
@@ -1687,9 +1737,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #D97706;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #D97706; margin: 0; font-size: 1.15em;'>⚖️ Algorithmic Fairness</h4>
+                    <h4 style='color: #D97706; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">balance</span> Algorithmic Fairness</h4>
                     <span class='verdict-badge' style='background: rgba(245, 158, 11, 0.15); color: #B45309; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.74em;'>
-                        ⚖️ Uniform Verification
+                        <span class="material-symbols-rounded">balance</span> Uniform Verification
                     </span>
                 </div>
                 <p style='color: #334155; line-height: 1.65; font-size: 0.9em; margin-bottom: 0;'>
@@ -1704,9 +1754,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #4F46E5;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #4F46E5; margin: 0; font-size: 1.15em;'>🧠 Grounding & Bias Mitigation</h4>
+                    <h4 style='color: #4F46E5; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">psychology</span> Grounding & Bias Mitigation</h4>
                     <span class='verdict-badge' style='background: rgba(79, 70, 229, 0.15); color: #4338CA; border: 1px solid rgba(79, 70, 229, 0.35); font-size: 0.74em;'>
-                        🛡️ Multi-LLM Consensus
+                        <span class="material-symbols-rounded">shield</span> Multi-LLM Consensus
                     </span>
                 </div>
                 <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
@@ -1725,9 +1775,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #7C3AED;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #7C3AED; margin: 0; font-size: 1.15em;'>💡 Multi-Layer Explainability</h4>
+                    <h4 style='color: #7C3AED; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">lightbulb</span> Multi-Layer Explainability</h4>
                     <span class='verdict-badge' style='background: rgba(124, 58, 237, 0.15); color: #6D28D9; border: 1px solid rgba(124, 58, 237, 0.35); font-size: 0.74em;'>
-                        📖 Transparent Rationale
+                        <span class="material-symbols-rounded">menu_book</span> Transparent Rationale
                     </span>
                 </div>
                 <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
@@ -1747,9 +1797,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #DC2626;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #DC2626; margin: 0; font-size: 1.15em;'>🔒 Cryptographic Security</h4>
+                    <h4 style='color: #DC2626; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">lock</span> Cryptographic Security</h4>
                     <span class='verdict-badge' style='background: rgba(239, 68, 68, 0.15); color: #B91C1C; border: 1px solid rgba(239, 68, 68, 0.35); font-size: 0.74em;'>
-                        🛡️ Defense in Depth
+                        <span class="material-symbols-rounded">shield</span> Defense in Depth
                     </span>
                 </div>
                 <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
@@ -1768,9 +1818,9 @@ else:
             render_html("""
             <div class='glass-card' style='border-left: 5px solid #0284C7;'>
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;'>
-                    <h4 style='color: #0284C7; margin: 0; font-size: 1.15em;'>👤 User Data Rights & Privacy</h4>
+                    <h4 style='color: #0284C7; margin: 0; font-size: 1.15em;'><span class="material-symbols-rounded">person</span> User Data Rights & Privacy</h4>
                     <span class='verdict-badge' style='background: rgba(2, 132, 199, 0.15); color: #0369A1; border: 1px solid rgba(2, 132, 199, 0.35); font-size: 0.74em;'>
-                        📋 Privacy Protected
+                        <span class="material-symbols-rounded">assignment</span> Privacy Protected
                     </span>
                 </div>
                 <p style='color: #475569; font-size: 0.9em; line-height: 1.6; margin-bottom: 12px;'>
@@ -1788,7 +1838,7 @@ else:
         render_html("""
         <div class='glass-card' style='border: 1px solid rgba(5, 150, 105, 0.40); background: var(--glass-surface-tint-success); text-align: center; padding: 28px 24px; margin-top: 10px;'>
             <div style='display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #059669, #047857); color: white; font-size: 1.3em; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(5,150,105,0.25);'>
-                🌍
+                <span class="material-symbols-rounded">public</span>
             </div>
             <h3 style='color: #065F46; font-size: 1.3em; margin: 0 0 8px 0;'>Responsible AI Commitment</h3>
             <p style='color: #047857; font-size: 0.95em; line-height: 1.65; max-width: 780px; margin: 0 auto;'>
