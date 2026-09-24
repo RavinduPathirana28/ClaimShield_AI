@@ -29,7 +29,10 @@ class RetrievalAgent(BaseAgent):
 
     def _retrieve(self, data: dict) -> dict:
         query = data.get("query", "").strip()
-        limit = int(data.get("limit", 3))
+        try:
+            limit = int(data.get("limit", 3))
+        except (TypeError, ValueError):
+            limit = 3
 
         if not query:
             return {
@@ -67,21 +70,32 @@ class RetrievalAgent(BaseAgent):
                 web_results = self.web_crawler.search_and_crawl(query, limit=limit)
                 
                 if web_results:
+                    # Check which articles already exist so repeated queries do not
+                    # re-insert duplicate rows into the local database on every run.
+                    existing = self.db.get_all_articles()
+                    existing_urls = {str(a.get("url", "")).strip() for a in existing if a.get("url")}
+                    existing_titles = {str(a.get("title", "")).strip().lower() for a in existing if a.get("title")}
+
                     saved_web_articles = []
                     for web_art in web_results:
+                        url = str(web_art.get("url", "")).strip()
+                        title = str(web_art.get("title", "")).strip()
+                        is_duplicate = bool(url and url in existing_urls) or bool(title and title.lower() in existing_titles)
                         try:
                             # Save to local database so it can be vector indexed in the future
-                            db_saved = self.db.add_article(
-                                title=web_art["title"],
-                                content=web_art["content"],
-                                source=web_art["source"],
-                                url=web_art["url"],
-                                date=web_art["date"]
-                            )
-                            web_art["id"] = db_saved.get("id", web_art["id"])
+                            if not is_duplicate:
+                                db_saved = self.db.add_article(
+                                    title=web_art["title"],
+                                    content=web_art["content"],
+                                    source=web_art["source"],
+                                    url=web_art["url"],
+                                    date=web_art["date"]
+                                )
+                                web_art["id"] = db_saved.get("id", web_art.get("id", 9000))
                         except Exception as save_err:
                             print(f"[Warning] Failed to save web article to DB: {save_err}")
-                            
+                            web_art.setdefault("id", 9000)
+
                         saved_web_articles.append(web_art)
                     
                     # Prepend live web articles so they take priority over low-score local articles

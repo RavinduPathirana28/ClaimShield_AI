@@ -7,6 +7,7 @@ import datetime
 import html
 import textwrap
 import importlib
+import threading
 from pathlib import Path
 
 # Add root folder to sys.path to enable app module imports
@@ -28,6 +29,9 @@ from app import config
 import seed_database
 
 _ORIGINAL_BASE_SEND = BaseAgent.send_message
+# Serialize pipeline runs so the class-level tracing monkeypatch below can never
+# be observed mid-flight (or restored) by a concurrent Streamlit session.
+_PIPELINE_LOCK = threading.RLock()
 
 # Page Config
 st.set_page_config(
@@ -91,6 +95,9 @@ def get_db():
         print("Streamlit: Database appears empty. Seeding sample articles and default accounts...")
         seed_database.seed()
         db_inst = DBManager()
+        # The cached orchestrator holds an in-memory FAISS index built from the
+        # old (empty) corpus; rebuild it so retrievals see the freshly seeded data.
+        get_orchestrator.clear()
     return db_inst
 
 db = get_db()
@@ -109,6 +116,15 @@ if "agent_logs" not in st.session_state:
     st.session_state.agent_logs = []
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🛡️ Verification Dashboard"
+if "flash" not in st.session_state:
+    st.session_state.flash = None
+
+# One-shot feedback surfaced across the st.rerun that set it (a success message
+# printed right before st.rerun() would otherwise be discarded by the reload).
+_flash_msg = st.session_state.get("flash")
+if _flash_msg:
+    st.session_state.flash = None
+    st.success(_flash_msg)
 
 # Header is rendered inside page sections, suppressed at top level
 
@@ -162,7 +178,7 @@ with st.sidebar:
                 st.session_state.username = auth_resp["user"]["username"]
                 st.session_state.role = auth_resp["user"]["role"]
                 st.session_state.jwt_token = auth_resp["token"]
-                st.success(f"Welcome, {st.session_state.username}! 🎉")
+                st.session_state.flash = f"Welcome, {st.session_state.username}! 🎉"
                 st.rerun()
             else:
                 st.error(auth_resp.get("message", "Authentication failed."))
@@ -583,8 +599,7 @@ else:
                         resp = _ORIGINAL_BASE_SEND(self, recipient, action, data)
                         trace_agent_message(self.name, recipient.name, action, data, resp)
                         return resp
-                    BaseAgent.send_message = custom_send
-                    
+
                     selected_engine = st.session_state.get("engine_mode", "Standard A2A Protocol")
                     orchestrator_req = {
                         "action": "verify",
@@ -594,12 +609,20 @@ else:
                             "engine_mode": selected_engine
                         }
                     }
-                    
+
                     pipeline_start_time = time.time()
-                    try:
-                        pipeline_result = orchestrator.handle_message(orchestrator_req)
-                    finally:
-                        BaseAgent.send_message = _ORIGINAL_BASE_SEND
+                    with _PIPELINE_LOCK:
+                        try:
+                            # Single-session tracing hook. Guarded by the lock so a
+                            # concurrent rerun never sees a half-patched BaseAgent,
+                            # and failures render cleanly instead of crashing the page.
+                            BaseAgent.send_message = custom_send
+                            pipeline_result = orchestrator.handle_message(orchestrator_req)
+                        except Exception as e:
+                            print(f"[UI] Pipeline raised an unexpected exception: {e}")
+                            pipeline_result = {"status": "error", "message": f"Unexpected pipeline error: {e}"}
+                        finally:
+                            BaseAgent.send_message = _ORIGINAL_BASE_SEND
                     pipeline_end_time = time.time()
                     
                     if pipeline_result.get("status") == "rate_limited":
@@ -846,9 +869,13 @@ else:
                             st.markdown("#### 🏷️ Key Extracted Concepts (spaCy NER)")
                             if entities:
                                 for ent in entities:
+                                    if not isinstance(ent, dict):
+                                        continue
+                                    ent_text = ent.get("text") or "Unknown"
+                                    ent_label = ent.get("label") or "MISC"
                                     st.markdown(f"""
                                     <span class='verdict-badge badge-secondary' style='margin-right: 5px; margin-bottom: 5px;'>
-                                        <strong>{ent['text']}</strong> ({ent['label']})
+                                        <strong>{ent_text}</strong> ({ent_label})
                                     </span>
                                     """, unsafe_allow_html=True)
                             else:
@@ -858,17 +885,21 @@ else:
                             st.markdown("#### 📌 Key Takeaways & Quotes")
                             if citations:
                                 for cit in citations:
-                                    art_label = f"Article #{cit['article_id']}" if 'article_id' in cit else "General Evidence"
+                                    if not isinstance(cit, dict):
+                                        continue
+                                    art_label = f"Article #{cit.get('article_id')}" if cit.get('article_id') else "General Evidence"
+                                    cit_quote = cit.get("quote") or "No quote provided."
+                                    cit_explanation = cit.get("explanation") or ""
                                     st.markdown(f"""
                                     <div class="citation-box">
                                         <div style="font-size: 0.85em; font-weight: 700; color: #7C3AED; margin-bottom: 5px;">
                                             {art_label}:
                                         </div>
                                         <div style="font-style: italic; font-size: 0.9em; margin-bottom: 8px; color: #1E293B;">
-                                            "{cit['quote']}"
+                                            "{cit_quote}"
                                         </div>
                                         <div style="font-size: 0.8em; color: #64748B;">
-                                            <strong>Insight:</strong> {cit['explanation']}
+                                            <strong>Insight:</strong> {cit_explanation}
                                         </div>
                                     </div>
                                     """, unsafe_allow_html=True)
@@ -1099,7 +1130,7 @@ else:
                     db.update_user_role(st.session_state.username, "user")
                     st.session_state.role = "user"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "user")
-                    st.success("Successfully switched to Free Plan!")
+                    st.session_state.flash = "Successfully switched to Free Plan!"
                     st.rerun()
 
         # Plan 2: Pro Plan
@@ -1133,7 +1164,7 @@ else:
                     db.update_user_role(st.session_state.username, "pro")
                     st.session_state.role = "pro"
                     st.session_state.jwt_token = generate_jwt(st.session_state.username, "pro")
-                    st.success("Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled.")
+                    st.session_state.flash = "Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled."
                     st.rerun()
 
         st.markdown("---")
@@ -1289,7 +1320,7 @@ else:
                     )
                     if st.button("Apply Plan Change", key="admin_apply_role"):
                         db.update_user_role(selected_target_user, selected_new_role)
-                        st.success(f"Updated user '{selected_target_user}' plan to '{'Pro Plan' if selected_new_role == 'pro' else 'Free Plan'}'.")
+                        st.session_state.flash = f"Updated user '{selected_target_user}' plan to '{'Pro Plan' if selected_new_role == 'pro' else 'Free Plan'}'."
                         st.rerun()
 
     # -------------------------------------------------------------------------
@@ -1370,14 +1401,18 @@ else:
                         st.markdown("**🏷️ Extracted Named Entities:**")
                         ents_html = "<div style='display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;'>"
                         for ent in details["entities"]:
-                            ents_html += f"<span class='verdict-badge badge-secondary' style='font-size: 0.78em;'>{ent['text']} <span style='opacity: 0.7;'>({ent['label']})</span></span>"
+                            if not isinstance(ent, dict):
+                                continue
+                            ents_html += f"<span class='verdict-badge badge-secondary' style='font-size: 0.78em;'>{ent.get('text','')} <span style='opacity: 0.7;'>({ent.get('label','MISC')})</span></span>"
                         ents_html += "</div>"
                         render_html(ents_html)
-                        
+
                     if details.get("articles_retrieved"):
                         st.markdown("**📰 Referenced Source Articles (FAISS Cosine Similarity):**")
                         for s in details["articles_retrieved"]:
-                            st.markdown(f"- **{s['source']}**: {s['title']} `(Score: {s['score']:.4f})`")
+                            if not isinstance(s, dict):
+                                continue
+                            st.markdown(f"- **{s.get('source','Unknown')}**: {s.get('title','')} `(Score: {s.get('score', 0.0):.4f})`")
 
     # -------------------------------------------------------------------------
     # PAGE 4: A2A PROTOCOL MONITOR

@@ -7,10 +7,18 @@ against the agent classes directly (no database writes, no destructive seeding,
 no live network calls) so the shared test suite and team data are unaffected.
 """
 
+import sys
 import unittest
+from pathlib import Path
+
+# Add root folder to sys.path to enable app module imports
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
 from app.agents.autogen_bridge import AutoGenClaimBridge
 from app.agents.verification_agent import VerificationAgent
+import app.agents.verification_agent as verif_mod
 
 ARTICLES = [
     {"id": 1, "title": "Apple market cap", "source": "Tech News",
@@ -33,7 +41,22 @@ class _FakeOrchestrator:
         self.verification_agent = verification_agent
 
 
-class TestConsensus(unittest.TestCase):
+class _ConfigIsolated(unittest.TestCase):
+    """Snapshot and restore the GROQ/GEMINI keys mutated below so the
+    module-global config is untouched for whichever suite runs next."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._orig_groq = verif_mod.config.GROQ_API_KEY
+        cls._orig_gemini = verif_mod.config.GEMINI_API_KEY
+
+    @classmethod
+    def tearDownClass(cls):
+        verif_mod.config.GROQ_API_KEY = cls._orig_groq
+        verif_mod.config.GEMINI_API_KEY = cls._orig_gemini
+
+
+class TestConsensus(_ConfigIsolated):
     def _agent(self):
         import app.agents.verification_agent as mod
         mod.config.GROQ_API_KEY = "test-key"
@@ -99,7 +122,7 @@ class TestConsensus(unittest.TestCase):
         self.assertEqual(agent._normalize_verdict("nonsense"), "Unverified")
 
 
-class TestDebateBridge(unittest.TestCase):
+class TestDebateBridge(_ConfigIsolated):
     def test_05_debate_reuses_consensus_without_extra_calls(self):
         import app.agents.verification_agent as mod
         mod.config.GROQ_API_KEY = ""
