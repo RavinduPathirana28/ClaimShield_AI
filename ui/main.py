@@ -46,6 +46,20 @@ def load_css():
 
 load_css()
 
+# Logo path helper
+LOGO_PATH = ROOT_DIR / "ui" / "assets" / "logo.jpg"
+
+def get_logo_base64():
+    """Returns base64 encoded logo for embedding in HTML."""
+    import base64
+    if LOGO_PATH.exists():
+        with open(LOGO_PATH, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+LOGO_B64 = get_logo_base64()
+LOGO_SRC = f"data:image/jpeg;base64,{LOGO_B64}" if LOGO_B64 else ""
+
 def render_html(html_str: str):
     """Renders HTML reliably using st.html (or fallback) without markdown interference."""
     dedented = textwrap.dedent(html_str).strip()
@@ -96,31 +110,38 @@ if "agent_logs" not in st.session_state:
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🛡️ Verification Dashboard"
 
-# Header Branding
-st.markdown("""
-<div style='text-align: center; margin-bottom: 25px;'>
-    <h1 style='font-size: 2.8em; margin-bottom: 5px;'>💬 ClaimShield AI</h1>
-    <p style='color: #818CF8; font-size: 1.1em; font-weight: 500;'>Instant QA & Fact Verification Engine — Responds to any question in simple, realistic language</p>
-</div>
-""", unsafe_allow_html=True)
+# Header is rendered inside page sections, suppressed at top level
 
 # ----------------- SIDEBAR: Auth, Navigation & Rate Limits -----------------
 with st.sidebar:
     if not st.session_state.authenticated:
-        st.markdown("### 🔐 User Authentication")
-        auth_mode = st.radio("Access Level", ["Login", "Register"], label_visibility="collapsed")
-        
-        username_in = st.text_input("Username", placeholder="e.g. user, premium, newsroom")
-        password_in = st.text_input("Password", type="password", placeholder="password")
-        
+        # ---- Branded Login Header ----
+        st.markdown(f"""
+        <div class='login-header'>
+            <img src='{LOGO_SRC}' class='login-logo' alt='ClaimShield AI Logo'/>
+            <div class='login-brand-name'>ClaimShield AI</div>
+            <div class='login-brand-sub'>Multi-Agent Fact Verification</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div class='login-divider'>Access Portal</div>", unsafe_allow_html=True)
+
+        auth_mode = st.radio("Access Level", ["Login", "Register"], label_visibility="collapsed",
+                             horizontal=True)
+
+        username_in = st.text_input("Username", placeholder="Enter your username")
+        password_in = st.text_input("Password", type="password", placeholder="Enter your password")
+
         role_select = "user"
         if auth_mode == "Register":
-            role_select = st.selectbox("Select Subscription Tier", ["user", "premium", "newsroom_admin"])
-            
-        if st.button(auth_mode, use_container_width=True):
+            role_select = st.selectbox("Subscription Tier", ["user", "premium", "newsroom_admin"],
+                                       format_func=lambda x: {"user": "🆓 Free Reader",
+                                                               "premium": "💎 Premium Journalist",
+                                                               "newsroom_admin": "🏢 Newsroom Enterprise"}[x])
+
+        btn_label = "🔐 Sign In" if auth_mode == "Login" else "🚀 Create Account"
+        if st.button(btn_label, use_container_width=True, type="primary"):
             auth_action = "login" if auth_mode == "Login" else "register"
-            
-            # Send message to Security Agent via Orchestrator's reference
             auth_msg = {
                 "action": "authenticate",
                 "data": {
@@ -130,50 +151,81 @@ with st.sidebar:
                     "role": role_select
                 }
             }
-            
-            # Intercept and directly query the security agent for auth
             auth_resp = orchestrator.security_agent.handle_message(auth_msg)
-            
+
             if auth_resp.get("status") == "success":
                 st.session_state.authenticated = True
                 st.session_state.username = auth_resp["user"]["username"]
                 st.session_state.role = auth_resp["user"]["role"]
                 st.session_state.jwt_token = auth_resp["token"]
-                st.success(f"Welcome back, {st.session_state.username}!")
+                st.success(f"Welcome, {st.session_state.username}! 🎉")
                 st.rerun()
             else:
                 st.error(auth_resp.get("message", "Authentication failed."))
-                
-        st.markdown("---")
-        st.info("💡 **Pre-seeded Demo Accounts:**\n- `user` / `password` (Free Reader)\n- `premium` / `premium` (Journalist)\n- `newsroom` / `newsroom` (Enterprise Admin)")
+
+        st.markdown("<div class='login-divider'>Demo Accounts</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class='demo-account-card'>
+            <div class='demo-account-role'>🆓 Free Reader</div>
+            <div class='demo-account-creds'>user / password</div>
+        </div>
+        <div class='demo-account-card'>
+            <div class='demo-account-role'>💎 Premium Journalist</div>
+            <div class='demo-account-creds'>premium / premium</div>
+        </div>
+        <div class='demo-account-card'>
+            <div class='demo-account-role'>🏢 Newsroom Enterprise</div>
+            <div class='demo-account-creds'>newsroom / newsroom</div>
+        </div>
+        """, unsafe_allow_html=True)
         
     else:
         # User is authenticated
         user_info = db.get_user(st.session_state.username)
         current_role = user_info.get("role", st.session_state.role) if user_info else st.session_state.role
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
-        
+
         role_display = {
             "user": "Free Reader",
             "premium": "Premium Journalist",
             "newsroom_admin": "Newsroom Enterprise"
         }.get(current_role, current_role.upper())
 
+        role_icon = {
+            "user": "🆓",
+            "premium": "💎",
+            "newsroom_admin": "🏢"
+        }.get(current_role, "👤")
+
+        # Sidebar brand header (authenticated)
+        st.markdown(f"""
+        <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);'>
+            <img src='{LOGO_SRC}' style='width:48px; height:48px; border-radius:14px; object-fit:cover;
+                box-shadow: 0 0 20px rgba(99,102,241,0.5); margin-bottom:6px; display:block; margin-left:auto; margin-right:auto;'/>
+            <div style='font-family:"Outfit",sans-serif; font-weight:800; font-size:1.05em;
+                background:linear-gradient(135deg,#818CF8,#7DD3FC); -webkit-background-clip:text;
+                -webkit-text-fill-color:transparent; background-clip:text;'>ClaimShield AI</div>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown(f"""
         <div class='glass-card' style='padding: 16px; margin-bottom: 15px;'>
             <div style='display: flex; align-items: center; gap: 12px;'>
-                <div style='width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #A855F7); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.2em;'>
+                <div style='width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #A855F7);
+                    display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.25em;
+                    box-shadow: 0 0 16px rgba(99,102,241,0.5); flex-shrink:0;'>
                     {initial_letter}
                 </div>
                 <div>
-                    <div style='font-size: 1.1em; font-weight: 700; color: #FFFFFF;'>{st.session_state.username}</div>
-                    <div style='font-size: 0.78em; color: #818CF8; font-weight: 600;'>{role_display}</div>
+                    <div style='font-size: 1.05em; font-weight: 700; color: #FFFFFF;'>{st.session_state.username}</div>
+                    <div style='font-size: 0.76em; color: #818CF8; font-weight: 600;'>{role_icon} {role_display}</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("### 🧭 Navigation Menu")
+
         nav_options = [
             "🛡️ Verification Dashboard",
             "👤 Account & Plan Management",
@@ -233,49 +285,198 @@ with st.sidebar:
 
 # ----------------- MAIN INTERFACE -----------------
 if not st.session_state.authenticated:
-    # Landing Page for unauthenticated visitors
-    landing_tabs = st.tabs(["✨ Overview & Capabilities", "💎 Subscription Plans", "🤖 Responsible AI"])
-    
-    with landing_tabs[0]:
+    # =========================================================================
+    # LANDING HOME PAGE — Unauthenticated Visitors
+    # =========================================================================
+
+    # ---- HERO SECTION ----
+    st.markdown(f"""
+    <div class='hero-section'>
+        <div class='hero-logo-wrap'>
+            <img src='{LOGO_SRC}' class='hero-logo-img' alt='ClaimShield AI'/>
+        </div>
+        <div class='hero-badge'>
+            <span class='hero-badge-dot'></span>
+            Now Live — Multi-Agent AI System
+        </div>
+        <div class='hero-title'>Truth Verified.<br/>In Real Time.</div>
+        <div class='hero-subtitle'>
+            ClaimShield AI is an advanced agentic fact-verification platform powered by a collaborative
+            network of 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus
+            — delivering transparent, evidence-backed verdicts instantly.
+        </div>
+        <div class='hero-cta-row'>
+            <span class='hero-btn-primary'>🛡️ Start Verifying Claims</span>
+            <span class='hero-btn-secondary'>📖 View Architecture</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ---- STATS ROW ----
+    st.markdown("""
+    <div class='stats-row'>
+        <div class='stat-item'>
+            <div class='stat-value'>5</div>
+            <div class='stat-label'>Specialized Agents</div>
+        </div>
+        <div class='stat-item'>
+            <div class='stat-value'>3</div>
+            <div class='stat-label'>LLM Consensus Models</div>
+        </div>
+        <div class='stat-item'>
+            <div class='stat-value'>A2A</div>
+            <div class='stat-label'>Messaging Protocol</div>
+        </div>
+        <div class='stat-item'>
+            <div class='stat-value'>FAISS</div>
+            <div class='stat-label'>Vector Retrieval</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ---- TRUST BAR ----
+    st.markdown("""
+    <div class='trust-bar'>
+        <div class='trust-item'><span class='trust-icon'>🔐</span> PBKDF2-SHA256 Hashing</div>
+        <div class='trust-item'><span class='trust-icon'>🪙</span> JWT Session Tokens</div>
+        <div class='trust-item'><span class='trust-icon'>⚡</span> Token-Bucket Rate Limiting</div>
+        <div class='trust-item'><span class='trust-icon'>📋</span> Encrypted Audit Trails</div>
+        <div class='trust-item'><span class='trust-icon'>🌐</span> LangGraph Stateful Workflow</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ---- FEATURE CARDS ----
+    st.markdown("""
+    <div class='section-eyebrow'>Platform Capabilities</div>
+    <div class='section-title'>Everything you need to verify the truth</div>
+    <div class='section-desc'>Six pillars of our multi-agent verification engine, built for journalists, researchers & news organizations.</div>
+    """, unsafe_allow_html=True)
+
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
         st.markdown("""
-        <div class='glass-card' style='text-align: center; padding: 40px;'>
-            <h2 style='color: #818CF8;'>🛡️ Shield Your Journalism Today</h2>
-            <p style='margin-bottom: 25px; color: #94A3B8; font-size: 1.1em;'>Create a secure account or login from the sidebar to access our real-time multi-agent claim verification system.</p>
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #6366F1, #818CF8);'>
+            <div class='feature-icon-wrap' style='background: rgba(99,102,241,0.15);'>🧠</div>
+            <div class='feature-card-title'>Multi-Agent Orchestration</div>
+            <div class='feature-card-desc'>
+                Security, NLP, Retrieval, Verification, and Explainer agents collaborate
+                via A2A/1.0 JSON protocol with full message tracing and live audit logs.
+            </div>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.markdown("### 🌟 System Architecture Highlights")
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #818CF8;'>🧠 Multi-Agent Network</h4>
-                <p style='color: #CBD5E1; font-size: 0.9em; line-height: 1.6;'>
-                    Orchestrated collaboration between Security, NLP, Retrieval, Verification, and Explainer agents via A2A/1.0 protocol.
-                </p>
+    with fc2:
+        st.markdown("""
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #38BDF8, #7DD3FC);'>
+            <div class='feature-icon-wrap' style='background: rgba(56,189,248,0.15);'>⚡</div>
+            <div class='feature-card-title'>Vector RAG & FAISS Index</div>
+            <div class='feature-card-desc'>
+                Semantic similarity retrieval over curated news repositories with cosine
+                ranking, top-5 expansion, and direct inline source citations.
             </div>
-            """, unsafe_allow_html=True)
-        with col_f2:
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #38BDF8;'>⚡ Vector RAG & FAISS</h4>
-                <p style='color: #CBD5E1; font-size: 0.9em; line-height: 1.6;'>
-                    Semantic vector similarity retrieval over trusted news repositories with cosine ranking and direct source citations.
-                </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with fc3:
+        st.markdown("""
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #A855F7, #D946EF);'>
+            <div class='feature-icon-wrap' style='background: rgba(168,85,247,0.15);'>🤖</div>
+            <div class='feature-card-title'>Multi-LLM Consensus</div>
+            <div class='feature-card-desc'>
+                Three independent LLMs independently evaluate claims, then vote on a consensus
+                verdict — eliminating single-model hallucination bias.
             </div>
-            """, unsafe_allow_html=True)
-        with col_f3:
-            st.markdown("""
-            <div class='glass-card'>
-                <h4 style='color: #10B981;'>🔒 Enterprise Security</h4>
-                <p style='color: #CBD5E1; font-size: 0.9em; line-height: 1.6;'>
-                    PBKDF2-SHA256 password hashing, signed JWT session tokens, token-bucket rate limiting, and encrypted audit trails.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
-    with landing_tabs[1]:
-        st.markdown("### 💎 Subscription & Pricing Tiers")
+    fc4, fc5, fc6 = st.columns(3)
+    with fc4:
+        st.markdown("""
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #10B981, #34D399);'>
+            <div class='feature-icon-wrap' style='background: rgba(16,185,129,0.15);'>🔒</div>
+            <div class='feature-card-title'>Enterprise-Grade Security</div>
+            <div class='feature-card-desc'>
+                PBKDF2-SHA256 password hashing, signed JWT tokens, token-bucket
+                rate limiting, and AES-encrypted audit trails at every layer.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with fc5:
+        st.markdown("""
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #F59E0B, #FBBF24);'>
+            <div class='feature-icon-wrap' style='background: rgba(245,158,11,0.15);'>🗺️</div>
+            <div class='feature-card-title'>LangGraph Stateful Workflow</div>
+            <div class='feature-card-desc'>
+                Optional LangGraph execution mode provides a stateful graph-based pipeline
+                for complex multi-step reasoning with full state persistence.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with fc6:
+        st.markdown("""
+        <div class='feature-card' style='--card-accent: linear-gradient(90deg, #EF4444, #F87171);'>
+            <div class='feature-icon-wrap' style='background: rgba(239,68,68,0.15);'>📊</div>
+            <div class='feature-card-title'>Explainability & Reports</div>
+            <div class='feature-card-desc'>
+                Every verdict comes with a cited evidence summary, confidence scores,
+                source attribution, and downloadable PDF verification reports.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ---- AGENT PIPELINE VISUALIZATION ----
+    st.markdown("<div style='margin-top: 50px;'>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='section-eyebrow'>How it works</div>
+    <div class='section-title'>The 5-Agent Verification Pipeline</div>
+    <div class='section-desc'>Each claim flows through our sequential agent network — from authentication to final explanation.</div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class='glass-card'>
+        <div class='pipeline-flow'>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(239,68,68,0.15); border-color: #EF4444; color: #EF4444;'>🔐</div>
+                <div class='pipeline-agent-label'>Security<br/>Agent</div>
+            </div>
+            <div class='pipeline-arrow'>→</div>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(56,189,248,0.15); border-color: #38BDF8; color: #38BDF8;'>🧬</div>
+                <div class='pipeline-agent-label'>NLP<br/>Agent</div>
+            </div>
+            <div class='pipeline-arrow'>→</div>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(245,158,11,0.15); border-color: #F59E0B; color: #F59E0B;'>🔍</div>
+                <div class='pipeline-agent-label'>Retrieval<br/>Agent</div>
+            </div>
+            <div class='pipeline-arrow'>→</div>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(168,85,247,0.15); border-color: #A855F7; color: #A855F7;'>⚖️</div>
+                <div class='pipeline-agent-label'>Verification<br/>Agent</div>
+            </div>
+            <div class='pipeline-arrow'>→</div>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(16,185,129,0.15); border-color: #10B981; color: #10B981;'>💡</div>
+                <div class='pipeline-agent-label'>Explainer<br/>Agent</div>
+            </div>
+            <div class='pipeline-arrow'>→</div>
+            <div class='pipeline-agent'>
+                <div class='pipeline-agent-icon' style='background: rgba(99,102,241,0.2); border-color: #6366F1; color: #818CF8;'>✅</div>
+                <div class='pipeline-agent-label'>Verdict<br/>& Report</div>
+            </div>
+        </div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ---- PRICING TABS ----
+    st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+    landing_tabs = st.tabs(["💎 Subscription Plans", "🤖 Responsible AI & Ethics"])
+
+    with landing_tabs[0]:
+        st.markdown("""
+        <div class='section-eyebrow'>Pricing</div>
+        <div class='section-title'>Plans for every team size</div>
+        <div class='section-desc'>Start free, scale to enterprise. No hidden fees.</div>
+        """, unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
             render_html("""
@@ -327,7 +528,7 @@ if not st.session_state.authenticated:
             </div>
             """)
 
-    with landing_tabs[2]:
+    with landing_tabs[1]:
         st.markdown("### 🤖 Responsible AI — Ethics & Governance")
         st.markdown("ClaimShield AI enforces fairness, explainability, transparency, and data protection across all tiers.")
 

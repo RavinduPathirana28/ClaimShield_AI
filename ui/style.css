@@ -579,3 +579,515 @@ section[data-testid="stSidebar"] {
     line-height: 1.5;
 }
 
+/* ==========================================================================
+   LANDING HOME PAGE STYLES
+   ========================================================================== */
+
+/* Hide default Streamlit header on landing */
+.landing-page-active header[data-testid="stHeader"] { display: none; }
+
+/* Floating orb animations */
+@keyframes float-orb {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+    33% { transform: translate(30px, -40px) scale(1.05); opacity: 0.5; }
+    66% { transform: translate(-20px, 20px) scale(0.95); opacity: 0.3; }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 60px 20px rgba(99, 102, 241, 0.25); }
+    50% { box-shadow: 0 0 100px 40px rgba(139, 92, 246, 0.4); }
+}
+
+@keyframes slide-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    text-align: center;
+    padding: 60px 20px 50px;
+    overflow: hidden;
+    animation: fade-in 0.8s ease forwards;
+}
+
+.hero-logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    animation: slide-up 0.7s ease forwards;
+}
+
+.hero-logo-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 28px;
+    object-fit: cover;
+    box-shadow: 0 0 50px rgba(99, 102, 241, 0.55), 0 0 100px rgba(99, 102, 241, 0.2);
+    border: 2px solid rgba(129, 140, 248, 0.4);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(129, 140, 248, 0.35);
+    color: #818CF8;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 30px;
+    margin-bottom: 22px;
+    animation: badge-pulse 2.5s ease infinite, slide-up 0.7s ease forwards;
+}
+
+.hero-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #818CF8;
+    box-shadow: 0 0 8px #818CF8;
+    display: inline-block;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.hero-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: clamp(2.4em, 5vw, 3.8em) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em !important;
+    margin: 0 auto 18px !important;
+    max-width: 820px;
+    background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 30%, #818CF8 65%, #7DD3FC 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite, slide-up 0.8s ease forwards;
+}
+
+.hero-subtitle {
+    color: #94A3B8 !important;
+    font-size: 1.15em !important;
+    line-height: 1.7 !important;
+    max-width: 620px;
+    margin: 0 auto 36px !important;
+    animation: slide-up 0.9s ease forwards;
+}
+
+.hero-cta-row {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 52px;
+    animation: slide-up 1s ease forwards;
+}
+
+.hero-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    color: #FFFFFF !important;
+    font-weight: 700;
+    font-size: 0.98em;
+    padding: 14px 30px;
+    border-radius: 12px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(124, 58, 237, 0.6);
+    background: linear-gradient(135deg, #5A52E6 0%, #8B5CF6 100%);
+}
+
+.hero-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #E2E8F0 !important;
+    font-weight: 600;
+    font-size: 0.98em;
+    padding: 14px 30px;
+    border-radius: 12px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(129, 140, 248, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Stats Row */
+.stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 28px 10px;
+    margin: 0 auto 56px;
+    max-width: 780px;
+    animation: fade-in 1.2s ease forwards;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    padding: 8px 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.stat-item:last-child { border-right: none; }
+
+.stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.2em;
+    font-weight: 800;
+    background: linear-gradient(135deg, #818CF8, #7DD3FC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: #64748B;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Feature Cards Grid */
+.features-section {
+    padding: 10px 0 40px;
+    animation: fade-in 1.3s ease forwards;
+}
+
+.section-eyebrow {
+    text-align: center;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #818CF8;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    text-align: center;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 2em !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 8px !important;
+}
+
+.section-desc {
+    text-align: center;
+    color: #64748B !important;
+    font-size: 0.98em !important;
+    margin-bottom: 32px !important;
+}
+
+.feature-card {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 28px 24px;
+    height: 100%;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, linear-gradient(90deg, #4F46E5, #7C3AED));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(129, 140, 248, 0.25);
+    box-shadow: 0 20px 50px -15px rgba(99, 102, 241, 0.3);
+}
+
+.feature-icon-wrap {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    margin-bottom: 18px;
+}
+
+.feature-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.08em;
+    font-weight: 700;
+    color: #F8FAFC;
+    margin-bottom: 10px;
+}
+
+.feature-card-desc {
+    font-size: 0.88em;
+    color: #94A3B8;
+    line-height: 1.7;
+}
+
+/* Agent Pipeline Visualization */
+.pipeline-section {
+    padding: 10px 0 50px;
+}
+
+.pipeline-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 20px 10px;
+}
+
+.pipeline-agent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    min-width: 90px;
+}
+
+.pipeline-agent-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    border: 2px solid;
+    transition: all 0.3s ease;
+}
+
+.pipeline-agent-icon:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 25px currentColor;
+}
+
+.pipeline-agent-label {
+    font-size: 0.73em;
+    font-weight: 600;
+    color: #94A3B8;
+    letter-spacing: 0.04em;
+}
+
+.pipeline-arrow {
+    font-size: 1.4em;
+    color: rgba(129, 140, 248, 0.4);
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+/* Trust bar */
+.trust-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 20px 0 50px;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748B;
+    font-size: 0.84em;
+    font-weight: 500;
+}
+
+.trust-icon { font-size: 1em; }
+
+/* ==========================================================================
+   LOGIN PAGE SIDEBAR REDESIGN
+   ========================================================================== */
+
+.login-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    object-fit: cover;
+    margin: 0 auto 10px;
+    display: block;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+}
+
+.login-brand-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25em;
+    font-weight: 800;
+    background: linear-gradient(135deg, #818CF8, #7DD3FC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+.login-brand-sub {
+    font-size: 0.72em;
+    color: #475569;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0;
+    color: #334155;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.demo-account-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+}
+
+.demo-account-role {
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #818CF8;
+    margin-bottom: 2px;
+}
+
+.demo-account-creds {
+    font-size: 0.78em;
+    color: #94A3B8;
+    font-family: 'Courier New', monospace;
+}
+
+/* Sidebar no-auth state top padding */
+.sidebar-auth-wrap {
+    padding: 6px 0;
+}
+
+/* ==========================================================================
+   PRICING SECTION REDESIGN
+   ========================================================================== */
+
+.pricing-section {
+    padding: 20px 0 40px;
+}
+
+.pricing-highlight-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    border-radius: 20px;
+    padding: 30px 24px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.pricing-standard-card {
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 30px 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-standard-card:hover {
+    border-color: rgba(129, 140, 248, 0.3);
+    transform: translateY(-3px);
+}
+
+.pricing-enterprise-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.6) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 20px;
+    padding: 30px 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-enterprise-card:hover {
+    border-color: rgba(52, 211, 153, 0.5);
+    transform: translateY(-3px);
+}
+
+
