@@ -232,6 +232,17 @@ if not st.session_state.authenticated:
     <script>
     (function() {
         function attachPortalTrigger() {
+            function tagHeroBtn() {
+                document.querySelectorAll('button').forEach(btn => {
+                    const txt = (btn.innerText || btn.textContent || '').trim();
+                    if (txt.includes('Start Verifying Claims') && !btn.classList.contains('hero-animated-wave-btn')) {
+                        btn.classList.add('hero-animated-wave-btn');
+                    }
+                });
+            }
+            tagHeroBtn();
+            setInterval(tagHeroBtn, 1200);
+
             document.addEventListener('click', function(e) {
                 const btn = e.target.closest('button');
                 if (!btn) return;
@@ -468,11 +479,10 @@ if not st.session_state.authenticated:
     # Hero CTA: Only [ 🛡️ Start Verifying Claims ]
     _, col_hero_btn, _ = st.columns([1.2, 1.6, 1.2])
     with col_hero_btn:
-        st.markdown("<div class='hero-btn-container'>", unsafe_allow_html=True)
+        render_clean_html("<div id='hero-btn-anchor' class='hero-btn-container'></div>")
         if st.button("🛡️ Start Verifying Claims", key="btn_hero_start_verifying", type="primary", use_container_width=True):
             st.session_state.show_access_portal = True
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # ---- STATS ROW ----
     st.markdown("""
@@ -644,7 +654,7 @@ if not st.session_state.authenticated:
         col1, col2 = st.columns(2)
         with col1:
             render_html("""
-            <div class='plan-card'>
+            <div class='plan-card' style='overflow: visible;'>
                 <div>
                     <h4>Free Plan</h4>
                     <div class='plan-price-tag' style='color: #0F172A;'>&#36;0</div>
@@ -661,7 +671,7 @@ if not st.session_state.authenticated:
             """)
         with col2:
             render_html("""
-            <div class='plan-card' style='border: 2px solid #4F46E5;'>
+            <div class='plan-card' style='border: 2px solid #4F46E5; overflow: visible;'>
                 <div class='plan-popular-tag'>Popular</div>
                 <div>
                     <h4>Pro Plan</h4>
@@ -1245,7 +1255,7 @@ else:
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_free else ""
             
             render_html(f"""
-            <div class='{card_class}'>
+            <div class='{card_class}' style='overflow: visible;'>
                 {active_tag_html}
                 <div>
                     <h4>Free Plan</h4>
@@ -1281,7 +1291,7 @@ else:
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_pro else "<div class='plan-popular-tag'>Popular</div>"
             
             render_html(f"""
-            <div class='{card_class}' style='border-color: #4F46E5;'>
+            <div class='{card_class}' style='border-color: #4F46E5; overflow: visible;'>
                 {active_tag_html}
                 <div>
                     <h4>Pro Plan</h4>

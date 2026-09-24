@@ -376,11 +376,14 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:chec
 /* Primary Action Button: Refined VisionOS Indigo/Blue Lens Glass with Specular Edge */
 div.stButton>button,
 button[kind="primary"],
-button[data-testid="baseButton-primary"] {
+button[data-testid="baseButton-primary"],
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"],
+section[data-testid="stSidebar"] button[kind="primary"] {
     background: linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #2563EB 100%) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     border: 1px solid rgba(255, 255, 255, 0.35) !important;
     border-radius: var(--radius-md) !important;
     padding: 10px 24px !important;
@@ -395,14 +398,40 @@ button[data-testid="baseButton-primary"] {
     cursor: pointer !important;
 }
 
+/* Ensure button text and child elements are always crisp white */
+div.stButton>button *,
+div.stButton>button p,
+div.stButton>button span,
+button[kind="primary"] *,
+button[kind="primary"] p,
+button[kind="primary"] span,
+button[data-testid="baseButton-primary"] *,
+button[data-testid="baseButton-primary"] p,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"] *,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"] p,
+section[data-testid="stSidebar"] button[kind="primary"] * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
 div.stButton>button:hover,
-button[kind="primary"]:hover {
+button[kind="primary"]:hover,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover {
     transform: translateY(-2px) scale(1.006) !important;
     box-shadow:
         0 14px 28px -4px rgba(67, 56, 202, 0.45),
         inset 0 2px 2px 0 rgba(255, 255, 255, 0.65) !important;
     background: linear-gradient(135deg, #3730A3 0%, #4338CA 50%, #1D4ED8 100%) !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+div.stButton>button:hover *,
+button[kind="primary"]:hover *,
+section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }
 
 div.stButton>button:active,
@@ -415,7 +444,8 @@ button[kind="primary"]:active {
 
 /* Secondary Button Reset: Translucent Frosted Glass Capsule */
 div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]),
-div[data-testid="stHorizontalBlock"] div.stButton>button {
+div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]),
+div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]) {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.54) 0%, rgba(255, 255, 255, 0.20) 100%) !important;
     backdrop-filter: var(--blur-control) !important;
     -webkit-backdrop-filter: var(--blur-control) !important;
@@ -1013,7 +1043,8 @@ div[data-testid="stProgress"]>div>div {
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    overflow: hidden;
+    overflow: visible !important;
+    margin-top: 18px !important;
 }
 
 .plan-card::before {
@@ -1045,36 +1076,40 @@ div[data-testid="stProgress"]>div>div {
 
 .plan-active-tag {
     position: absolute;
-    top: -12px;
+    top: -13px;
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(135deg, #047857 0%, #059669 100%);
     color: #FFFFFF;
     font-size: 0.75em;
     font-weight: 700;
-    padding: 3px 14px;
+    padding: 4px 16px;
     border-radius: var(--radius-pill);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.40);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    z-index: 15;
+    white-space: nowrap;
 }
 
 .plan-popular-tag {
     position: absolute;
-    top: -12px;
+    top: -13px;
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(135deg, #4338CA 0%, #2563EB 100%);
     color: #FFFFFF;
     font-size: 0.75em;
     font-weight: 700;
-    padding: 3px 14px;
+    padding: 4px 16px;
     border-radius: var(--radius-pill);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.40);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    z-index: 15;
+    white-space: nowrap;
 }
 
 .plan-price-tag {
@@ -1366,55 +1401,173 @@ div[data-testid="stJson"] * {
 /* Hero Start Verifying Claims Button Container & Trigger */
 .hero-btn-container {
     margin: -10px auto 46px;
-    display: flex;
-    justify-content: center;
-    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
+div[data-testid="stColumn"]:has(.hero-btn-container),
+div[data-testid="column"]:has(.hero-btn-container),
+div[data-testid="stColumn"]:has(#hero-btn-anchor),
+div[data-testid="column"]:has(#hero-btn-anchor),
+div[data-testid="stElementContainer"]:has(.hero-btn-container),
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor),
+div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"],
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"],
+div[data-testid="stColumn"]:has(#hero-btn-anchor) div.stButton,
+div[data-testid="column"]:has(#hero-btn-anchor) div.stButton,
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] div.stButton,
 .hero-btn-container div.stButton {
-    display: flex;
-    justify-content: center;
-    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
-div[data-testid="column"] div.hero-btn-container div.stButton > button,
-div[data-testid="stHorizontalBlock"] div.hero-btn-container div.stButton > button,
-.hero-btn-container div.stButton > button,
-button[key="btn_hero_start_verifying"] {
+div[data-testid="stColumn"]:has(.hero-btn-container) button,
+div[data-testid="column"]:has(.hero-btn-container) button,
+div[data-testid="stColumn"]:has(#hero-btn-anchor) button,
+div[data-testid="column"]:has(#hero-btn-anchor) button,
+div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button,
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] button,
+div:has(> #hero-btn-anchor) + div button,
+button[key="btn_hero_start_verifying"],
+.hero-animated-wave-btn,
+button.hero-animated-wave-btn {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
-    background: linear-gradient(135deg, #4338CA 0%, #3B82F6 100%) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
+    background: linear-gradient(135deg, #4338CA 0%, #2563EB 50%, #3B82F6 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     color: #FFFFFF !important;
-    font-weight: 650 !important;
-    font-size: 1.02em !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.06em !important;
     padding: 14px 34px !important;
-    border-radius: var(--radius-md) !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-radius: 9999px !important;
+    border: 2px solid #818CF8 !important;
     cursor: pointer !important;
-    box-shadow:
-        0 10px 24px -4px rgba(67, 56, 202, 0.35),
-        inset 0 1.5px 1.5px rgba(255, 255, 255, 0.55) !important;
-    transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    letter-spacing: -0.01em !important;
-    max-width: 360px !important;
+    letter-spacing: 0.01em !important;
+    max-width: 380px !important;
     width: 100% !important;
     height: auto !important;
-    min-height: 48px !important;
+    min-height: 52px !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    animation: hero-btn-wave-border 2.4s ease-in-out infinite !important;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-div[data-testid="column"] div.hero-btn-container div.stButton > button:hover,
-div[data-testid="stHorizontalBlock"] div.hero-btn-container div.stButton > button:hover,
-.hero-btn-container div.stButton > button:hover,
-button[key="btn_hero_start_verifying"]:hover {
-    transform: translateY(-2px) scale(1.008) !important;
+/* Ensure button text is bright white */
+div[data-testid="stColumn"]:has(.hero-btn-container) button *,
+div[data-testid="column"]:has(.hero-btn-container) button *,
+div[data-testid="stColumn"]:has(#hero-btn-anchor) button *,
+div[data-testid="column"]:has(#hero-btn-anchor) button *,
+div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button *,
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] button *,
+div:has(> #hero-btn-anchor) + div button *,
+.hero-animated-wave-btn * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* Outward-rippling wave ring */
+div[data-testid="stColumn"]:has(.hero-btn-container) button::after,
+div[data-testid="stColumn"]:has(#hero-btn-anchor) button::after,
+div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button::after,
+button[key="btn_hero_start_verifying"]::after,
+.hero-animated-wave-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    border: 2px solid rgba(56, 189, 248, 0.85);
+    opacity: 0;
+    pointer-events: none;
+    animation: hero-btn-sonar-wave 2.4s cubic-bezier(0.1, 0.5, 0.7, 1) infinite;
+}
+
+/* Pulsing & color-shifting wave border animation */
+@keyframes hero-btn-wave-border {
+    0% {
+        border-color: #818CF8 !important;
+        box-shadow:
+            0 0 0 0px rgba(99, 102, 241, 0.7),
+            0 0 12px rgba(99, 102, 241, 0.45),
+            0 10px 24px -4px rgba(67, 56, 202, 0.4),
+            inset 0 1.5px 2px rgba(255, 255, 255, 0.7) !important;
+    }
+    35% {
+        border-color: #38BDF8 !important;
+        box-shadow:
+            0 0 0 6px rgba(56, 189, 248, 0.30),
+            0 0 22px 2px rgba(56, 189, 248, 0.70),
+            0 14px 30px -4px rgba(56, 189, 248, 0.4),
+            inset 0 2px 2px rgba(255, 255, 255, 0.95) !important;
+    }
+    65% {
+        border-color: #C084FC !important;
+        box-shadow:
+            0 0 0 8px rgba(192, 132, 252, 0.22),
+            0 0 24px 3px rgba(192, 132, 252, 0.60),
+            0 12px 28px -4px rgba(192, 132, 252, 0.4),
+            inset 0 2px 2px rgba(255, 255, 255, 0.90) !important;
+    }
+    100% {
+        border-color: #818CF8 !important;
+        box-shadow:
+            0 0 0 0px rgba(99, 102, 241, 0.7),
+            0 0 12px rgba(99, 102, 241, 0.45),
+            0 10px 24px -4px rgba(67, 56, 202, 0.4),
+            inset 0 1.5px 2px rgba(255, 255, 255, 0.7) !important;
+    }
+}
+
+/* Expanding sonar wave ring */
+@keyframes hero-btn-sonar-wave {
+    0% {
+        transform: scale(0.98);
+        opacity: 0.9;
+        border-color: rgba(99, 102, 241, 0.85);
+    }
+    45% {
+        transform: scale(1.045);
+        opacity: 0.45;
+        border-color: rgba(56, 189, 248, 0.75);
+    }
+    100% {
+        transform: scale(1.10);
+        opacity: 0;
+        border-color: rgba(192, 132, 252, 0);
+    }
+}
+
+div[data-testid="stColumn"]:has(.hero-btn-container) button:hover,
+div[data-testid="column"]:has(.hero-btn-container) button:hover,
+div[data-testid="stColumn"]:has(#hero-btn-anchor) button:hover,
+div[data-testid="column"]:has(#hero-btn-anchor) button:hover,
+div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button:hover,
+div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] button:hover,
+div:has(> #hero-btn-anchor) + div button:hover,
+button[key="btn_hero_start_verifying"]:hover,
+.hero-animated-wave-btn:hover {
+    transform: translateY(-2px) scale(1.015) !important;
+    border-color: #38BDF8 !important;
     box-shadow:
-        0 16px 32px -4px rgba(67, 56, 202, 0.48),
-        inset 0 2px 2px rgba(255, 255, 255, 0.75) !important;
-    background: linear-gradient(135deg, #3730A3 0%, #2563EB 100%) !important;
+        0 0 0 8px rgba(56, 189, 248, 0.45),
+        0 0 32px 4px rgba(56, 189, 248, 0.85),
+        0 18px 40px -4px rgba(67, 56, 202, 0.60),
+        inset 0 2px 2px rgba(255, 255, 255, 0.90) !important;
+    background: linear-gradient(135deg, #3730A3 0%, #2563EB 50%, #0284C7 100%) !important;
     color: #FFFFFF !important;
 }
 
