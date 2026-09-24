@@ -105,9 +105,21 @@ class LangGraphClaimVerifier:
         builder.add_node("verify", verify_node)
 
         builder.set_entry_point("sanitize")
-        builder.add_edge("sanitize", "nlp")
-        builder.add_edge("nlp", "retrieve")
-        builder.add_edge("retrieve", "verify")
+
+        def route_after_sanitize(state: ClaimVerificationState) -> str:
+            return "nlp" if state.get("status") != "error" else END
+
+        def route_after_nlp(state: ClaimVerificationState) -> str:
+            return "retrieve" if state.get("status") != "error" else END
+
+        def route_after_retrieve(state: ClaimVerificationState) -> str:
+            return "verify" if state.get("status") != "error" else END
+
+        # If any node reports failure it patches "status" to "error" and the graph
+        # short-circuits to END instead of continuing and overwriting the error.
+        builder.add_conditional_edges("sanitize", route_after_sanitize, {"nlp": "nlp", END: END})
+        builder.add_conditional_edges("nlp", route_after_nlp, {"retrieve": "retrieve", END: END})
+        builder.add_conditional_edges("retrieve", route_after_retrieve, {"verify": "verify", END: END})
         builder.add_edge("verify", END)
 
         self.graph = builder.compile()
@@ -139,9 +151,10 @@ class LangGraphClaimVerifier:
 
         try:
             final_state = self.graph.invoke(initial_state)
-            return {
+            status = final_state.get("status", "success")
+            result = {
                 "sender": "langgraph_orchestrator",
-                "status": final_state.get("status", "success"),
+                "status": status,
                 "claim": final_state.get("clean_claim", claim),
                 "verdict": final_state.get("verdict", "Unclear"),
                 "confidence": final_state.get("confidence", 0.0),
@@ -151,7 +164,11 @@ class LangGraphClaimVerifier:
                 "ml_classification": final_state.get("ml_classification", {}),
                 "engine": final_state.get("engine", "LangGraph Graph Execution")
             }
+            if status == "error":
+                result["message"] = final_state.get("error_message") or "A LangGraph node failed during verification."
+            return result
         except Exception as e:
+            print(f"[LangGraph] Verification graph raised: {e}")
             return self._fallback_pipeline(claim, username, role)
 
     def _fallback_pipeline(self, claim: str, username: str, role: str) -> Dict[str, Any]:

@@ -28,7 +28,10 @@ ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "")
 
 # Security & JWT
 JWT_SECRET = os.environ.get("JWT_SECRET", "super_secret_jwt_key_for_news_verifier_agentic_system_2026")
-JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))
+try:
+    JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))
+except (TypeError, ValueError):
+    JWT_EXPIRY_MINUTES = 60
 
 # Rate Limiting: Token Bucket settings
 RATE_LIMIT_CAPACITY = 3  # Max 3 verification requests for Free tier
