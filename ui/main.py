@@ -37,18 +37,12 @@ st.set_page_config(
 )
 
 # Load CSS Styles
-@st.cache_data
-def get_cached_css():
+def load_css():
     css_path = ROOT_DIR / "ui" / "style.css"
     if css_path.exists():
         with open(css_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
-def load_css():
-    css = get_cached_css()
-    if css:
-        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+            css = f.read()
+            st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 load_css()
 
@@ -67,13 +61,67 @@ def get_logo_base64():
 LOGO_B64 = get_logo_base64()
 LOGO_SRC = f"data:image/jpeg;base64,{LOGO_B64}" if LOGO_B64 else ""
 
-def render_html(html_str: str):
-    """Renders HTML reliably using st.html (or fallback) without markdown interference."""
-    dedented = textwrap.dedent(html_str).strip()
-    if hasattr(st, "html"):
-        st.html(dedented)
-    else:
-        st.markdown(dedented, unsafe_allow_html=True)
+def render_clean_html(html_str: str):
+    """Renders HTML reliably via st.markdown without markdown code-block indentation or DOMPurify stripping."""
+    clean = "\n".join(line.lstrip() for line in html_str.strip().splitlines())
+    st.markdown(clean, unsafe_allow_html=True)
+
+
+def get_typewriter_subtitle_html(text: str, base_delay: float = 0.25, letter_speed: float = 0.015) -> str:
+    """Generates pure CSS hardware-accelerated letter-by-letter typewriter animation.
+    Each character reveals sequentially with natural word wrapping and cursor fade.
+    Includes embedded styles for 100% resilient cross-environment rendering.
+    """
+    words = text.split(" ")
+    t = base_delay
+    word_blocks = []
+    for word in words:
+        char_spans = []
+        for ch in word:
+            escaped_ch = html.escape(ch)
+            char_spans.append(f"<span class='tw-char' style='animation-delay:{t:.3f}s;'>{escaped_ch}</span>")
+            t += letter_speed
+        word_blocks.append(f"<span class='tw-word'>{''.join(char_spans)}</span>")
+        t += letter_speed * 1.3
+    
+    body = " ".join(word_blocks)
+    cursor = "<span class='tw-cursor'>|</span>"
+    total_duration = t + 0.5
+    
+    return f"""
+<style>
+.tw-word {{ display: inline-block; white-space: nowrap; }}
+.tw-char {{
+    display: inline-block;
+    opacity: 0;
+    animation: tw-char-reveal 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}}
+@keyframes tw-char-reveal {{
+    0% {{ opacity: 0; transform: translateY(2px); }}
+    100% {{ opacity: 1; transform: translateY(0); }}
+}}
+.tw-cursor {{
+    display: inline-block;
+    color: #4338CA;
+    font-weight: 500;
+    margin-left: 2px;
+    vertical-align: baseline;
+    animation: tw-cursor-blink 0.75s ease-in-out infinite, tw-cursor-fade 0.5s ease forwards {total_duration:.2f}s;
+}}
+@keyframes tw-cursor-blink {{
+    0%, 100% {{ opacity: 1; }}
+    50% {{ opacity: 0; }}
+}}
+@keyframes tw-cursor-fade {{
+    to {{ opacity: 0; visibility: hidden; }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+    .tw-char {{ opacity: 1 !important; transform: none !important; animation: none !important; }}
+    .tw-cursor {{ display: none !important; }}
+}}
+</style>
+<div class='hero-subtitle' id='hero-typewriter-wrap'>{body}{cursor}</div>
+"""
 
 
 def pdf_report_bytes(pipeline_result: dict):
@@ -253,7 +301,7 @@ with st.sidebar:
 
         st.markdown("<div class='login-divider'>Access Portal</div>", unsafe_allow_html=True)
 
-        auth_mode = st.radio("", ["Login", "Register"], label_visibility="hidden",
+        auth_mode = st.radio("Access Portal", ["Login", "Register"], label_visibility="collapsed",
                              horizontal=True)
 
         username_in = st.text_input("Username", placeholder="Enter your username")
@@ -409,7 +457,14 @@ if not st.session_state.authenticated:
     # =========================================================================
 
     # ---- HERO SECTION ----
-    st.markdown(f"""
+    subtitle_text = (
+        "ClaimShield AI is an advanced agentic fact-verification platform powered by a collaborative "
+        "network of 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus "
+        "— delivering transparent, evidence-backed verdicts instantly."
+    )
+    subtitle_html = get_typewriter_subtitle_html(subtitle_text)
+
+    hero_markup = f"""
     <div class='hero-section'>
         <div class='hero-logo-wrap'>
             <div style='display:inline-flex; padding: 10px; border-radius: 36px; background: linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.20) 100%); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.85); box-shadow: 0 16px 40px -10px rgba(15,23,42,0.08), inset 0 2px 2px rgba(255,255,255,0.95);'>
@@ -421,13 +476,10 @@ if not st.session_state.authenticated:
             Now Live — Multi-Agent AI System
         </div>
         <div class='hero-title'>Truth Verified.<br/>In Real Time.</div>
-        <div class='hero-subtitle'>
-            ClaimShield AI is an advanced agentic fact-verification platform powered by a collaborative
-            network of 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus
-            — delivering transparent, evidence-backed verdicts instantly.
-        </div>
+        {subtitle_html}
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_clean_html(hero_markup)
 
     # Hero CTA: Only [ 🛡️ Start Verifying Claims ]
     _, col_hero_btn, _ = st.columns([1.2, 1.6, 1.2])
@@ -548,8 +600,11 @@ if not st.session_state.authenticated:
         </div>
         """, unsafe_allow_html=True)
 
+    # Ensure render_html is available throughout landing page components
+    render_html = render_clean_html
+
     # ---- AGENT PIPELINE VISUALIZATION ----
-    st.markdown("<div style='margin-top: 50px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
     st.markdown("""
     <div class='section-eyebrow'>How it works</div>
     <div class='section-title'>The 5-Agent Verification Pipeline</div>
@@ -589,7 +644,6 @@ if not st.session_state.authenticated:
                 <div class='pipeline-agent-label'>Verdict<br/>& Report</div>
             </div>
         </div>
-    </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -645,6 +699,9 @@ if not st.session_state.authenticated:
         st.markdown("ClaimShield AI enforces fairness, explainability, transparency, and data protection across all tiers.")
 
 else:
+    # Ensure render_html is available throughout authenticated pages
+    render_html = render_clean_html
+
     # =========================================================================
     # AUTHENTICATED USER PAGES
     # =========================================================================
