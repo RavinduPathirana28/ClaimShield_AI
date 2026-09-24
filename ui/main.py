@@ -645,7 +645,7 @@ else:
                             
                         # 1. Straight Answer Section
                         st.markdown(f"""
-                        <div class="glass-card" style="border-left: 6px solid #4F46E5; background: rgba(99, 102, 241, 0.05);">
+                        <div class="glass-card" style="border-left: 6px solid #4F46E5; background: var(--glass-surface-tint-primary);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <div class="verdict-badge {v_class}">{verdict_display}</div>
                                 <div>
@@ -1017,7 +1017,7 @@ else:
 
         if current_role in ["pro", "premium", "newsroom_admin"]:
             render_html(f"""
-            <div class='glass-card' style='border-left: 6px solid #059669; background: rgba(16, 185, 129, 0.06);'>
+            <div class='glass-card' style='border-left: 6px solid #059669; background: var(--glass-surface-tint-success);'>
                 <h4 style='color: #059669; margin-top: 0;'>🚀 Unlimited Pro Plan Active</h4>
                 <p style='color: #334155; line-height: 1.6; margin-bottom: 0;'>
                     Your account is subscribed to the <strong>Pro Plan</strong>. You have zero request throttles, priority execution in the verification queue, and display of at least 3 (if available) and up to 5 maximum verified resources per query.
