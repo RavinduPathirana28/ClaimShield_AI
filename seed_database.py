@@ -214,6 +214,7 @@ def seed():
     # 4. Seed default test accounts representing different subscription tiers
     test_users = [
         {"username": "user", "password": "password", "role": "user"},
+        {"username": "pro", "password": "password", "role": "pro"},
         {"username": "premium", "password": "premium", "role": "premium"},
         {"username": "newsroom", "password": "newsroom", "role": "newsroom_admin"}
     ]

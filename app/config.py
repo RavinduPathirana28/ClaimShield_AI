@@ -31,9 +31,14 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "super_secret_jwt_key_for_news_verifie
 JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))
 
 # Rate Limiting: Token Bucket settings
-RATE_LIMIT_CAPACITY = 10  # Max requests
+RATE_LIMIT_CAPACITY = 3  # Max 3 verification requests for Free tier
 RATE_LIMIT_REFILL_PERIOD = 3600  # 1 hour in seconds
-RATE_LIMIT_REFILL_AMOUNT = 5  # Refill 5 tokens per hour
+RATE_LIMIT_REFILL_AMOUNT = 3  # Refill tokens per hour
+
+# Commercialization Plan Resource Display Limits
+FREE_PLAN_DISPLAY_RESOURCES = 2  # Free plan displays only 2 resources
+PRO_PLAN_MIN_RESOURCES = 3       # Pro plan displays at least 3 resources if available
+PRO_PLAN_MAX_RESOURCES = 5       # Pro plan displays up to 5 resources maximum
 
 # UI settings
 UI_TITLE = "ClaimShield AI — Multi-Agent Fact Checker"

@@ -1,4 +1,5 @@
 import json
+import app.config as config
 from app.agents.base_agent import BaseAgent
 from app.agents.security_agent import SecurityAgent
 from app.agents.nlp_agent import NLPAgent
@@ -132,8 +133,9 @@ class Orchestrator(BaseAgent):
         search_query = nlp_resp.get("search_query", clean_claim)
 
         # Step 4: Retrieve Supporting Documents (Retrieval Agent)
-        # Premium/newsroom admins get slightly more documents (e.g. 5 vs 3)
-        limit = 5 if user_role in ["premium", "newsroom_admin"] else 3
+        is_pro = user_role in ["pro", "premium", "newsroom_admin"]
+        # Pro users retrieve up to 5 resources; Free users retrieve at least 3 internally for verification
+        limit = config.PRO_PLAN_MAX_RESOURCES if is_pro else max(config.PRO_PLAN_MIN_RESOURCES, 3)
         ret_resp = self.send_message(
             recipient=self.retrieval_agent,
             action="retrieve",
@@ -224,6 +226,12 @@ class Orchestrator(BaseAgent):
         display_articles = articles
         if verdict in ["Answered", "General Info"] or (articles and articles[0].get("score", 0.0) < 0.30):
             display_articles = []
+        elif not is_pro:
+            # Free tier strictly displays only 2 resources
+            display_articles = articles[:config.FREE_PLAN_DISPLAY_RESOURCES]
+        else:
+            # Pro tier displays at least 3 (if available) and up to 5 maximum resources
+            display_articles = articles[:config.PRO_PLAN_MAX_RESOURCES]
 
         # Step 7: Compile and Return final response payload
         return {
@@ -238,6 +246,8 @@ class Orchestrator(BaseAgent):
             "citations": citations,
             "entities": entities,
             "articles": display_articles,
+            "total_resources_found": len(articles),
+            "is_pro_plan": is_pro,
             "engine": engine,
             "tokens_remaining": remaining_tokens
         }

@@ -120,8 +120,8 @@ class SecurityAgent(BaseAgent):
 
         # Subscriptions have unlimited limits or higher caps
         role = user.get("role", "user")
-        if role in ["premium", "newsroom_admin"]:
-            # Premium users are bypassed or have a massive bucket
+        if role in ["pro", "premium", "newsroom_admin"]:
+            # Pro & premium users are bypassed or have a massive bucket
             return {
                 "sender": self.name,
                 "status": "success",
