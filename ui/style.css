@@ -1311,6 +1311,56 @@ div[data-testid="stJson"] * {
     line-height: 1.7 !important;
     max-width: 640px;
     margin: 0 auto 34px !important;
+    min-height: 86px;
+}
+
+/* Pure CSS Hardware-Accelerated Typewriter */
+.tw-word {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.tw-char {
+    display: inline-block;
+    opacity: 0;
+    animation: tw-char-reveal 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tw-char-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth Typewriter Cursor */
+.tw-cursor {
+    display: inline-block;
+    color: #4338CA;
+    font-weight: 500;
+    margin-left: 2px;
+    vertical-align: baseline;
+    animation: tw-cursor-blink 0.75s ease-in-out infinite, tw-cursor-fade 0.6s ease forwards 4.2s;
+}
+
+@keyframes tw-cursor-blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes tw-cursor-fade {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
 /* Hero Start Verifying Claims Button Container & Trigger */
