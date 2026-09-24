@@ -4,3 +4,11 @@ fileWatcherType = "none"
 
 [runner]
 magicEnabled = false
+
+[theme]
+base = "light"
+primaryColor = "#7C3AED"
+backgroundColor = "#F0F2F8"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1E1B4B"
+font = "sans serif"

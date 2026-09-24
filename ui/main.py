@@ -197,6 +197,7 @@ with st.sidebar:
             "newsroom_admin": "🏢"
         }.get(current_role, "👤")
 
+
         # Sidebar brand header (authenticated)
         st.markdown(f"""
         <div style='text-align:center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);'>
