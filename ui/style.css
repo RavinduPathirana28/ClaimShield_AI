@@ -374,7 +374,6 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:chec
    ========================================================================== */
 
 /* Primary Action Button: Refined VisionOS Indigo/Blue Lens Glass with Specular Edge */
-div.stButton>button,
 button[kind="primary"],
 button[data-testid="baseButton-primary"],
 section[data-testid="stSidebar"] div.stButton>button[kind="primary"],
@@ -398,10 +397,7 @@ section[data-testid="stSidebar"] button[kind="primary"] {
     cursor: pointer !important;
 }
 
-/* Ensure button text and child elements are always crisp white */
-div.stButton>button *,
-div.stButton>button p,
-div.stButton>button span,
+/* Ensure ONLY primary button text and child elements are white */
 button[kind="primary"] *,
 button[kind="primary"] p,
 button[kind="primary"] span,
@@ -415,8 +411,8 @@ section[data-testid="stSidebar"] button[kind="primary"] * {
     font-weight: 600 !important;
 }
 
-div.stButton>button:hover,
 button[kind="primary"]:hover,
+button[data-testid="baseButton-primary"]:hover,
 section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover {
     transform: translateY(-2px) scale(1.006) !important;
     box-shadow:
@@ -427,52 +423,84 @@ section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover {
     -webkit-text-fill-color: #FFFFFF !important;
 }
 
-div.stButton>button:hover *,
 button[kind="primary"]:hover *,
+button[data-testid="baseButton-primary"]:hover *,
 section[data-testid="stSidebar"] div.stButton>button[kind="primary"]:hover * {
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
 }
 
-div.stButton>button:active,
-button[kind="primary"]:active {
+button[kind="primary"]:active,
+button[data-testid="baseButton-primary"]:active {
     transform: translateY(1px) scale(0.99) !important;
     box-shadow:
         0 4px 12px -2px rgba(67, 56, 202, 0.30),
         inset 0 2px 3px rgba(0, 0, 0, 0.20) !important;
 }
 
-/* Secondary Button Reset: Translucent Frosted Glass Capsule */
-div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]),
-div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]),
-div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]) {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.54) 0%, rgba(255, 255, 255, 0.20) 100%) !important;
+/* Secondary Button Reset: Translucent Frosted Glass Capsule with Dark Readable Text */
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]),
+button[kind="secondary"],
+button[data-testid="baseButton-secondary"],
+div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]),
+div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]),
+div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.30) 100%) !important;
     backdrop-filter: var(--blur-control) !important;
     -webkit-backdrop-filter: var(--blur-control) !important;
     color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
     border: 1px solid var(--glass-border) !important;
     border-radius: var(--radius-pill) !important;
     padding: 8px 18px !important;
     font-size: 0.88em !important;
-    font-weight: 550 !important;
+    font-weight: 600 !important;
     box-shadow:
         0 3px 10px rgba(15, 23, 42, 0.03),
         inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95) !important;
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):hover,
-div[data-testid="stHorizontalBlock"] div.stButton>button:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.35) 100%) !important;
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]) *,
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]) p,
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]) span,
+button[kind="secondary"] *,
+button[kind="secondary"] p,
+div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]) *,
+div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]) *,
+div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]) * {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]):hover,
+button[kind="secondary"]:hover,
+div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover,
+div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover,
+div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.45) 100%) !important;
     border-color: rgba(67, 56, 202, 0.35) !important;
     color: var(--apple-indigo) !important;
+    -webkit-text-fill-color: var(--apple-indigo) !important;
     transform: translateY(-1.5px) !important;
     box-shadow:
         0 6px 16px rgba(67, 56, 202, 0.10),
         inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1) !important;
 }
 
-div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):active,
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]):hover *,
+button[kind="secondary"]:hover *,
+div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover *,
+div[data-testid="stColumn"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover *,
+div[data-testid="stHorizontalBlock"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):hover * {
+    color: var(--apple-indigo) !important;
+    -webkit-text-fill-color: var(--apple-indigo) !important;
+}
+
+div.stButton > button:not([kind="primary"]):not([data-testid="baseButton-primary"]):active,
+button[kind="secondary"]:active,
+div[data-testid="column"] div.stButton>button:not([kind="primaryFormSubmit"]):not([kind="primary"]):not([data-testid="baseButton-primary"]):active,
 div[data-testid="stHorizontalBlock"] div.stButton>button:active {
     transform: translateY(1px) !important;
     box-shadow:
