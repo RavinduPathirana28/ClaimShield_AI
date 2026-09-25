@@ -2,9 +2,16 @@
 Claim Recommendations Engine.
 
 After a claim is verified, surfaces 3-4 high-value, related claims the user can
-verify next. The candidate pool is built from (1) a curated set of statements that
-map directly onto the seeded news corpus (so every pick routes into a real,
-evidence-backed verification) and (2) the user's own verification history.
+verify next. Every recommendation is driven by similarity to the claim the user
+just entered, never by their past verification activity:
+
+* The candidate pool is led by the titles of the corpus articles that the FAISS
+  vector index retrieves for the entered claim, so an "Apple" query surfaces
+  Apple-related items directly from the news corpus.
+* Curated statements (which map onto the seeded corpus) act as a fallback pool
+  so the panel still fills in offline/hermetic runs.
+* The user's own verification history is deliberately excluded so the panel
+  follows the current claim, not past preferences.
 
 Scoring uses semantic similarity from the shared SentenceTransformer embedding
 model when available, with a token-overlap (Dice) fallback for offline/hermetic
@@ -103,6 +110,7 @@ class ClaimRecommender:
         self.diversity = max(0.0, min(1.0, diversity))
         self._embed_model = None
         self._model_checked = False
+        self._titles = None
 
     # -- embedding model -----------------------------------------------------
     def _ensure_model(self):
@@ -129,29 +137,66 @@ class ClaimRecommender:
             return None
 
     # -- candidate construction ---------------------------------------------
-    def _candidate_pool(self, username):
-        """(claim, source, recency) triples: curated topics then user history.
+    def _article_title_map(self):
+        """``article_id -> (title, outlet)`` for the seeded corpus (cached)."""
+        if self._titles is not None:
+            return self._titles
+        self._titles = {}
+        if self.db is None:
+            return self._titles
+        try:
+            for art in (self.db.get_all_articles() or []):
+                self._titles[str(art.get("id"))] = (
+                    (art.get("title") or "").strip(),
+                    (art.get("source") or "").strip(),
+                )
+        except Exception:
+            self._titles = {}
+        return self._titles
 
-        History arrives newest-first from the DB, so ``recency`` (0 = freshest)
-        lets scoring apply a small recency-decayed boost to prior checks.
+    def _retrieve_corpus_titles(self, claim, limit):
+        """Titles of the corpus articles the vector index deems closest."""
+        search = getattr(self.vector_store, "search_index", None)
+        if search is None:
+            return []
+        try:
+            hits = search(claim, limit=limit)
+        except Exception:
+            hits = []
+        if not hits:
+            return []
+        titles = self._article_title_map()
+        out = []
+        for article_id, _sim in hits or []:
+            entry = titles.get(str(article_id))
+            if entry and entry[0]:
+                out.append(entry)
+        return out
+
+    def _candidate_pool(self, claim):
+        """(claim, source) candidates similar to the entered claim.
+
+        Led by the titles of the corpus articles retrieved for the claim -- they
+        are the closest, verifyable "what next" items -- with the curated claim
+        set as a fallback. The user's own history is deliberately excluded so
+        the panel reflects the current claim, not past preferences.
         """
         pool = []
         seen = set()
-        for claim in list(CURATED_CLAIMS) + list(CURATED_QUERIES):
-            norm = _normalize(claim)
+        limit = max(self.top_n * 2, self.top_n + 2)
+
+        for title, outlet in self._retrieve_corpus_titles(claim, limit):
+            norm = _normalize(title)
             if norm and norm not in seen:
                 seen.add(norm)
-                pool.append((claim, "Trending topic", None))
-        if self.db is not None and username:
-            try:
-                for recency, log in enumerate(self.db.get_logs_by_user(username) or []):
-                    claim = (log.get("claim") or "").strip()
-                    norm = _normalize(claim)
-                    if claim and norm and norm not in seen:
-                        seen.add(norm)
-                        pool.append((claim, "Previously verified", recency))
-            except Exception:
-                pass
+                pool.append((title, outlet or "Related article"))
+
+        for claim_text in list(CURATED_CLAIMS) + list(CURATED_QUERIES):
+            norm = _normalize(claim_text)
+            if norm and norm not in seen:
+                seen.add(norm)
+                pool.append((claim_text, "Trending topic"))
+
         return pool
 
     # -- diversity ----------------------------------------------------------
@@ -181,15 +226,20 @@ class ClaimRecommender:
 
     # -- scoring -------------------------------------------------------------
     def recommend(self, claim, username="guest", top_n=None):
-        """Returns up to top_n varied recommendations, most related first."""
+        """Returns up to top_n varied recommendations, most related first.
+
+        ``username`` is accepted for API compatibility but deliberately has no
+        effect: recommendations are ranked purely by similarity to the entered
+        claim, never by the user's past verification history.
+        """
         if not claim or not claim.strip():
             return []
         n = top_n or self.top_n
-        pool = self._candidate_pool(username)
+        pool = self._candidate_pool(claim)
         if not pool:
             return []
         norm_claim = _normalize(claim)
-        pool_texts = [t for t, *_ in pool]
+        pool_texts = [t for t, _ in pool]
 
         emb = self._embed([claim] + pool_texts)
         semantic = {}
@@ -200,7 +250,7 @@ class ClaimRecommender:
                 semantic[i] = float(s)
 
         scored = []
-        for i, (text, source, recency) in enumerate(pool):
+        for i, (text, source) in enumerate(pool):
             if _normalize(text) == norm_claim:
                 continue
             sem = semantic.get(i, 0.0)
@@ -213,10 +263,6 @@ class ClaimRecommender:
                 sim = max(sem, max(tok, big) * 0.5)
             else:
                 sim = max(tok, big, sem * 0.5)
-            # Freshly verified claims are strong "verify next" candidates, so
-            # nudge them with a small recency-decayed boost (newest first).
-            if source == "Previously verified" and recency is not None:
-                sim += max(0.0, 0.09 - 0.015 * recency)
             scored.append({
                 "claim": text,
                 "source": source,
