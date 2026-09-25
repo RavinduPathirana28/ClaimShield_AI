@@ -14,6 +14,17 @@ class _PlainVectorStore:
     model = None
 
 
+class _IndexedVectorStore:
+    """Minimal double exposing FAISS-style article search for corpus candidates."""
+
+    def __init__(self, hits):
+        self.hits = hits  # [(article_id, similarity), ...]
+        self.model = None
+
+    def search_index(self, query, limit=3):
+        return self.hits[:limit]
+
+
 class _FuzzyDB:
     """Minimal double for db.get_logs_by_user history lookups."""
 
@@ -22,6 +33,19 @@ class _FuzzyDB:
 
     def get_logs_by_user(self, username):
         return [{"claim": c} for c in self.claims]
+
+    def get_all_articles(self):
+        return []
+
+
+class _ArticlesDB(_FuzzyDB):
+    """DB double with a seeded corpus of articles."""
+
+    def __init__(self, articles):
+        self.articles = articles
+
+    def get_all_articles(self):
+        return self.articles
 
 
 class TestClaimRecommender(unittest.TestCase):
@@ -74,14 +98,36 @@ class TestClaimRecommender(unittest.TestCase):
         # Nothing passes the strict gate, but the panel is still filled to top_n.
         self.assertEqual(len(out), 4)
 
-    def test_history_claims_enter_pool(self):
-        prior = "ASML shipped its first 2nm High-NA EUV lithography system."
+    def test_history_does_not_influence_recommendations(self):
+        # A user's past checks must not surface in the panel: recommendations
+        # follow the entered claim, never the user's prior preferences.
+        prior = "Drinking 2-3 cups of coffee daily improves heart health."
         db = _FuzzyDB([prior])
         rec = self.make_recommender(db=db, vector_store=_PlainVectorStore())
-        out = rec.recommend("ASML began volume 2nm EUV lithography deliveries.", "user")
-        labels = {r["claim"]: r["source"] for r in out}
-        self.assertIn(prior, labels)
-        self.assertEqual(labels[prior], "Previously verified")
+        out = rec.recommend("Apple will launch the iPhone 18 in July 2026.", "user")
+        self.assertTrue(out)
+        self.assertNotIn("Previously verified", [r["source"] for r in out])
+        self.assertTrue(any("apple" in r["claim"].lower() or "iphone" in r["claim"].lower()
+                            for r in out),
+                        "panel should lead with claims similar to what the user entered")
+
+    def test_corpus_titles_rank_first_above_curated(self):
+        # When the vector index retrieves articles, their titles are the primary
+        # recommendation candidates: an Apple claim surfaces Apple articles first.
+        db = _ArticlesDB([
+            {"id": 1, "title": "Apple's Roadmap: No iPhone 18 planned until 2027",
+             "source": "TechNews Daily"},
+            {"id": 2, "title": "Greenland glaciers melting 15% faster than expected",
+             "source": "Scientific Earth"},
+        ])
+        vs = _IndexedVectorStore([(1, 0.92), (2, 0.18)])
+        rec = self.make_recommender(db=db, vector_store=vs)
+        out = rec.recommend("Apple will launch the iPhone 18 in July 2026.", "user")
+        self.assertGreaterEqual(len(out), 1)
+        self.assertEqual(out[0]["source"], "TechNews Daily")
+        self.assertIn("iphone", out[0]["claim"].lower())
+        self.assertTrue(any("apple" in r["claim"].lower() or "iphone" in r["claim"].lower()
+                            for r in out))
 
     def test_history_dedup_against_curated(self):
         db = _FuzzyDB(["Apple will launch the iPhone 18 in July 2026."])
