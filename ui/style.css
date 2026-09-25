@@ -385,7 +385,7 @@ section[data-testid="stSidebar"] div.block-container {
 
 /* VisionOS Navigation Menu Radio Buttons */
 section[data-testid="stSidebar"] div[data-testid="stRadio"]>div {
-    gap: 6px !important;
+    gap: 5px !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-testid="stWidgetLabel"],
@@ -400,17 +400,23 @@ section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     border-radius: var(--radius-md) !important;
     background: rgba(255, 255, 255, 0.36) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.58) !important;
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 3px !important;
     cursor: pointer !important;
     user-select: none !important;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label > div:first-child,
+section[data-testid="stSidebar"] div[data-testid="stRadio"] > div label p {
+    font-size: 0.9em !important;
+    line-height: 1.25 !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
@@ -583,6 +589,17 @@ div.stDownloadButton>button {
     transition: all 0.24s ease !important;
 }
 
+div.stDownloadButton > button p,
+div.stDownloadButton > button span {
+    color: #FFFFFF !important;
+}
+
+/* Force the icon to white */
+div.stDownloadButton > button svg {
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+}
+
 div.stDownloadButton>button:hover {
     transform: translateY(-2px) !important;
     box-shadow:
@@ -708,43 +725,8 @@ div[data-testid="stProgress"]>div>div {
 }
 
 /* ==========================================================================
-   MULTI-MODEL CONSENSUS & EXPLAINABILITY
+   MULTI-MODEL CONSENSUS & EXPLAINABILITY (compact)
    ========================================================================== */
-
-.cs-model-row {
-    background: var(--glass-level-2);
-    backdrop-filter: var(--blur-control);
-    -webkit-backdrop-filter: var(--blur-control);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: 14px 18px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), inset 0 1.5px 1px rgba(255, 255, 255, 0.95);
-    transition: all 0.25s ease;
-}
-
-.cs-model-row:hover {
-    background: var(--glass-level-2-hover);
-    border-color: var(--glass-border-highlight);
-    transform: translateY(-1px);
-}
-
-.cs-model-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.cs-model-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 0.95em;
-    color: var(--text-primary);
-}
 
 .cs-provider-dot {
     width: 10px;
@@ -752,84 +734,94 @@ div[data-testid="stProgress"]>div>div {
     border-radius: 50%;
     display: inline-block;
     flex-shrink: 0;
-    box-shadow: 0 0 8px currentColor;
+
 }
 
-.cs-model-badge {
-    font-size: 0.74em;
+/* One compact row per model: meta + verdict badge on the left, meter on the right */
+.cs-cc-row {
+    display: grid;
+    grid-template-columns: 1fr 190px;
+    gap: 10px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+.cs-cc-row:last-of-type {
+    border-bottom: none;
+}
+
+.cs-cc-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.cs-cc-name {
+    font-weight: 700;
+    font-size: 0.9em;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.cs-cc-verdict {
+    font-size: 0.68em;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    padding: 3px 10px;
+    padding: 3px 9px;
     border-radius: var(--radius-pill);
     white-space: nowrap;
 }
 
-.cs-conf-track {
-    height: 7px;
-    background: rgba(226, 232, 240, 0.85);
-    border-radius: var(--radius-pill);
-    margin-top: 10px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+.cs-cc-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.cs-conf-fill {
+.cs-cc-pct {
+    font-size: 0.78em;
+    font-weight: 800;
+    color: var(--text-primary);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.cs-cc-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(226, 232, 240, 0.85);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    min-width: 70px;
+}
+
+.cs-cc-fill {
     height: 100%;
     border-radius: var(--radius-pill);
-    transition: width 0.4s ease;
 }
 
-.cs-conf-note {
-    font-size: 0.76em;
-    color: var(--text-muted);
-    margin-top: 6px;
-    font-weight: 600;
-}
-
-.cs-model-snippet {
-    font-size: 0.88em;
+.cs-cc-snippet {
+    font-size: 0.78em;
     color: var(--text-secondary);
-    line-height: 1.55;
-    margin-top: 8px;
+    line-height: 1.5;
+    margin: 2px 0 8px 24px;
     font-style: italic;
-    background: rgba(255, 255, 255, 0.4);
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    border-left: 3px solid rgba(67, 56, 202, 0.4);
-}
-
-/* Agreement Meter Box */
-.cs-agreement-box {
-    border-top: 1px solid var(--glass-border-subtle);
-    margin-top: 18px;
-    padding-top: 18px;
-}
-
-.cs-agreement-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
-}
-
-.cs-agreement-track {
-    height: 10px;
-    background: rgba(226, 232, 240, 0.85);
-    border-radius: var(--radius-pill);
+    white-space: nowrap;
     overflow: hidden;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    text-overflow: ellipsis;
 }
 
-.cs-agreement-note {
-    font-size: 0.84em;
-    color: var(--text-secondary);
-    margin-top: 10px;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border-subtle);
+.cs-cc-snippet .material-symbols-rounded {
+    font-size: 14px;
+    vertical-align: -2px;
+    margin-right: 6px;
+    color: #94A3B8;
 }
 
 .cs-fallback-note {
@@ -841,6 +833,41 @@ div[data-testid="stProgress"]>div>div {
     background: rgba(217, 119, 6, 0.10);
     border-left: 4px solid #D97706;
     margin-bottom: 6px;
+}
+
+/* Compact Agreement Meter Strip */
+.cs-agreement-compact {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: rgba(241, 245, 249, 0.6);
+    border: 1px solid var(--glass-border-subtle);
+}
+
+.cs-agree-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.cs-agree-note {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.cs-agree-pct {
+    font-size: 0.8em;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .cs-cc-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ==========================================================================
@@ -1225,6 +1252,21 @@ div[data-testid="stProgress"]>div>div {
     width: 1.3em;
 }
 
+/* --- Breathing room: plan-card action buttons never sit flush against the card --- */
+div[data-testid="stColumn"]:has(.plan-card) button {
+    margin-top: 16px !important;
+}
+
+/* Gap below the checkout form before the Cancel button (and similar footer buttons) */
+div[data-testid="stColumn"]:has(form[data-testid="stForm"]) button[kind="secondary"] {
+    margin-top: 8px !important;
+}
+
+/* Gap between the receipt card and the success-page navigation buttons */
+div[data-testid="stLayoutWrapper"]:has(.receipt-card) + div[data-testid="stLayoutWrapper"] button {
+    margin-top: 26px !important;
+}
+
 /* Feature Comparison Table */
 .matrix-table {
     width: 100%;
@@ -1553,7 +1595,6 @@ div[data-testid="column"]:has(#hero-btn-anchor) button,
 div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button,
 div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] button,
 div:has(> #hero-btn-anchor) + div button,
-button[key="btn_hero_start_verifying"],
 .hero-animated-wave-btn,
 button.hero-animated-wave-btn {
     display: inline-flex !important;
@@ -1601,7 +1642,6 @@ div:has(> #hero-btn-anchor) + div button *,
 div[data-testid="stColumn"]:has(.hero-btn-container) button::after,
 div[data-testid="stColumn"]:has(#hero-btn-anchor) button::after,
 div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button::after,
-button[key="btn_hero_start_verifying"]::after,
 .hero-animated-wave-btn::after {
     content: '';
     position: absolute;
@@ -1675,7 +1715,6 @@ div[data-testid="column"]:has(#hero-btn-anchor) button:hover,
 div[data-testid="stElementContainer"]:has(.hero-btn-container) + div[data-testid="stElementContainer"] button:hover,
 div[data-testid="stElementContainer"]:has(#hero-btn-anchor) + div[data-testid="stElementContainer"] button:hover,
 div:has(> #hero-btn-anchor) + div button:hover,
-button[key="btn_hero_start_verifying"]:hover,
 .hero-animated-wave-btn:hover {
     transform: translateY(-2px) scale(1.015) !important;
     border-color: #38BDF8 !important;
@@ -1688,9 +1727,8 @@ button[key="btn_hero_start_verifying"]:hover,
     color: #FFFFFF !important;
 }
 
-/* VisionOS Frosted Close Button for Access Portal */
-button[key="btn_close_access_portal"],
-div[data-testid="stButton"]:has(button[key="btn_close_access_portal"]) button {
+/* VisionOS Frosted Close Button for Access Portal (Streamlit 1.64 exposes widget keys as .st-key-<key> on the container) */
+.st-key-btn_close_access_portal button {
     background: rgba(255, 255, 255, 0.60) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
@@ -1712,8 +1750,7 @@ div[data-testid="stButton"]:has(button[key="btn_close_access_portal"]) button {
     margin-left: auto !important;
 }
 
-button[key="btn_close_access_portal"]:hover,
-div[data-testid="stButton"]:has(button[key="btn_close_access_portal"]) button:hover {
+.st-key-btn_close_access_portal button:hover {
     background: rgba(255, 255, 255, 0.95) !important;
     color: var(--apple-rose) !important;
     transform: scale(1.08) !important;
@@ -2156,4 +2193,410 @@ button[data-testid="stTab"][aria-selected="true"] {
         flex-direction: column;
         text-align: center;
     }
+}
+
+/* ==========================================================================
+   Dummy Payment Gateway — Checkout & Receipt
+   ========================================================================== */
+
+.success-check {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.55), rgba(7, 89, 133, 0.06)),
+        linear-gradient(135deg, var(--apple-emerald-dark) 0%, var(--apple-emerald) 60%, #34D399 100%);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 18px 44px -8px rgba(5, 150, 105, 0.45),
+        inset 0 2px 3px rgba(255, 255, 255, 0.5),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.receipt-card {
+    background: var(--glass-level-1);
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    box-shadow: var(--glass-shadow);
+    animation: receipt-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes receipt-pop {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(226, 232, 240, 0.85);
+    font-size: 0.9em;
+}
+
+.receipt-row:last-child {
+    border-bottom: none;
+}
+
+.receipt-label {
+    color: #64748B;
+    font-size: 0.86em;
+}
+
+.receipt-value {
+    color: #0F172A;
+    font-weight: 700;
+    font-size: 0.94em;
+    text-align: right;
+}
+
+/* ==========================================================================
+   BOOT SPLASH + PIPELINE RUN LOADER + CHROME HIDING
+   ========================================================================== */
+
+/* Hide Streamlit chrome: top-right menu, header bar, toolbar, footer.
+   NOTE: header + toolbar are re-shown ONLY on authenticated pages via an
+   inline override in main.py (they host the native sidebar controls). */
+#MainMenu,
+header[data-testid="stHeader"],
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"],
+footer[data-testid="stFooter"],
+[data-testid="stStatusWidget"],
+div[data-testid="stMainMenuListWrapper"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* --------------------------------------------------------------------------
+   Boot splash (first-run branded overlay)
+   -------------------------------------------------------------------------- */
+.cs-boot-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: radial-gradient(1200px 800px at 50% 20%, #EEF2FF 0%, #E0E7FF 45%, #C7D2FE 100%);
+    animation: cs-splash-hide 0.9s ease 1.7s forwards;
+    pointer-events: none;
+}
+
+.cs-splash-orb {
+    position: relative;
+    width: 132px;
+    height: 132px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: 0 24px 60px rgba(67, 56, 202, 0.28), inset 0 1.5px 1.5px rgba(255, 255, 255, 1);
+}
+
+.cs-splash-ring {
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #6366F1;
+    border-right-color: #8B5CF6;
+    animation: cs-spin 1.4s linear infinite;
+}
+
+.cs-splash-orb img {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 14px rgba(67, 56, 202, 0.25));
+}
+
+.cs-splash-title {
+    font-size: 2.1em;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #312E81, #4F46E5 55%, #7C3AED);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.cs-splash-sub {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #4F46E5;
+    letter-spacing: 0.02em;
+}
+
+@keyframes cs-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes cs-splash-hide {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Pipeline run loader (live step-by-step; static, no ambient animation)
+   -------------------------------------------------------------------------- */
+.cs-run-loader {
+    border-radius: 16px;
+    padding: 14px 16px 16px;
+    margin: 8px 0 18px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.40));
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.10), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95);
+}
+
+.cs-run-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 0.95em;
+    color: #312E81;
+    margin-bottom: 12px;
+}
+
+.cs-run-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+.cs-run-tag {
+    margin-left: auto;
+    font-size: 0.68em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #6D28D9;
+    background: rgba(124, 58, 237, 0.10);
+    border: 1px solid rgba(124, 58, 237, 0.22);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.cs-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.cs-st {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.cs-st-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(226, 232, 240, 0.6);
+    color: #64748B;
+    flex-shrink: 0;
+}
+
+.cs-st-badge .material-symbols-rounded {
+    font-size: 17px;
+}
+
+.cs-st-label {
+    font-weight: 700;
+    font-size: 0.88em;
+    color: #1E293B;
+}
+
+.cs-st-status {
+    margin-left: auto;
+    font-size: 0.66em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94A3B8;
+    white-space: nowrap;
+}
+
+.cs-st-done {
+    background: rgba(5, 150, 105, 0.06);
+    border-color: rgba(5, 150, 105, 0.24);
+}
+
+.cs-st-done .cs-st-badge {
+    background: rgba(5, 150, 105, 0.14);
+    color: #047857;
+}
+
+.cs-st-done .cs-st-status {
+    color: #059669;
+}
+
+.cs-st-active {
+    background: rgba(202, 138, 4, 0.06);
+    border-color: rgba(202, 138, 4, 0.24);
+}
+
+.cs-st-active .cs-st-badge {
+    background: rgba(202, 138, 4, 0.14);
+    color: #92400E;
+}
+
+.cs-st-active .cs-st-label {
+    color: #111827;
+}
+
+.cs-st-active .cs-st-status {
+    color: #92400E;
+}
+
+.cs-st-pending {
+    opacity: 0.5;
+}
+
+.cs-bar {
+    margin-top: 12px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.14);
+    overflow: hidden;
+}
+
+.cs-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #6366F1, #8B5CF6);
+}
+
+.cs-run-detail {
+    margin-top: 8px;
+    font-size: 0.78em;
+    font-weight: 600;
+    color: #6D28D9;
+}
+
+/* --------------------------------------------------------------------------
+   Transition overlay (login / logout / async-looking actions)
+   -------------------------------------------------------------------------- */
+.cs-page-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    background: rgba(238, 242, 255, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.cs-overlay-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 30px 46px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 30px 80px rgba(67, 56, 202, 0.35), inset 0 1.5px 1.5px rgba(255, 255, 255, 1);
+    max-width: min(420px, 92vw);
+}
+
+.cs-overlay-ico {
+    font-size: 40px;
+    color: #4F46E5;
+    font-variation-settings: 'FILL' 1;
+}
+
+.cs-overlay-title {
+    font-size: 1.15em;
+    font-weight: 800;
+    color: #0F172A;
+}
+
+.cs-overlay-sub {
+    font-size: 0.85em;
+    color: #64748B;
+    text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Page-transition top bar (one-shot sweep when the routed page changes)
+   -------------------------------------------------------------------------- */
+.cs-nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 99998;
+    background: rgba(226, 232, 240, 0.5);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.cs-nav-fill {
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, #6366F1, #8B5CF6, #6366F1);
+    animation: cs-nav-sweep 0.55s ease-in-out forwards;
+}
+
+@keyframes cs-nav-sweep {
+    0% { transform: translateX(-110%); }
+    100% { transform: translateX(310%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cs-boot-splash,
+    .cs-splash-ring,
+    .cs-nav-fill {
+        animation-duration: 0.01s !important;
+        animation-iteration-count: 1 !important;
+    }
+    .cs-boot-splash {
+        animation: none !important;
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Explore Related Claims: full-width wrapping buttons (keep full claim text)
+   -------------------------------------------------------------------------- */
+div[data-testid="stButton"] button {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
 }

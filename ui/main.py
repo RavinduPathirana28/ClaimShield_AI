@@ -8,6 +8,7 @@ import html
 import textwrap
 import importlib
 import threading
+import contextlib
 from pathlib import Path
 
 # Add root folder to sys.path to enable app module imports
@@ -22,6 +23,12 @@ from app.agents.orchestrator import Orchestrator
 from app.agents.base_agent import BaseAgent
 from app import config
 import seed_database
+from ui.payment_gateway import (
+    PLANS as BILLING_PLANS,
+    TEST_CARD_NUMBERS as BILLING_TEST_CARDS,
+    validate_card as billing_validate_card,
+    process_payment as billing_process_payment,
+)
 from ui.icons import (
     SHIELD, LOCK, KEY, TOKEN, BOLT, ASSIGNMENT, PUBLIC, PSYCHOLOGY,
     SMART_TOY, ALT_ROUTE, BAR_CHART, BIOTECH, SEARCH, BALANCE, LIGHTBULB,
@@ -81,6 +88,14 @@ def load_css():
 
 load_css()
 
+# Shared full-viewport placeholder for async transition overlays (login /
+# logout). Must live OUTSIDE `with st.sidebar:`: the landing portal applies
+# transform/backdrop-filter to the sidebar section, which turns it into a CSS
+# containing block for `position: fixed` descendants. Created inside the
+# sidebar, the "Signing In" overlay would be pinned to the sidebar box instead
+# of the full screen.
+TRANSITION_PH = st.empty()
+
 # Logo path helper
 LOGO_PATH = ROOT_DIR / "ui" / "assets" / "logo.jpg"
 
@@ -100,6 +115,173 @@ def render_clean_html(html_str: str):
     """Renders HTML reliably via st.markdown without markdown code-block indentation or DOMPurify stripping."""
     clean = "\n".join(line.lstrip() for line in html_str.strip().splitlines())
     st.markdown(clean, unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Loading UX: boot splash + live step-by-step pipeline loader + transitions
+# ---------------------------------------------------------------------------
+
+_PIPELINE_STEPS = [
+    ("shield", "Security Check"),
+    ("biotech", "Parse & Extract"),
+    ("search", "Vector Retrieval"),
+    ("menu_book", "Context & Summaries"),
+    ("handshake", "Model Consensus"),
+    ("fact_check", "Verdict & Audit"),
+]
+
+# Maps the agent-to-agent action currently executing to a loader step, so the
+# card reflects the REAL stage of the pipeline instead of looping an animation.
+_PIPELINE_ACTION_STEPS = {
+    "sanitize": 0,
+    "check_rate_limit": 0,
+    "process_claim": 1,
+    "retrieve": 2,
+    "summarize": 3,
+    "verify_claim": 4,
+    "log_audit": 5,
+}
+
+_PIPELINE_ACTION_DETAIL = {
+    "sanitize": "Sanitizing claim input",
+    "check_rate_limit": "Token-bucket rate limit check",
+    "process_claim": "spaCy NER extraction & query generation",
+    "retrieve": "FAISS vector search over the corpus",
+    "summarize": "Building extractive evidence summary",
+    "verify_claim": "Collecting Groq & Gemini verdicts",
+    "log_audit": "Persisting encrypted audit trail",
+}
+
+
+def build_pipeline_loader_html(active_step: int = -1, detail: str = "") -> str:
+    """Renders the currently-executing step of the verification pipeline.
+
+    Static on purpose: completed steps carry a check, the active step is
+    highlighted, pending steps stay muted. No decorative animation — each
+    render corresponds to a real agent message that has fired.
+    """
+    step_rows = []
+    for i, (ic, title) in enumerate(_PIPELINE_STEPS):
+        if active_step < 0 or i < active_step:
+            state_cls, ico, status = "cs-st cs-st-done", "check", "Done"
+        elif i == active_step:
+            state_cls, ico, status = "cs-st cs-st-active", ic, "Running"
+        else:
+            state_cls, ico, status = "cs-st cs-st-pending", ic, "Queued"
+        step_rows.append(f"""
+        <div class="{state_cls}">
+            <span class="cs-st-badge"><span class="material-symbols-rounded">{ico}</span></span>
+            <span class="cs-st-label">{title}</span>
+            <span class="cs-st-status">{status}</span>
+        </div>""")
+    pct = 0
+    if active_step >= 0:
+        pct = int(((active_step + 1) / len(_PIPELINE_STEPS)) * 100)
+    return f"""
+<div class="cs-run-loader">
+    <div class="cs-run-head">
+        <span class="cs-run-dot"></span>
+        <span>Multi-Agent Verification Running</span>
+        <span class="cs-run-tag">{pct}%</span>
+    </div>
+    <div class="cs-steps">{''.join(step_rows)}</div>
+    <div class="cs-bar"><div class="cs-bar-fill" style="width:{pct}%;"></div></div>
+    <div class="cs-run-detail">{detail}</div>
+</div>
+"""
+
+
+def _pipeline_step_for(action: str) -> int:
+    return _PIPELINE_ACTION_STEPS.get(action, -1)
+
+
+# Live handle into the active loader. The tracing hook inside the run block
+# calls _report_pipeline_step() every time an agent message fires, so the card
+# advances row-by-row to the real current step.
+_PIPELINE_RUNNER = {"render": None}
+
+
+def _report_pipeline_step(action: str) -> None:
+    render = _PIPELINE_RUNNER.get("render")
+    if render is not None:
+        render(action)
+
+
+@contextlib.contextmanager
+def _pipeline_loading():
+    """Renders a live step-by-step loader for the duration of a synchronous run."""
+    placeholder = st.empty()
+    state = {"step": -1, "detail": ""}
+
+    def render(action: str):
+        step = _pipeline_step_for(action)
+        if step >= 0:
+            state["step"] = step
+            state["detail"] = _PIPELINE_ACTION_DETAIL.get(action, "")
+        placeholder.markdown(
+            build_pipeline_loader_html(state["step"], state["detail"]),
+            unsafe_allow_html=True,
+        )
+
+    _PIPELINE_RUNNER["render"] = render
+    render("")
+    try:
+        yield state
+    finally:
+        placeholder.empty()
+        _PIPELINE_RUNNER["render"] = None
+
+
+def build_transition_overlay_html(title: str, subtitle: str, icon: str) -> str:
+    """Branded full-screen overlay for async-looking transitions (login, logout)."""
+    return f"""
+<div class="cs-page-overlay">
+    <div class="cs-overlay-card">
+        <span class="material-symbols-rounded cs-overlay-ico">{icon}</span>
+        <div class="cs-overlay-title">{title}</div>
+        <div class="cs-overlay-sub">{subtitle}</div>
+    </div>
+</div>
+"""
+
+
+def run_with_transition(title: str, subtitle: str, icon: str, work, min_seconds: float = 0.7):
+    """Executes work behind a branded overlay for at least min_seconds so the
+    transition reads as intentional feedback rather than Streamlit's plain fade.
+
+    Returns (result, placeholder). On failure the caller must clear the
+    placeholder; on success the caller should st.rerun() so the overlay vanishes.
+    """
+    placeholder = TRANSITION_PH
+    placeholder.markdown(
+        build_transition_overlay_html(title, subtitle, icon),
+        unsafe_allow_html=True,
+    )
+    started = time.time()
+    result = work()
+    elapsed = time.time() - started
+    if elapsed < min_seconds:
+        time.sleep(min_seconds - elapsed)
+    return result, placeholder
+
+
+def build_boot_splash_html() -> str:
+    """Full-screen branded splash rendered only on the very first script run."""
+    return f"""
+<div class="cs-boot-splash">
+    <div class="cs-splash-orb">
+        <div class="cs-splash-ring"></div>
+        <img src='{LOGO_SRC}' alt='ClaimShield AI'/>
+    </div>
+    <div class="cs-splash-title">ClaimShield AI</div>
+    <div class="cs-splash-sub">Multi-Agent Fact Verification Platform</div>
+</div>
+"""
+
+
+if "boot_splash_shown" not in st.session_state:
+    st.session_state.boot_splash_shown = True
+    render_clean_html(build_boot_splash_html())
 
 
 def get_typewriter_subtitle_html(text: str, base_delay: float = 0.25, letter_speed: float = 0.015) -> str:
@@ -162,7 +344,7 @@ def get_typewriter_subtitle_html(text: str, base_delay: float = 0.25, letter_spe
 def pdf_report_bytes(pipeline_result: dict):
     """Builds PDF report bytes for a pipeline result; returns None if reportlab is missing."""
     try:
-        from generate_pdf import build_verification_report_bytes
+        from app.generate_pdf import build_verification_report_bytes
         return build_verification_report_bytes(pipeline_result)
     except Exception as e:
         print(f"[UI] PDF report generation unavailable: {e}")
@@ -205,6 +387,8 @@ if "current_page" not in st.session_state:
     st.session_state.current_page = PAGE_VERIFICATION
 if "nav_radio" not in st.session_state:
     st.session_state.nav_radio = PAGE_VERIFICATION
+if "_prev_page" not in st.session_state:
+    st.session_state._prev_page = PAGE_VERIFICATION
 if "flash" not in st.session_state:
     st.session_state.flash = None
 
@@ -216,6 +400,20 @@ if _flash_msg:
     st.success(_flash_msg)
 if "show_access_portal" not in st.session_state:
     st.session_state.show_access_portal = False
+
+# Dummy payment gateway flow state: None | "checkout" | "success"
+if "checkout_flow" not in st.session_state:
+    st.session_state.checkout_flow = None
+if "checkout_plan" not in st.session_state:
+    st.session_state.checkout_plan = "pro"
+if "checkout_receipt" not in st.session_state:
+    st.session_state.checkout_receipt = None
+
+# Guest portal preselects (choose a plan straight from the landing pricing cards)
+if "portal_mode" not in st.session_state:
+    st.session_state.portal_mode = "Login"
+if "portal_plan" not in st.session_state:
+    st.session_state.portal_plan = "user"
 
 # Header is rendered inside page sections, suppressed at top level
 
@@ -349,35 +547,62 @@ with st.sidebar:
 
         st.markdown("<div class='login-divider'>Access Portal</div>", unsafe_allow_html=True)
 
-        auth_mode = st.radio("Access Portal", ["Login", "Register"], label_visibility="collapsed",
-                             horizontal=True)
+        # Plain session keys (NOT widget keys) so the landing "Choose Free/Pro"
+        # buttons can preselect the portal before the widgets are instantiated.
+        portal_mode_val = st.session_state.get("portal_mode", "Login")
+        auth_mode = st.radio(
+            "Access Portal",
+            ["Login", "Register"],
+            label_visibility="collapsed",
+            horizontal=True,
+            index=0 if portal_mode_val == "Login" else 1,
+        )
+        st.session_state.portal_mode = auth_mode
 
         username_in = st.text_input("Username", placeholder="Enter your username")
         password_in = st.text_input("Password", type="password", placeholder="Enter your password")
 
         role_select = "user"
         if auth_mode == "Register":
+            portal_plan_val = st.session_state.get("portal_plan", "user")
             role_select = st.selectbox(
                 "Subscription Plan",
                 ["user", "pro"],
-                format_func=lambda x: {"user": "Free Plan (3 requests, 2 resources displayed)",
-                                       "pro": "Pro Plan (Unlimited, 3–5 resources displayed)"}[x]
+                index=0 if portal_plan_val == "user" else 1,
+                format_func=lambda x: {"user": "Free Plan ($0) — 3 requests, 2 resources displayed",
+                                       "pro": "Pro Plan ($19/mo) — Unlimited, 3–5 resources displayed"}[x]
             )
+            st.session_state.portal_plan = role_select
 
         btn_label = "Sign In" if auth_mode == "Login" else "Create Account"
         btn_icon = f":material/{LOCK}:" if auth_mode == "Login" else f":material/{ROCKET_LAUNCH}:"
         if st.button(btn_label, icon=btn_icon, use_container_width=True, type="primary"):
             auth_action = "login" if auth_mode == "Login" else "register"
+            # A brand-new user registering for the paid plan starts on the Free
+            # role and is routed through the demo checkout; their Pro role is
+            # only written to the DB once the simulated payment succeeds.
+            pending_pro_checkout = (auth_action == "register" and role_select == "pro")
+            auth_role = "user" if pending_pro_checkout else role_select
             auth_msg = {
                 "action": "authenticate",
                 "data": {
                     "username": username_in,
                     "password": password_in,
                     "auth_action": auth_action,
-                    "role": role_select
+                    "role": auth_role
                 }
             }
-            auth_resp = orchestrator.security_agent.handle_message(auth_msg)
+
+            def _do_auth() -> dict:
+                return orchestrator.security_agent.handle_message(auth_msg)
+
+            auth_overlay_title = "Signing In" if auth_action == "login" else "Creating Account"
+            auth_overlay_sub = ("Verifying your credentials with the Security Agent…"
+                                if auth_action == "login"
+                                else "Registering your account securely…")
+            auth_resp, auth_ph = run_with_transition(
+                auth_overlay_title, auth_overlay_sub, "key", _do_auth, min_seconds=0.7
+            )
 
             if auth_resp.get("status") == "success":
                 st.session_state.authenticated = True
@@ -386,9 +611,17 @@ with st.sidebar:
                 st.session_state.jwt_token = auth_resp["token"]
                 st.session_state.current_page = PAGE_VERIFICATION
                 st.session_state.nav_radio = PAGE_VERIFICATION
-                st.session_state.flash = f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}"
+                if pending_pro_checkout:
+                    st.session_state.checkout_plan = "pro"
+                    st.session_state.checkout_flow = "checkout"
+                    st.session_state.flash = f"Account created! Complete the Pro checkout to activate unlimited access. {icon_md(ARROW_FORWARD)}"
+                else:
+                    st.session_state.checkout_flow = None
+                    st.session_state.checkout_receipt = None
+                    st.session_state.flash = f"Welcome, {st.session_state.username}! {icon_md(CELEBRATION)}"
                 st.rerun()
             else:
+                auth_ph.empty()
                 st.error(auth_resp.get("message", "Authentication failed."))
 
         
@@ -405,6 +638,18 @@ with st.sidebar:
         
     else:
         # User is authenticated
+        # Re-Show Streamlit's native header/toolbar so the built-in sidebar
+        # collapse/expand buttons are available (hidden globally by style.css).
+        st.markdown("""
+        <style>
+        body header[data-testid="stHeader"],
+        body div[data-testid="stToolbar"] {
+            display: flex !important;
+            visibility: visible !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         user_info = db.get_user(st.session_state.username)
         current_role = user_info.get("role", st.session_state.role) if user_info else st.session_state.role
         initial_letter = (st.session_state.username[0].upper()) if st.session_state.username else "U"
@@ -426,22 +671,22 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
         st.markdown(f"""
-        <div class='glass-card' style='padding: 16px; margin-bottom: 15px;'>
-            <div style='display: flex; align-items: center; gap: 12px;'>
-                <div style='width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #4338CA, #2563EB);
-                    display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.25em;
+        <div class='glass-card' style='padding: 12px; margin-bottom: 12px;'>
+            <div style='display: flex; align-items: center; gap: 11px;'>
+                <div style='width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4338CA, #2563EB);
+                    display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.15em;
                     box-shadow: 0 4px 14px rgba(67,56,202,0.25); flex-shrink:0;'>
                     {initial_letter}
                 </div>
-                <div>
-                    <div style='font-size: 1.05em; font-weight: 700; color: #0A0F1D;'>{st.session_state.username}</div>
-                    <div style='font-size: 0.76em; color: #4338CA; font-weight: 600;'>{role_icon} {role_display}</div>
+                <div style='min-width: 0;'>
+                    <div style='font-size: 1.0em; font-weight: 700; color: #0A0F1D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{st.session_state.username}</div>
+                    <div style='font-size: 0.74em; color: #4338CA; font-weight: 600;'>{role_icon} {role_display}</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"### {icon_md(EXPLORE)} Navigation Menu")
+        st.markdown(f"#### {icon_md(EXPLORE)} Navigation")
 
         nav_options = [
             PAGE_VERIFICATION,
@@ -450,22 +695,23 @@ with st.sidebar:
             PAGE_A2A,
             PAGE_RESPONSIBLE_AI
         ]
-        
-        # Ensure session state radio key matches current page
-        if "nav_radio" not in st.session_state or st.session_state.nav_radio not in nav_options:
-            st.session_state.nav_radio = st.session_state.current_page if st.session_state.current_page in nav_options else PAGE_VERIFICATION
 
-        def _on_nav_change():
-            st.session_state.current_page = st.session_state.nav_radio
+        # nav_radio is a PLAIN session key (NOT a widget key) so that action
+        # handlers (logout, success-nav buttons) can move the user to another
+        # page without hitting StreamlitWidgetAlreadyInstantiatedError.
+        nav_default = st.session_state.get(
+            "nav_radio",
+            st.session_state.current_page if st.session_state.current_page in nav_options else PAGE_VERIFICATION
+        )
+        nav_index = nav_options.index(nav_default) if nav_default in nav_options else 0
 
-        # Keep track of active page with direct key binding for immediate single-click navigation
         selected_page = st.radio(
             "Go to Page",
             nav_options,
             label_visibility="collapsed",
-            key="nav_radio",
-            on_change=_on_nav_change
+            index=nav_index,
         )
+        st.session_state.nav_radio = selected_page
         st.session_state.current_page = selected_page
 
         st.markdown("---")
@@ -500,6 +746,12 @@ with st.sidebar:
         st.session_state.engine_mode = engine_mode
 
         if st.button("Logout", use_container_width=True):
+            logout_ph = TRANSITION_PH
+            logout_ph.markdown(
+                build_transition_overlay_html("Signing Out", "Clearing your secure session…", "logout"),
+                unsafe_allow_html=True,
+            )
+            time.sleep(0.5)
             st.session_state.authenticated = False
             st.session_state.username = None
             st.session_state.role = "user"
@@ -508,6 +760,8 @@ with st.sidebar:
             st.session_state.current_page = PAGE_VERIFICATION
             st.session_state.nav_radio = PAGE_VERIFICATION
             st.session_state.show_access_portal = False
+            st.session_state.checkout_flow = None
+            st.session_state.checkout_receipt = None
             st.rerun()
 
 # ----------------- MAIN INTERFACE -----------------
@@ -719,7 +973,7 @@ if not st.session_state.authenticated:
         col1, col2 = st.columns(2)
         with col1:
             render_html("""
-            <div class='plan-card' style='overflow: visible;'>
+            <div class='plan-card' style='border: 2px solid rgba(148, 163, 184, 0.35); overflow: visible;'>
                 <div>
                     <h4>Free Plan</h4>
                     <div class='plan-price-tag' style='color: #0F172A;'>&#36;0</div>
@@ -734,6 +988,11 @@ if not st.session_state.authenticated:
                 </div>
             </div>
             """)
+            if st.button("Choose Free Plan", icon=f":material/{CARD_MEMBERSHIP}:", key="btn_landing_choose_free", use_container_width=True):
+                st.session_state.portal_mode = "Register"
+                st.session_state.portal_plan = "user"
+                st.session_state.show_access_portal = True
+                st.rerun()
         with col2:
             render_html("""
             <div class='plan-card' style='border: 2px solid #4F46E5; overflow: visible;'>
@@ -752,6 +1011,11 @@ if not st.session_state.authenticated:
                 </div>
             </div>
             """)
+            if st.button("Choose Pro Plan", icon=f":material/{STAR}:", key="btn_landing_choose_pro", use_container_width=True):
+                st.session_state.portal_mode = "Register"
+                st.session_state.portal_plan = "pro"
+                st.session_state.show_access_portal = True
+                st.rerun()
 
     with landing_tabs[1]:
         st.markdown(f"### {icon_md(SMART_TOY)} Responsible AI — Ethics & Governance")
@@ -766,9 +1030,187 @@ else:
     # =========================================================================
 
     # -------------------------------------------------------------------------
+    # CHECKOUT FLOW — DUMMY PAYMENT GATEWAY (overrides normal page dispatch)
+    # -------------------------------------------------------------------------
+    if st.session_state.get("checkout_flow") == "checkout":
+        checkout_plan = st.session_state.get("checkout_plan", "pro")
+        plan_info = BILLING_PLANS.get(checkout_plan, BILLING_PLANS["pro"])
+        price = plan_info["price"]
+        checkout_user = st.session_state.username
+        test_card_label = list(BILLING_TEST_CARDS.keys())[0]
+
+        st.markdown(f"## {icon_md(CARD_MEMBERSHIP)} Secure Checkout")
+        st.markdown(f"Complete this one-time **{plan_info['name']}** order to activate unlimited access for **{checkout_user}**.")
+
+        col_order, col_billing = st.columns([1, 1])
+
+        with col_order:
+            render_html(f"""
+            <div class='plan-card' style='border-color: #4F46E5; overflow: visible; text-align: left;'>
+                <div class='plan-popular-tag'>Order Summary</div>
+                <div>
+                    <h4 style='text-align:center;'>{plan_info['name']}</h4>
+                    <div class='plan-price-tag' style='text-align:center; color: #4F46E5;'>&#36;{price:.0f}<span style='font-size: 0.45em; color: #64748B;'>/mo</span></div>
+                    <p style='color: #64748B; font-size: 0.85em; text-align:center;'>{plan_info['description']}</p>
+                    <ul class='plan-feature-list'>
+                        <li><strong>Unlimited</strong> verification checks</li>
+                        <li><strong>Displays at least 3 (if available) &amp; up to 5 max</strong></li>
+                        <li>Bypassed token bucket rate limits</li>
+                        <li>Priority LLM execution queue</li>
+                        <li>Multi-Agent Persona Debate &amp; LangGraph</li>
+                    </ul>
+                    <hr style='border:none; border-top:1px solid rgba(226,232,240,0.9); margin: 4px 0 12px;'>
+                    <div style='font-size: 0.88em; color: #334155; line-height: 2;'>
+                        <div style='display:flex; justify-content:space-between;'><span style='color:#64748B;'>Billing account</span><strong>{checkout_user}</strong></div>
+                        <div style='display:flex; justify-content:space-between;'><span style='color:#64748B;'>Billing period</span><strong>Monthly</strong></div>
+                        <div style='display:flex; justify-content:space-between;'><span style='color:#64748B;'>Plan price</span><strong>&#36;{price:.2f} USD</strong></div>
+                        <div style='display:flex; justify-content:space-between;'><span style='color:#64748B;'>Tax</span><strong>&#36;0.00</strong></div>
+                        <div style='display:flex; justify-content:space-between; border-top:1px solid rgba(226,232,240,0.9); padding-top:8px; margin-top:6px;'>
+                            <span style='color:#0F172A; font-weight:700;'>Total due today</span>
+                            <strong style='color:#4F46E5; font-size:1.05em;'>&#36;{price:.2f}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """)
+
+            render_html(f"""
+            <div class='glass-card' style='padding: 14px 18px; margin-top: 12px; font-size: 0.84em; color: #64748B;'>
+                <span class="material-symbols-rounded" style='vertical-align: middle; color: #059669;'>lock</span>
+                Payments are processed by <strong style='color:#334155;'>ClaimShield Pay</strong>, a demo gateway.
+                Your card details are validated locally and are never stored. No changes are made to your
+                account unless the payment succeeds.
+            </div>
+            """)
+
+        with col_billing:
+            render_html("""
+            <div class='section-eyebrow'>Payment Details</div>
+            <div class='section-title' style='font-size: 1.35em;'>Card Information</div>
+            """)
+            with st.form(f"checkout_form_{checkout_plan}", clear_on_submit=False):
+                holder_input = st.text_input("Cardholder Name", placeholder="e.g. Jane Smith")
+                card_input = st.text_input(
+                    "Card Number",
+                    placeholder="4242 4242 4242 4242",
+                    help=f"Demo gateway only accepts {test_card_label[:4]} {test_card_label[4:8]} {test_card_label[8:12]} {test_card_label[12:]}.",
+                )
+                exp_col, cvv_col = st.columns(2)
+                expiry_input = exp_col.text_input("Expiry (MM/YY)", placeholder="12/28")
+                cvv_input = cvv_col.text_input("CVV", type="password", placeholder="123")
+                pay_submitted = st.form_submit_button(
+                    f"Pay ${price:.2f} & Activate", type="primary",
+                    icon=f":material/{LOCK}:", use_container_width=True,
+                )
+
+            if pay_submitted:
+                ok, gate_msg = billing_validate_card(holder_input, card_input, expiry_input, cvv_input)
+                if not ok:
+                    st.error(icon_md(CANCEL) + " " + gate_msg)
+                else:
+                    with st.spinner("Encrypting details & contacting payment gateway..."):
+                        receipt = billing_process_payment({
+                            "username": checkout_user,
+                            "plan": checkout_plan,
+                            "amount": price,
+                            "card_number": card_input,
+                        })
+                    if receipt["approved"]:
+                        db.update_user_tokens(checkout_user, float(config.RATE_LIMIT_CAPACITY), time.time())
+                        db.update_user_role(checkout_user, plan_info["role"])
+                        st.session_state.role = plan_info["role"]
+                        st.session_state.jwt_token = generate_jwt(checkout_user, plan_info["role"])
+                        st.session_state.checkout_receipt = receipt
+                        st.session_state.checkout_flow = "success"
+                        st.session_state.flash = f"{icon_md(CHECK_CIRCLE)} Payment successful — {plan_info['name']} activated!"
+                        st.rerun()
+                    else:
+                        st.error(icon_md(CANCEL) + " Payment declined. No changes were made to your account.")
+
+            st.markdown("---")
+            if st.button("Cancel & Keep Current Plan", use_container_width=True, key="btn_checkout_cancel"):
+                st.session_state.checkout_flow = None
+                st.session_state.checkout_receipt = None
+                st.session_state.current_page = PAGE_ACCOUNT
+                st.session_state.nav_radio = PAGE_ACCOUNT
+                st.rerun()
+
+    elif st.session_state.get("checkout_flow") == "success":
+        receipt = st.session_state.get("checkout_receipt") or {}
+        plan_name = receipt.get("plan_name", "Pro Plan")
+        amount = float(receipt.get("amount", 19.00))
+
+        render_html(f"""
+        <div style='display: flex; flex-direction: column; align-items: center; text-align: center; padding: 34px 16px 8px;'>
+            <div class='success-check'>
+                <span class="material-symbols-rounded" style='font-size: 44px;'>check</span>
+            </div>
+            <div class='section-eyebrow' style='margin-top: 18px;'>Payment Successful</div>
+            <div class='section-title' style='font-size: 1.7em;'>You're Now on {plan_name}</div>
+            <p style='color: #64748B; max-width: 520px;'>Thank you, <strong style='color:#0F172A;'>{receipt.get('username', st.session_state.username)}</strong>.
+            Unlimited claim checks, 3–5 resources per verdict and the priority LLM queue are now active for your account.</p>
+        </div>
+        """)
+
+        receipt_col1, receipt_col2 = st.columns([1.4, 1])
+        with receipt_col1:
+            render_html(f"""
+            <div class='receipt-card'>
+                <div style='display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;'>
+                    <strong style='color:#0F172A;'>Order Confirmation</strong>
+                    <span class='badge-secondary' style='background: rgba(16,185,129,0.12); color: #047857; border: 1px solid rgba(16,185,129,0.35);'>Paid</span>
+                </div>
+                <div class='receipt-row'><span class='receipt-label'>Receipt ID</span><span class='receipt-value'>{receipt.get('transaction_id', 'CS-XXXXXXXXXX')}</span></div>
+                <div class='receipt-row'><span class='receipt-label'>Plan</span><span class='receipt-value'>{plan_name}</span></div>
+                <div class='receipt-row'><span class='receipt-label'>Amount charged</span><span class='receipt-value' style='color:#047857;'>&#36;{amount:.2f} {receipt.get('currency', 'USD')}</span></div>
+                <div class='receipt-row'><span class='receipt-label'>Payment method</span><span class='receipt-value'>{receipt.get('card_brand', 'Visa')} •••• {receipt.get('card_last4', '4242')}</span></div>
+                <div class='receipt-row'><span class='receipt-label'>Transaction time</span><span class='receipt-value'>{receipt.get('timestamp', '-')}</span></div>
+                <div class='receipt-row'><span class='receipt-label'>Gateway</span><span class='receipt-value'>{receipt.get('gateway', 'ClaimShield Pay (Demo)')}</span></div>
+            </div>
+            """)
+        with receipt_col2:
+            render_html(f"""
+            <div class='glass-card' style='padding: 18px; font-size: 0.9em;'>
+                <div style='font-weight:700; color:#0F172A; margin-bottom: 8px;'><span class="material-symbols-rounded" style='vertical-align: middle; color:#4F46E5;'>rocket_launch</span> What changed</div>
+                <ul class='plan-feature-list' style='font-size: 0.9em; margin: 6px 0 0;'>
+                    <li>Role upgraded to <strong style='color:#4F46E5;'>Pro</strong> in the database</li>
+                    <li>Token bucket rate limits <strong>bypassed</strong></li>
+                    <li>Up to <strong>5 resources</strong> displayed per verdict</li>
+                    <li>JWT re-issued with the new role</li>
+                </ul>
+            </div>
+            """)
+
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            if st.button("Continue to Verification Dashboard", type="primary", icon=f":material/{ARROW_FORWARD}:", use_container_width=True, key="btn_success_dashboard"):
+                st.session_state.checkout_flow = None
+                st.session_state.checkout_receipt = None
+                st.session_state.current_page = PAGE_VERIFICATION
+                st.session_state.nav_radio = PAGE_VERIFICATION
+                st.rerun()
+        with btn_c2:
+            if st.button("Go to Account & Plan", icon=f":material/{PERSON}:", use_container_width=True, key="btn_success_account"):
+                st.session_state.checkout_flow = None
+                st.session_state.checkout_receipt = None
+                st.session_state.current_page = PAGE_ACCOUNT
+                st.session_state.nav_radio = PAGE_ACCOUNT
+                st.rerun()
+
+    # -------------------------------------------------------------------------
+    # PAGE ROUTER
+    # -------------------------------------------------------------------------
+
+    # A one-shot top bar signals page transitions (nav clicks, post-login
+    # entry) with a subtle sweep instead of an abrupt content swap.
+    if st.session_state.get("current_page") != st.session_state.get("_prev_page"):
+        st.session_state._prev_page = st.session_state.get("current_page")
+        render_clean_html('<div class="cs-nav-bar"><div class="cs-nav-fill"></div></div>')
+
+    # -------------------------------------------------------------------------
     # PAGE 1: CLAIM VERIFICATION DASHBOARD
     # -------------------------------------------------------------------------
-    if st.session_state.current_page == PAGE_VERIFICATION:
+    elif st.session_state.current_page == PAGE_VERIFICATION:
         st.markdown(f"### {icon_md(SEARCH)} Ask a Question or Verify a Claim")
         st.markdown("Type any general question or factual statement below. Our multi-agent AI system will evaluate it and provide a realistic, easy-to-understand explanation.")
 
@@ -791,6 +1233,8 @@ else:
 
         if "claim_text_val" not in st.session_state:
             st.session_state.claim_text_val = ""
+        if "recommendations_cache" not in st.session_state:
+            st.session_state.recommendations_cache = []
         if sample_query:
             st.session_state.claim_text_val = sample_query
 
@@ -808,11 +1252,15 @@ else:
         with col_info:
             st.caption("Supports general knowledge questions as well as factual news verification.")
 
-        if submit_fact:
+        # A recommended claim is selected on the report panel: it pre-fills the
+        # input, sets this flag, and reruns so the pipeline auto-executes.
+        auto_verify_claim = st.session_state.pop("pending_auto_verify", None)
+
+        if submit_fact or auto_verify_claim:
             if not claim_input.strip():
                 st.warning("Please type a question or statement first.")
             else:
-                with st.spinner("Multi-Agent Verification & QA Pipeline executing..."):
+                with _pipeline_loading():
                     st.session_state.agent_logs = []
                     
                     def trace_agent_message(sender, recipient, action, data, response):
@@ -827,6 +1275,7 @@ else:
                         st.session_state.agent_logs.append(log_entry)
                     
                     def custom_send(self, recipient, action, data):
+                        _report_pipeline_step(action)
                         resp = _ORIGINAL_BASE_SEND(self, recipient, action, data)
                         trace_agent_message(self.name, recipient.name, action, data, resp)
                         return resp
@@ -954,19 +1403,22 @@ else:
                                 vcolor = verdict_colors.get(v, "#D97706")
                                 conf = int(mr.get("confidence", 0) * 100)
                                 snippet = (mr.get("straight_answer") or mr.get("summary") or "").strip()
-                                if len(snippet) > 200:
-                                    snippet = snippet[:200].rsplit(" ", 1)[0] + "…"
-                                snippet_html = f'<div class="cs-model-snippet">“{esc(snippet)}”</div>' if snippet else ""
+                                if len(snippet) > 160:
+                                    snippet = snippet[:160].rsplit(" ", 1)[0] + "…"
+                                snippet_html = f'<div class="cs-cc-snippet" title="{esc(snippet)}">{esc(snippet)}</div>' if snippet else ""
                                 row_html.append(f"""
-                                <div class="cs-model-row">
-                                    <div class="cs-model-head">
-                                        <div class="cs-model-name"><span class="cs-provider-dot" style="background:{dot}"></span>{esc(eng)}</div>
-                                        <span class="cs-model-badge" style="color:{vcolor}; background:{vcolor}18; border:1px solid {vcolor}44;">{verdict_icons.get(v, ICON_HELP)} {v}</span>
+                                <div class="cs-cc-row">
+                                    <div class="cs-cc-meta">
+                                        <span class="cs-provider-dot" style="background:{dot}"></span>
+                                        <span class="cs-cc-name">{esc(eng)}</span>
+                                        <span class="cs-cc-verdict" style="color:{vcolor}; background:{vcolor}18; border:1px solid {vcolor}44;">{verdict_icons.get(v, ICON_HELP)} {v}</span>
                                     </div>
-                                    <div class="cs-conf-track"><div class="cs-conf-fill" style="width:{min(max(conf, 4), 100)}%; background:linear-gradient(90deg,{vcolor},{dot});"></div></div>
-                                    <div class="cs-conf-note">{conf}% confidence</div>
-                                    {snippet_html}
-                                </div>""")
+                                    <div class="cs-cc-meter">
+                                        <span class="cs-cc-pct">{conf}%</span>
+                                        <div class="cs-cc-track"><div class="cs-cc-fill" style="width:{min(max(conf, 4), 100)}%; background:linear-gradient(90deg,{vcolor},{dot});"></div></div>
+                                    </div>
+                                </div>
+                                {snippet_html}""")
                             consensus_body = "".join(row_html)
                         else:
                             consensus_body = """
@@ -982,26 +1434,27 @@ else:
                             converged = agreement_score >= 0.7
                             fill_color = "linear-gradient(90deg,#059669,#0284C7)" if converged else "linear-gradient(90deg,#D97706,#DC2626)"
                             note_color = "#059669" if converged else "#D97706"
-                            note_text = (f"{ICON_CHECK} The models converged on this verdict." if converged
-                                         else f"{ICON_WARNING} The models diverged — treat this verdict with lower confidence.")
+                            note_text = ("The models converged on this verdict." if converged
+                                         else "The models diverged — treat this verdict with lower confidence.")
                             agreement_html = f"""
-                            <div class="cs-agreement-box">
-                                <div class="cs-agreement-label">
-                                    <span style="font-size:0.85em; color:#64748B; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Cross-Model Agreement</span>
-                                    <span style="font-size:1.4em; font-weight:700; color:#0F172A;">{agr_pct}%</span>
+                            <div class="cs-agreement-compact">
+                                <div class="cs-agree-top">
+                                    <span class="cs-agree-note" style="color:{note_color};">{ICON_CHECK if converged else ICON_WARNING} {note_text}</span>
+                                    <span class="cs-agree-pct" style="color:{note_color};">{agr_pct}% agreement</span>
                                 </div>
-                                <div class="cs-agreement-track"><div class="cs-conf-fill" style="width:{agr_pct}%; background:{fill_color};"></div></div>
-                                <div class="cs-agreement-note" style="border-left:4px solid {note_color};">{note_text}</div>
+                                <div class="cs-cc-track"><div class="cs-cc-fill" style="width:{agr_pct}%; background:{fill_color};"></div></div>
                             </div>"""
 
                         render_html(f"""
-                        <div class="glass-card" style="border-left: 4px solid #D97706;">
-                            <div style="font-size: 0.85em; color: #D97706; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
-                                <span class="material-symbols-rounded">handshake</span> Multi-Model Consensus &amp; Explainability
+                        <div class="glass-card" style="border-left: 4px solid #D97706; padding: 16px 18px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
+                                <div style="font-size: 0.85em; color: #D97706; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <span class="material-symbols-rounded">handshake</span> Multi-Model Consensus &amp; Explainability
+                                </div>
                             </div>
                             {consensus_body}
                             {agreement_html}
-                            <div style="font-size: 0.75em; color: #64748B; margin-top: 12px;">
+                            <div style="font-size: 0.72em; color: #94A3B8; margin-top: 10px;">
                                 Each model evaluates the same evidence independently; the verdict reflects their weighted consensus.
                             </div>
                         </div>
@@ -1095,110 +1548,136 @@ else:
                                 """)
                                 render_html("".join(turn_html) + consensus_box)
 
-                        # Columns for concepts & quotes
+                        # Columns for concepts & quotes (collapsed by default for a compact report)
                         c1, c2 = st.columns(2)
                         with c1:
-                            st.markdown(f"#### {icon_md(SELL)} Key Extracted Concepts (spaCy NER)")
-                            if entities:
-                                for ent in entities:
-                                    if not isinstance(ent, dict):
-                                        continue
-                                    ent_text = ent.get("text") or "Unknown"
-                                    ent_label = ent.get("label") or "MISC"
-                                    st.markdown(f"""
-                                    <span class='verdict-badge badge-secondary' style='margin-right: 5px; margin-bottom: 5px;'>
-                                        <strong>{ent_text}</strong> ({ent_label})
-                                    </span>
-                                    """, unsafe_allow_html=True)
-                            else:
-                                st.caption("No specific named entities extracted.")
-                                
-                        with c2:
-                            st.markdown(f"#### {icon_md(PUSH_PIN)} Key Takeaways & Quotes")
-                            if citations:
-                                for cit in citations:
-                                    if not isinstance(cit, dict):
-                                        continue
-                                    art_label = f"Article #{cit.get('article_id')}" if cit.get('article_id') else "General Evidence"
-                                    cit_quote = cit.get("quote") or "No quote provided."
-                                    cit_explanation = cit.get("explanation") or ""
-                                    st.markdown(f"""
-                                    <div class="citation-box">
-                                        <div style="font-size: 0.85em; font-weight: 700; color: #7C3AED; margin-bottom: 5px;">
-                                            {art_label}:
-                                        </div>
-                                        <div style="font-style: italic; font-size: 0.9em; margin-bottom: 8px; color: #1E293B;">
-                                            "{cit_quote}"
-                                        </div>
-                                        <div style="font-size: 0.8em; color: #64748B;">
-                                            <strong>Insight:</strong> {cit_explanation}
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                            else:
-                                st.caption("No additional citations required for this response.")
-                                
-                        # Referenced Links
-                        st.markdown("---")
-                        st.markdown(f"### {icon_md(LINK)} Referenced Sources & Verified Article Links")
-                        if ret_articles:
-                            live_web_articles = [a for a in ret_articles if "Live Web" in a.get("source", "")]
-                            db_articles = [a for a in ret_articles if "Live Web" not in a.get("source", "")]
-                            article_dates = [a.get("date", "") for a in ret_articles if a.get("date")]
-                            newest_date = max(article_dates) if article_dates else "unknown"
-                            total_found = pipeline_result.get("total_resources_found", len(ret_articles))
-                            is_pro = pipeline_result.get("is_pro_plan", current_role in ["pro", "premium", "newsroom_admin"])
-
-                            if not is_pro:
-                                render_html(f"""
-                                <div style="font-size: 0.84em; background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
-                                    <span class="material-symbols-rounded">lock</span> <strong style="color: #4F46E5;">Free Plan Display:</strong> Showing <strong>{len(ret_articles)}</strong> resources (Free plan displays maximum 2 of {total_found} retrieved). <span style="color: #64748B;">Upgrade to <strong>Pro Plan</strong> to view at least 3 (if available) and up to 5 maximum resources!</span>
-                                </div>
-                                """)
-                            else:
-                                render_html(f"""
-                                <div style="font-size: 0.84em; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
-                                    <span class="material-symbols-rounded">star</span> <strong style="color: #059669;">Pro Plan Active:</strong> Displaying <strong>{len(ret_articles)}</strong> verified resources (Pro tier displays at least 3 if available, up to 5 maximum).
-                                </div>
-                                """)
-
-                            render_html(f"""
-                            <div style="font-size: 0.82em; color: #475569; background: rgba(241, 245, 249, 0.8); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
-                                <span class="material-symbols-rounded">receipt_long</span> <strong style="color:#0F172A;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
-                            </div>
-                            """)
-                            if live_web_articles:
-                                st.markdown("The following live web sources were matched against the claim:")
-                            else:
-                                st.markdown("The following source articles were retrieved and cross-referenced by FAISS vector similarity:")
-                            for idx, art in enumerate(ret_articles):
-                                url_link = art.get('url', '#')
-                                st.markdown(f"""
-                                <div class="article-card" style="border-left: 4px solid #0284C7;">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                        <div class="article-title" style="font-size: 1.1em; font-weight: 700; color: #0F172A;">
-                                            [{idx+1}] {art['title']}
-                                        </div>
-                                        <span class="badge-secondary" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px;">
-                                            Score: {art['score']:.4f}
+                            with st.expander(f"{icon_md(SELL)} Key Extracted Concepts (spaCy NER)", expanded=False):
+                                if entities:
+                                    for ent in entities:
+                                        if not isinstance(ent, dict):
+                                            continue
+                                        ent_text = ent.get("text") or "Unknown"
+                                        ent_label = ent.get("label") or "MISC"
+                                        st.markdown(f"""
+                                        <span class='verdict-badge badge-secondary' style='margin-right: 5px; margin-bottom: 5px;'>
+                                            <strong>{ent_text}</strong> ({ent_label})
                                         </span>
+                                        """, unsafe_allow_html=True)
+                                else:
+                                    st.caption("No specific named entities extracted.")
+
+                        with c2:
+                            with st.expander(f"{icon_md(PUSH_PIN)} Key Takeaways & Quotes", expanded=False):
+                                if citations:
+                                    for cit in citations:
+                                        if not isinstance(cit, dict):
+                                            continue
+                                        art_label = f"Article #{cit.get('article_id')}" if cit.get('article_id') else "General Evidence"
+                                        cit_quote = cit.get("quote") or "No quote provided."
+                                        cit_explanation = cit.get("explanation") or ""
+                                        st.markdown(f"""
+                                        <div class="citation-box">
+                                            <div style="font-size: 0.85em; font-weight: 700; color: #7C3AED; margin-bottom: 5px;">
+                                                {art_label}:
+                                            </div>
+                                            <div style="font-style: italic; font-size: 0.9em; margin-bottom: 8px; color: #1E293B;">
+                                                "{cit_quote}"
+                                            </div>
+                                            <div style="font-size: 0.8em; color: #64748B;">
+                                                <strong>Insight:</strong> {cit_explanation}
+                                            </div>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                else:
+                                    st.caption("No additional citations required for this response.")
+                                
+                        # Referenced Links (collapsed by default for a compact report)
+                        st.markdown("---")
+                        with st.expander(f"{icon_md(LINK)} Referenced Sources & Verified Article Links", expanded=False):
+                            if ret_articles:
+                                live_web_articles = [a for a in ret_articles if "Live Web" in a.get("source", "")]
+                                db_articles = [a for a in ret_articles if "Live Web" not in a.get("source", "")]
+                                article_dates = [a.get("date", "") for a in ret_articles if a.get("date")]
+                                newest_date = max(article_dates) if article_dates else "unknown"
+                                total_found = pipeline_result.get("total_resources_found", len(ret_articles))
+                                is_pro = pipeline_result.get("is_pro_plan", current_role in ["pro", "premium", "newsroom_admin"])
+
+                                if not is_pro:
+                                    render_html(f"""
+                                    <div style="font-size: 0.84em; background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
+                                        <span class="material-symbols-rounded">lock</span> <strong style="color: #4F46E5;">Free Plan Display:</strong> Showing <strong>{len(ret_articles)}</strong> resources (Free plan displays maximum 2 of {total_found} retrieved). <span style="color: #64748B;">Upgrade to <strong>Pro Plan</strong> to view at least 3 (if available) and up to 5 maximum resources!</span>
                                     </div>
-                                    <div class="article-meta" style="margin-top: 4px; margin-bottom: 8px; color: #64748B; font-size: 0.85em;">
-                                        <span class="material-symbols-rounded">newspaper</span> <strong>Source:</strong> {art['source']} | <span class="material-symbols-rounded">calendar_today</span> <strong>Date:</strong> {art['date']}
+                                    """)
+                                else:
+                                    render_html(f"""
+                                    <div style="font-size: 0.84em; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; color: #334155;">
+                                        <span class="material-symbols-rounded">star</span> <strong style="color: #059669;">Pro Plan Active:</strong> Displaying <strong>{len(ret_articles)}</strong> verified resources (Pro tier displays at least 3 if available, up to 5 maximum).
                                     </div>
-                                    <div style="font-size: 0.9em; color: #334155; line-height: 1.5; margin-bottom: 10px;">
-                                        {art['content']}
-                                    </div>
-                                    <div style="background: rgba(241, 245, 249, 0.85); border: 1px solid rgba(226, 232, 240, 0.85); padding: 8px 12px; border-radius: 8px; font-size: 0.85em;">
-                                        <span class="material-symbols-rounded">link</span> <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline;">{url_link}</a>
-                                    </div>
+                                    """)
+
+                                render_html(f"""
+                                <div style="font-size: 0.82em; color: #475569; background: rgba(241, 245, 249, 0.8); border: 1px solid rgba(226, 232, 240, 0.9); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;">
+                                    <span class="material-symbols-rounded">receipt_long</span> <strong style="color:#0F172A;">Evidence used for this verdict:</strong> {len(ret_articles)} source(s) — {len(db_articles)} from local knowledge base · {len(live_web_articles)} from live web · newest article: {newest_date}
                                 </div>
-                                """, unsafe_allow_html=True)
-                        else:
-                            st.info(f"{icon_md(LIGHTBULB)} General knowledge query: No local database links were required. Answer generated using internal facts.")
-                            
+                                """)
+                                if live_web_articles:
+                                    st.markdown("The following live web sources were matched against the claim:")
+                                else:
+                                    st.markdown("The following source articles were retrieved and cross-referenced by FAISS vector similarity:")
+                                for idx, art in enumerate(ret_articles):
+                                    url_link = art.get('url', '#')
+                                    st.markdown(f"""
+                                    <div class="article-card" style="border-left: 4px solid #0284C7;">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <div class="article-title" style="font-size: 1.1em; font-weight: 700; color: #0F172A;">
+                                                [{idx+1}] {art['title']}
+                                            </div>
+                                            <span class="badge-secondary" style="font-size: 0.8em; padding: 2px 8px; border-radius: 4px;">
+                                                Score: {art['score']:.4f}
+                                            </span>
+                                        </div>
+                                        <div class="article-meta" style="margin-top: 4px; margin-bottom: 8px; color: #64748B; font-size: 0.85em;">
+                                            <span class="material-symbols-rounded">newspaper</span> <strong>Source:</strong> {art['source']} | <span class="material-symbols-rounded">calendar_today</span> <strong>Date:</strong> {art['date']}
+                                        </div>
+                                        <div style="font-size: 0.9em; color: #334155; line-height: 1.5; margin-bottom: 10px;">
+                                            {art['content']}
+                                        </div>
+                                        <div style="background: rgba(241, 245, 249, 0.85); border: 1px solid rgba(226, 232, 240, 0.85); padding: 8px 12px; border-radius: 8px; font-size: 0.85em;">
+                                            <span class="material-symbols-rounded">link</span> <strong>Verified Link:</strong> <a href="{url_link}" target="_blank" style="color: #0284C7; font-weight: 600; text-decoration: underline;">{url_link}</a>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                            else:
+                                st.info(f"{icon_md(LIGHTBULB)} General knowledge query: No local database links were required. Answer generated using internal facts.")
+
+                        # Persist recommended claims to a cache rendered after the
+                        # run block below, so the panel stays clickable across runs.
+                        st.session_state.recommendations_cache = pipeline_result.get("recommendations", [])
+
                     else:
                         st.error(f"Fact checking pipeline failed: {pipeline_result.get('message')}")
+
+        # Recommended related claims — click one to verify it next.
+        recommendations = st.session_state.get("recommendations_cache", [])
+        if recommendations:
+            st.markdown("---")
+            st.markdown(f"### {icon_md(EXPLORE)} Explore Related Claims")
+            st.markdown("High-value claims related to this verification. Select one to run it through the full pipeline.")
+            for rec_i, rec_entry in enumerate(recommendations):
+                rec_claim = rec_entry.get("claim", "")
+                rec_source = rec_entry.get("source", "Related claim")
+                rec_sim = int(float(rec_entry.get("similarity", 0.0)) * 100)
+                if st.button(
+                    rec_claim,
+                    key=f"rec_claim_{rec_i}",
+                    icon=f":material/{ARROW_FORWARD}:",
+                    use_container_width=True,
+                    help="Verify this claim next",
+                ):
+                    st.session_state.claim_text_val = rec_claim
+                    st.session_state.pending_auto_verify = rec_claim
+                    st.rerun()
+                st.caption(f"{rec_source} · ~{rec_sim}% related")
 
     # -------------------------------------------------------------------------
     # PAGE 2: USER ACCOUNT & PLAN MANAGEMENT (DEDICATED PAGE)
@@ -1336,7 +1815,7 @@ else:
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_free else ""
             
             render_html(f"""
-            <div class='{card_class}' style='overflow: visible;'>
+            <div class='{card_class}' style='border: 2px solid rgba(148, 163, 184, 0.35); overflow: visible;'>
                 {active_tag_html}
                 <div>
                     <h4>Free Plan</h4>
@@ -1372,7 +1851,7 @@ else:
             active_tag_html = "<div class='plan-active-tag'>Active Plan</div>" if is_active_pro else "<div class='plan-popular-tag'>Popular</div>"
             
             render_html(f"""
-            <div class='{card_class}' style='border-color: #4F46E5; overflow: visible;'>
+            <div class='{card_class}' style='border: 2px solid #4F46E5; overflow: visible;'>
                 {active_tag_html}
                 <div>
                     <h4>Pro Plan</h4>
@@ -1393,10 +1872,9 @@ else:
                 st.button("Current Active Plan", icon=f":material/{CHECK_CIRCLE}:", key="btn_pro_active", disabled=True, use_container_width=True)
             else:
                 if st.button("Upgrade to Pro Plan", icon=f":material/{BOLT}:", key="btn_pro_upgrade", use_container_width=True):
-                    db.update_user_role(st.session_state.username, "pro")
-                    st.session_state.role = "pro"
-                    st.session_state.jwt_token = generate_jwt(st.session_state.username, "pro")
-                    st.session_state.flash = "Successfully upgraded to Pro Plan! Rate limits bypassed & full 3–5 resource display enabled."
+                    st.session_state.checkout_plan = "pro"
+                    st.session_state.checkout_flow = "checkout"
+                    st.session_state.checkout_receipt = None
                     st.rerun()
 
         st.markdown("---")

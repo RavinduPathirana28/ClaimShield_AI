@@ -7,6 +7,7 @@ from app.agents.retrieval_agent import RetrievalAgent
 from app.agents.verification_agent import VerificationAgent
 from app.agents.langgraph_workflow import LangGraphClaimVerifier
 from app.agents.autogen_bridge import AutoGenClaimBridge
+from app.recommendations import ClaimRecommender
 
 class Orchestrator(BaseAgent):
     """
@@ -31,6 +32,10 @@ class Orchestrator(BaseAgent):
         # Framework Bridges
         self.langgraph_verifier = LangGraphClaimVerifier(self)
         self.autogen_bridge = AutoGenClaimBridge(self)
+        self.recommender = ClaimRecommender(
+            db=self.security_agent.db,
+            vector_store=self.retrieval_agent.vector_store
+        )
 
     def handle_message(self, message: dict) -> dict:
         action = message.get("action")
@@ -39,10 +44,17 @@ class Orchestrator(BaseAgent):
         if action == "verify":
             mode = data.get("engine_mode", "Standard A2A Protocol")
             if mode == "LangGraph Stateful Workflow":
-                return self.langgraph_verifier.run(
-                    claim=data.get("claim", ""),
-                    username=data.get("username", "guest")
+                # The same security gates that govern the standard flow apply
+                # here: sanitize, token-bucket rate limit (deducts a token),
+                # audit logging, and recommendations.
+                ctx, err = self._security_precheck(data)
+                if err:
+                    return err
+                result = self.langgraph_verifier.run(
+                    claim=ctx["clean_claim"],
+                    user_ctx=ctx
                 )
+                return self._complete_verification(ctx, result)
             elif mode == "AutoGen Agent Debate":
                 res = self._verify_flow(data)
                 debate = self.autogen_bridge.run_debate(data.get("claim", ""), res.get("articles", []))
@@ -58,12 +70,19 @@ class Orchestrator(BaseAgent):
                 "message": f"Unknown action: {action}"
             }
 
-    def _verify_flow(self, data: dict) -> dict:
+    def _security_precheck(self, data: dict) -> tuple:
+        """Steps 1-2: sanitization + rate-limit validation.
+
+        Returns (ctx, None) on success or (None, error_result) otherwise. The
+        context carries the resolved username, role, remaining tokens, and both
+        the raw and cleaned claim so downstream engines can stay in parity with
+        the standard flow without re-checking or double-charging.
+        """
         claim_input = data.get("claim", "")
         username = data.get("username", "")
 
         if not claim_input:
-            return {
+            return None, {
                 "sender": self.name,
                 "status": "error",
                 "message": "A claim must be provided for verification."
@@ -75,21 +94,20 @@ class Orchestrator(BaseAgent):
             action="sanitize",
             data={"text": claim_input}
         )
-        
+
         if san_resp.get("status") != "success":
-            return {
+            return None, {
                 "sender": self.name,
                 "status": "error",
                 "message": f"Sanitization phase failed: {san_resp.get('message')}"
             }
-        
+
         clean_claim = san_resp.get("clean_text", claim_input)
 
         # Step 2: Check Rate Limit (Security Agent)
-        # Guest users are blocked or assigned a temporary limit (handled by security agent)
         if not username:
             username = "guest"
-            
+
         rate_resp = self.send_message(
             recipient=self.security_agent,
             action="check_rate_limit",
@@ -97,7 +115,7 @@ class Orchestrator(BaseAgent):
         )
 
         if rate_resp.get("status") != "success":
-            return {
+            return None, {
                 "sender": self.name,
                 "status": "error",
                 "message": f"Rate limit verification failed: {rate_resp.get('message')}"
@@ -105,7 +123,7 @@ class Orchestrator(BaseAgent):
 
         if not rate_resp.get("allowed", False):
             retry_after = rate_resp.get("retry_after_seconds", 60)
-            return {
+            return None, {
                 "sender": self.name,
                 "status": "rate_limited",
                 "message": f"Too many requests! Rate limit exceeded for {username}.",
@@ -113,7 +131,89 @@ class Orchestrator(BaseAgent):
             }
 
         user_role = rate_resp.get("role", "user")
-        remaining_tokens = rate_resp.get("tokens", 0.0)
+        ctx = {
+            "claim_input": claim_input,
+            "clean_claim": clean_claim,
+            "username": username,
+            "role": user_role,
+            "tokens_remaining": rate_resp.get("tokens", 0.0),
+            "is_pro": user_role in ["pro", "premium", "newsroom_admin"]
+        }
+        return ctx, None
+
+    def _verify_flow(self, data: dict) -> dict:
+        ctx, err = self._security_precheck(data)
+        if err:
+            return err
+        return self._complete_verification(ctx)
+
+    def _complete_verification(self, ctx: dict, result: dict = None) -> dict:
+        """Finalizes a verification result: audit logging + recommendations.
+
+        Used by both the standard sequential flow and the LangGraph graph so the
+        two engines share token accounting (already spent in precheck), audit
+        persistence, and the related-claims panel.
+        """
+        result = result if result is not None else self._verify_flow_with_ctx(ctx)
+        if result.get("status") == "success":
+            self._log_verification_audit(ctx, result)
+            result["recommendations"] = self._recommendations(result, ctx)
+        return result
+
+    def _log_verification_audit(self, ctx: dict, result: dict) -> None:
+        """Persists an encrypted audit entry for a completed verification."""
+        articles = result.get("all_articles") or result.get("articles", [])
+        audit_details = {
+            "clean_claim": result.get("claim") or ctx["clean_claim"],
+            "entities": result.get("entities", []),
+            "search_query": result.get("search_query") or ctx["clean_claim"],
+            "articles_retrieved": [
+                {
+                    "id": a.get("id"),
+                    "title": a.get("title"),
+                    "source": a.get("source"),
+                    "score": a.get("score", 0.0)
+                } for a in articles
+            ],
+            "citations": result.get("citations", []),
+            "engine": result.get("engine", ""),
+            "summary": result.get("summary", ""),
+            "straight_answer": result.get("straight_answer", ""),
+            "tokens_remaining": ctx["tokens_remaining"]
+        }
+        self.send_message(
+            recipient=self.security_agent,
+            action="log_audit",
+            data={
+                "user_id": ctx["username"],
+                "claim": ctx["claim_input"],
+                "verdict": result.get("verdict", "Unclear"),
+                "confidence": result.get("confidence", 0.0),
+                "details": audit_details
+            }
+        )
+
+    def _recommendations(self, result: dict, ctx: dict) -> list:
+        try:
+            return self.recommender.recommend(
+                result.get("claim") or ctx["clean_claim"],
+                ctx["username"]
+            )
+        except Exception as e:
+            print(f"[Orchestrator] Recommendation generation failed: {e}")
+            return []
+
+    def _verify_flow_with_ctx(self, ctx: dict) -> dict:
+        """Steps 3-7 with an already-resolved security context.
+
+        Assumes sanitization + rate limiting were performed (no token is
+        re-charged here). Mirrors the sequential steps the LangGraph fallback
+        uses when the graph itself raises.
+        """
+        clean_claim = ctx["clean_claim"]
+        user_role = ctx["role"]
+        is_pro = ctx["is_pro"]
+        remaining_tokens = ctx["tokens_remaining"]
 
         # Step 3: Parse Claim & NER (NLP Agent)
         nlp_resp = self.send_message(
@@ -134,7 +234,6 @@ class Orchestrator(BaseAgent):
         ml_classification = nlp_resp.get("ml_classification", {})
 
         # Step 4: Retrieve Supporting Documents (Retrieval Agent)
-        is_pro = user_role in ["pro", "premium", "newsroom_admin"]
         # Pro users retrieve up to 5 resources; Free users retrieve at least 3 internally for verification
         limit = config.PRO_PLAN_MAX_RESOURCES if is_pro else max(config.PRO_PLAN_MIN_RESOURCES, 3)
         ret_resp = self.send_message(
@@ -193,38 +292,6 @@ class Orchestrator(BaseAgent):
         if verdict in ["Answered", "General Info"]:
             evidence_summary = ""
 
-        # Step 6: Log Audit (Security Agent)
-        audit_details = {
-            "clean_claim": clean_claim,
-            "entities": entities,
-            "search_query": search_query,
-            "articles_retrieved": [
-                {
-                    "id": a["id"],
-                    "title": a["title"],
-                    "source": a["source"],
-                    "score": a.get("score", 0.0)
-                } for a in articles
-            ],
-            "citations": citations,
-            "engine": engine,
-            "summary": summary,
-            "straight_answer": straight_answer,
-            "tokens_remaining": remaining_tokens
-        }
-        
-        self.send_message(
-            recipient=self.security_agent,
-            action="log_audit",
-            data={
-                "user_id": username,
-                "claim": claim_input,
-                "verdict": verdict,
-                "confidence": confidence,
-                "details": audit_details
-            }
-        )
-
         # Filter reference articles so general QA queries don't display unrelated articles
         display_articles = articles
         if verdict in ["Answered", "General Info"] or (articles and articles[0].get("score", 0.0) < 0.30):
@@ -248,7 +315,9 @@ class Orchestrator(BaseAgent):
             "evidence_summary": evidence_summary,
             "citations": citations,
             "entities": entities,
+            "search_query": search_query,
             "articles": display_articles,
+            "all_articles": articles,
             "total_resources_found": len(articles),
             "is_pro_plan": is_pro,
             "ml_classification": ml_classification,

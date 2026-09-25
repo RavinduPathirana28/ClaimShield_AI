@@ -122,12 +122,13 @@ ClaimShield_AI/
 │   │   └── autogen_bridge.py     # Multi-agent persona debate bridge
 │   ├── database/
 │   │   ├── __init__.py           # Database package
-│   │   └── db_manager.py         # SQLite & SQLAlchemy CRUD operations
-│   └── utils/
-│       ├── __init__.py           # Utilities package
-│       ├── security.py           # Password hashing & JWT helpers
-│       ├── vector_store.py       # FAISS indexing & embedding store
-│       └── web_crawler.py        # Live web scraping utility
+│   │   └── db_manager.py         # SQLite & Supabase CRUD operations
+│   ├── utils/
+│   │   ├── __init__.py           # Utilities package
+│   │   ├── security.py           # Password hashing & JWT helpers
+│   │   ├── vector_store.py       # FAISS indexing & embedding store
+│   │   └── web_crawler.py        # Live web scraping utility
+│   └── generate_pdf.py           # ReportLab PDF report builder
 ├── ui/
 │   ├── main.py                   # Streamlit interactive application
 │   └── style.css                 # Custom glassmorphism UI styling
@@ -135,7 +136,6 @@ ClaimShield_AI/
 │   ├── test_agents.py              # Shared agent test suite
 │   └── test_verification.py        # Verification consensus, debate & PDF tests
 ├── seed_database.py              # Knowledge base seeding script
-├── generate_pdf.py               # ReportLab PDF report builder
 ├── requirements.txt              # Project dependencies
 ├── .gitignore                    # Version control ignore list
 └── README.md                     # Project documentation

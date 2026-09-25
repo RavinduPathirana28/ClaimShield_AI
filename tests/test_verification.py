@@ -162,7 +162,7 @@ class TestPdfReport(unittest.TestCase):
             import reportlab  # noqa: F401
         except ImportError:
             self.skipTest("reportlab not installed")
-        from generate_pdf import build_verification_report_bytes
+        from app.generate_pdf import build_verification_report_bytes
         result = {
             "claim": "Sample claim & <tag>.",
             "verdict": "Contradicted",
@@ -183,7 +183,7 @@ class TestPdfReport(unittest.TestCase):
             import reportlab  # noqa: F401
         except ImportError:
             self.skipTest("reportlab not installed")
-        from generate_pdf import build_verification_report_bytes
+        from app.generate_pdf import build_verification_report_bytes
         data = build_verification_report_bytes({"claim": "", "verdict": "Unclear"})
         self.assertTrue(data.startswith(b"%PDF"))
 
