@@ -7,7 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-from ui.payment_gateway import (
+from app.payment_gateway import (
     PLANS,
     TEST_CARD_NUMBERS,
     normalize_card_number,

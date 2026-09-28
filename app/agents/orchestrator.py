@@ -194,14 +194,29 @@ class Orchestrator(BaseAgent):
         )
 
     def _recommendations(self, result: dict, ctx: dict) -> list:
+        claim = result.get("claim") or ctx["clean_claim"]
+        # Context lets the LLM layer propose follow-ups grounded in what was
+        # just verified (verdict, answer, key entities) instead of generic filler.
+        context = {
+            "verdict": result.get("verdict"),
+            "straight_answer": result.get("straight_answer"),
+            "entities": [
+                (e.get("text") if isinstance(e, dict) else str(e))
+                for e in (result.get("entities") or [])[:8]
+                if e
+            ],
+        }
         try:
-            return self.recommender.recommend(
-                result.get("claim") or ctx["clean_claim"],
-                ctx["username"]
+            return self.recommender.recommend_llm(
+                claim, ctx["username"], context=context
             )
         except Exception as e:
-            print(f"[Orchestrator] Recommendation generation failed: {e}")
-            return []
+            print(f"[Orchestrator] LLM recommendations failed, using local engine: {e}")
+            try:
+                return self.recommender.recommend(claim, ctx["username"])
+            except Exception as fallback_err:
+                print(f"[Orchestrator] Recommendation generation failed: {fallback_err}")
+                return []
 
     def _verify_flow_with_ctx(self, ctx: dict) -> dict:
         """Steps 3-7 with an already-resolved security context.

@@ -26,6 +26,9 @@ data/*.db
 data/faiss_index.bin
 data/faiss_index.bin.json
 
+# Node
+node_modules/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db
@@ -34,3 +37,4 @@ Thumbs.db
 *.swp
 
 opencode.json
+.opencode
