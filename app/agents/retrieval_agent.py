@@ -41,8 +41,8 @@ class RetrievalAgent(BaseAgent):
                 "message": "Empty query text supplied to Retrieval Agent."
             }
 
+# 1. Query local FAISS Vector Store index
         try:
-            # 1. Query local FAISS Vector Store index
             results = self.vector_store.search_index(query, limit=limit)
             articles_list = self.db.get_all_articles()
             articles_map = {art["id"]: art for art in articles_list}
@@ -60,18 +60,18 @@ class RetrievalAgent(BaseAgent):
                 if retrieved_articles:
                     top_score = retrieved_articles[0].get("score", 0.0)
 
-            # 2. Launch the live web crawler when the query is time-sensitive (news,
-            #    launches, reports), asks who currently holds an office/role, OR when
-            #    local results are insufficient — so fresh evidence always reaches
-            #    the verifier instead of unrelated vector matches.
+# 2. Launch the live web crawler when the query is time-sensitive (news,
+#    launches, reports), asks who currently holds an office/role, OR when
+#    local results are insufficient — so fresh evidence always reaches
+#    the verifier instead of unrelated vector matches.
             query_is_news = WebCrawler.is_time_sensitive(query) or WebCrawler.is_office_holder(query)
             if query_is_news or not retrieved_articles or top_score < 0.30:
                 print(f"[Retrieval Agent] {'Time-sensitive query -> ' if query_is_news else 'Local FAISS score (' + f'{top_score:.2f}' + ') insufficient -> '}Launching Live Web Crawler for '{query}'...")
                 web_results = self.web_crawler.search_and_crawl(query, limit=limit)
-                
+
+# Check which articles already exist so repeated queries do not
+# re-insert duplicate rows into the local database on every run.                
                 if web_results:
-                    # Check which articles already exist so repeated queries do not
-                    # re-insert duplicate rows into the local database on every run.
                     existing = self.db.get_all_articles()
                     existing_urls = {str(a.get("url", "")).strip() for a in existing if a.get("url")}
                     existing_titles = {str(a.get("title", "")).strip().lower() for a in existing if a.get("title")}
@@ -82,7 +82,7 @@ class RetrievalAgent(BaseAgent):
                         title = str(web_art.get("title", "")).strip()
                         is_duplicate = bool(url and url in existing_urls) or bool(title and title.lower() in existing_titles)
                         try:
-                            # Save to local database so it can be vector indexed in the future
+# Save to local database so it can be vector indexed in the future
                             if not is_duplicate:
                                 db_saved = self.db.add_article(
                                     title=web_art["title"],
@@ -98,7 +98,7 @@ class RetrievalAgent(BaseAgent):
 
                         saved_web_articles.append(web_art)
                     
-                    # Prepend live web articles so they take priority over low-score local articles
+# Prepend live web articles so they take priority over low-score local articles
                     retrieved_articles = saved_web_articles + [a for a in retrieved_articles if a.get("score", 0.0) >= 0.30]
 
             return {
