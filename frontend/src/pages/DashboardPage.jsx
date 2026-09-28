@@ -1,226 +1,412 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import * as api from '../services/api';
-import PipelineLoader from '../components/PipelineLoader';
-import VerdictCard from '../components/VerdictCard';
-import EvidenceList from '../components/EvidenceList';
-import Recommendations from '../components/Recommendations';
+import { Link } from 'react-router';
+import {
+  Search,
+  Shield,
+  ShieldAlert,
+  Loader2,
+  Bot,
+  Smartphone,
+  MoonStar,
+  Coffee,
+  Cpu,
+  ArrowRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+
+import PipelineLoader from '@/components/PipelineLoader';
+import VerdictCard from '@/components/VerdictCard';
+import ConsensusCard from '@/components/ConsensusCard';
+import DebateCard from '@/components/DebateCard';
+import EvidenceList from '@/components/EvidenceList';
+import Recommendations from '@/components/Recommendations';
+import PaymentDialog from '@/components/PaymentDialog';
+
+import { useAuth } from '@/context/AuthContext';
+import { useRuns } from '@/context/RunContext';
+import * as api from '@/services/api';
 
 const SAMPLES = [
-  { label: 'What is AI?', query: 'What is Artificial Intelligence?', icon: 'smart_toy' },
-  { label: 'iPhone 18 in 2026?', query: 'Apple will launch the iPhone 18 in July 2026.', icon: 'smartphone' },
-  { label: 'Why is sky blue?', query: 'Why is the sky blue?', icon: 'nightlight' },
-  { label: 'Is coffee healthy?', query: 'Is drinking coffee good for heart health?', icon: 'coffee' },
+  { label: 'What is AI?', query: 'What is Artificial Intelligence?', icon: Bot },
+  { label: 'iPhone 18 in 2026?', query: 'Apple will launch the iPhone 18 in July 2026.', icon: Smartphone },
+  { label: 'Why is sky blue?', query: 'Why is the sky blue?', icon: MoonStar },
+  { label: 'Is coffee healthy?', query: 'Is drinking coffee good for heart health?', icon: Coffee },
 ];
 
-export default function DashboardPage({ engineMode = 'Standard A2A Protocol', onUpgradeClick, onNewAgentLogs }) {
-  const { token, refreshProfile } = useAuth();
-  const [claim, setClaim] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [result, setResult] = useState(null);
-  const [currentLogs, setCurrentLogs] = useState([]);
+const ENGINE_MODES = [
+  'Standard A2A Protocol',
+  'LangGraph Stateful Workflow',
+  'AutoGen Agent Debate',
+];
 
-  const handleVerify = async (textToVerify = null) => {
-    const query = (textToVerify !== null ? textToVerify : claim).trim();
+function DetailHeading({ children }) {
+  return <h4 className="text-sm font-semibold tracking-tight">{children}</h4>;
+}
+
+export default function DashboardPage() {
+  const { token, refreshProfile, isPro } = useAuth();
+  const { recordRun, agentLogs } = useRuns();
+
+  const [claim, setClaim] = useState('');
+  const [engineMode, setEngineMode] = useState(ENGINE_MODES[0]);
+  const [loading, setLoading] = useState(false);
+  const [steps, setSteps] = useState([]);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+  const [elapsed, setElapsed] = useState(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const run = async (override = null) => {
+    const query = (override ?? claim).trim();
     if (!query) {
-      setError('Please enter a claim or question to verify.');
+      setError({ message: 'Please type a question or statement first.', status: 0 });
       return;
     }
+    if (override !== null) setClaim(override);
 
-    if (textToVerify !== null) {
-      setClaim(textToVerify);
-    }
-
-    setError('');
-    setLoading(true);
+    setError(null);
     setResult(null);
+    setSteps([]);
+    setElapsed(null);
+    setLoading(true);
+    const started = Date.now();
 
     try {
-      const response = await api.verifyClaim(token, query, engineMode);
-      setResult(response.result);
-      if (response.agent_logs) {
-        setCurrentLogs(response.agent_logs);
-        if (onNewAgentLogs) onNewAgentLogs(response.agent_logs);
-      }
+      const { result: finalResult, agent_logs } = await api.streamVerify(
+        token,
+        query,
+        engineMode,
+        (event) => setSteps((prev) => [...prev, event])
+      );
+      setResult(finalResult);
+      setElapsed((Date.now() - started) / 1000);
+      recordRun(agent_logs);
       await refreshProfile();
     } catch (err) {
-      setError(err.message || 'Verification failed. Please try again.');
+      setError({ message: err.message, status: err.status });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '16px 20px 80px' }}>
-      {/* Title */}
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0F172A', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '2rem' }}>search</span>
-          <span>Ask a Question or Verify a Claim</span>
-        </h2>
-        <p style={{ margin: 0, color: '#64748B', fontSize: '0.94rem' }}>
-          Type any general question or factual statement below. Our multi-agent AI system will evaluate it and provide a realistic, easy-to-understand explanation.
-        </p>
-      </div>
+  const entities = (result?.entities || []).filter((e) => e && typeof e === 'object');
+  const citations = (result?.citations || []).filter((c) => c && typeof c === 'object');
+  const ml = result?.ml_classification;
+  const evidenceSummary = result?.evidence_summary;
+  const debate = result?.autogen_debate;
+  const hasDebate = !!debate && (!!debate.consensus || !!debate.message || (debate.debate_log || []).length > 0);
 
-      {/* Preset Samples */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748B', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Sample Questions & Claims:
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {SAMPLES.map((s, idx) => (
-            <button
-              key={idx}
-              onClick={() => { setClaim(s.query); }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(255, 255, 255, 0.85)',
-                border: '1px solid #CBD5E1',
-                padding: '7px 14px',
-                borderRadius: '9999px',
-                fontSize: '0.82rem',
-                color: '#334155',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#4F46E5';
-                e.currentTarget.style.color = '#4F46E5';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#CBD5E1';
-                e.currentTarget.style.color = '#334155';
-              }}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: '1.05rem' }}>{s.icon}</span>
-              <span>{s.label}</span>
-            </button>
+  const overviewSections = [
+    evidenceSummary && (
+      <section key="highlights" className="flex flex-col gap-2">
+        <DetailHeading>Evidence highlights</DetailHeading>
+        <p className="leading-relaxed text-foreground/90">{evidenceSummary}</p>
+      </section>
+    ),
+    citations.length > 0 && (
+      <section key="quotes" className="flex flex-col gap-2.5">
+        <DetailHeading>Key quotes &amp; citations · {citations.length}</DetailHeading>
+        <div className="flex flex-col gap-2.5">
+          {citations.map((cit, idx) => (
+            <div key={idx} className="rounded-lg border bg-muted/40 p-3">
+              <p className="text-xs font-semibold text-muted-foreground">
+                {cit.article_id ? `Article #${cit.article_id}` : 'General evidence'}
+              </p>
+              <p className="my-1 text-sm italic">“{cit.quote || 'No quote provided.'}”</p>
+              {cit.explanation && (
+                <p className="text-xs text-muted-foreground">
+                  <strong>Insight:</strong> {cit.explanation}
+                </p>
+              )}
+            </div>
           ))}
         </div>
-      </div>
+      </section>
+    ),
+    entities.length > 0 && (
+      <section key="entities" className="flex flex-col gap-2">
+        <DetailHeading>Extracted concepts · {entities.length}</DetailHeading>
+        <div className="flex flex-wrap gap-1.5">
+          {entities.map((ent, idx) => (
+            <Badge key={idx} variant="secondary">
+              <strong>{ent.text || 'Unknown'}</strong>&nbsp;({ent.label || 'MISC'})
+            </Badge>
+          ))}
+        </div>
+      </section>
+    ),
+  ].filter(Boolean);
 
-      {/* Input Form Box */}
-      <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
-        <textarea
+  const modelSections = [
+    <ConsensusCard
+      key="consensus"
+      agreementScore={result?.agreement_score}
+      modelResults={result?.model_results || []}
+    />,
+    ml && (
+      <section key="ml" className="flex flex-col gap-2">
+        <DetailHeading>ML credibility check</DetailHeading>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+          <span>
+            Prediction: <strong>{ml.label || 'N/A'}</strong>
+          </span>
+          <span>
+            Confidence: <strong>{Math.round((ml.confidence || 0) * 100)}%</strong>
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Engine: {ml.engine || 'TF-IDF Vectorizer'}
+          </span>
+        </div>
+      </section>
+    ),
+    hasDebate && (
+      <section key="debate" className="flex flex-col gap-2">
+        <DetailHeading>Multi-agent debate</DetailHeading>
+        <DebateCard debate={debate} />
+      </section>
+    ),
+  ].filter(Boolean);
+
+  const technicalSections =
+    agentLogs.length > 0
+      ? [
+          <section key="a2a" className="flex flex-col gap-2">
+            <DetailHeading>A2A/1.0 agent messages · {agentLogs.length}</DetailHeading>
+            <div className="flex flex-col gap-2">
+              {agentLogs.slice(0, 4).map((log, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs"
+                >
+                  <strong className="text-primary">{log.from}</strong>
+                  <span className="text-muted-foreground">→</span>
+                  <strong className="text-emerald-600">{log.to}</strong>
+                  <span className="text-muted-foreground">({log.action})</span>
+                  <span className="ml-auto font-mono text-muted-foreground">{log.timestamp}</span>
+                </div>
+              ))}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {agentLogs.length > 4 && (
+                  <p className="text-xs text-muted-foreground">
+                    + {agentLogs.length - 4} more envelopes
+                  </p>
+                )}
+                <Button asChild variant="outline" size="sm" className="ml-auto no-underline">
+                  <Link to="/a2a">
+                    Open A2A Protocol Monitor
+                    <ArrowRight data-icon="inline-end" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>,
+        ]
+      : [];
+
+  const detailTabs = [
+    overviewSections.length > 0 && {
+      value: 'overview',
+      label: 'Overview',
+      node: overviewSections,
+    },
+    modelSections.length > 0 && {
+      value: 'models',
+      label: 'Model analysis',
+      node: modelSections,
+    },
+    technicalSections.length > 0 && {
+      value: 'technical',
+      label: 'A2A messages',
+      node: technicalSections,
+    },
+  ].filter(Boolean);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <header>
+        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+          <Search className="size-6 text-primary" />
+          Ask a Question or Verify a Claim
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Type any general question or factual statement below. Our multi-agent AI system will
+          evaluate it and provide a realistic, easy-to-understand explanation.
+        </p>
+      </header>
+
+      <section>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Sample Questions &amp; Claims:
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {SAMPLES.map((sample) => (
+            <Button
+              key={sample.label}
+              variant="outline"
+              size="sm"
+              onClick={() => setClaim(sample.query)}
+            >
+              <sample.icon data-icon="inline-start" />
+              {sample.label}
+            </Button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border bg-card p-4 shadow-sm">
+        <Textarea
+          id="claim-input"
+          name="claim"
           rows={3}
           value={claim}
           onChange={(e) => setClaim(e.target.value)}
           placeholder="e.g. 'What is quantum computing?', 'Why is the sky blue?', or 'Apple will launch iPhone 18 in July 2026'"
-          style={{
-            width: '100%',
-            padding: '14px 16px',
-            borderRadius: '12px',
-            border: '1px solid #CBD5E1',
-            fontSize: '1rem',
-            outline: 'none',
-            resize: 'vertical',
-            boxSizing: 'border-box',
-            fontFamily: 'inherit',
-            lineHeight: '1.5'
-          }}
+          className="resize-y text-sm"
         />
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <Select value={engineMode} onValueChange={setEngineMode}>
+            <SelectTrigger className="w-[260px]" aria-label="Engine protocol">
+              <Cpu data-icon="inline-start" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ENGINE_MODES.map((mode) => (
+                <SelectItem key={mode} value={mode}>
+                  {mode}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ fontSize: '0.82rem', color: '#64748B' }}>
-            Supports general knowledge questions as well as factual news verification.
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-muted-foreground md:inline">
+              Supports general knowledge questions as well as factual news verification.
+            </span>
+            <Button onClick={() => run()} disabled={loading}>
+              {loading ? (
+                <Loader2 data-icon="inline-start" className="animate-spin" />
+              ) : (
+                <Shield data-icon="inline-start" />
+              )}
+              {loading ? 'Verifying…' : 'Run ClaimShield AI'}
+            </Button>
           </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={() => handleVerify()}
-            disabled={loading}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 28px',
-              borderRadius: '12px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '0.98rem',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)'
-            }}
-          >
-            <span className="material-symbols-rounded">shield</span>
-            <span>{loading ? 'Verifying with Multi-Agent Pipeline...' : 'Run ClaimShield AI'}</span>
-          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Error Banner */}
       {error && (
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: '#DC2626',
-          borderRadius: '12px',
-          padding: '14px 18px',
-          fontSize: '0.92rem',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <span className="material-symbols-rounded">error</span>
-          <div>{error}</div>
+        <Alert variant="destructive">
+          <ShieldAlert className="size-4" />
+          <AlertTitle>
+            {error.status === 429
+              ? 'Rate limit exceeded'
+              : 'Fact checking pipeline failed'}
+          </AlertTitle>
+          <AlertDescription>
+            {error.message}
+            {error.status === 429 &&
+              ' Please wait a moment, or upgrade to the Pro Plan on the Account page to bypass token limits.'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {loading && <PipelineLoader events={steps} />}
+
+      {!loading && !result && !error && (
+        <Empty className="min-h-[260px] border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Search />
+            </EmptyMedia>
+            <EmptyTitle>No verification yet</EmptyTitle>
+            <EmptyDescription>
+              Type a claim or question above and run the multi-agent pipeline to see the full
+              analysis report — verdict, model consensus, evidence and citations.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button variant="outline" size="sm" onClick={() => run(SAMPLES[0].query)}>
+              Try “{SAMPLES[0].label}”
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+          </EmptyContent>
+        </Empty>
+      )}
+
+      {!loading && result && (
+        <div className="flex flex-col gap-5">
+          <VerdictCard
+            result={result}
+            elapsed={elapsed}
+            agreementScore={result.agreement_score}
+            modelCount={(result.model_results || []).length}
+          />
+
+          <EvidenceList
+            result={result}
+            onUpgradeClick={isPro ? undefined : () => setCheckoutOpen(true)}
+          />
+
+          {detailTabs.length > 0 && (
+            <Card className="shadow-sm">
+              <Tabs defaultValue={detailTabs[0].value} className="w-full">
+                <div className="px-6 pt-5">
+                  <TabsList>
+                    {detailTabs.map((tab) => (
+                      <TabsTrigger key={tab.value} value={tab.value}>
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+                <CardContent className="flex flex-col gap-5 pt-5">
+                  {detailTabs.map((tab) => (
+                    <TabsContent
+                      key={tab.value}
+                      value={tab.value}
+                      className="flex flex-col gap-5"
+                    >
+                      {tab.node}
+                    </TabsContent>
+                  ))}
+                </CardContent>
+              </Tabs>
+            </Card>
+          )}
+
+          <Recommendations
+            recommendations={result.recommendations}
+            onSelectClaim={(c) => run(c)}
+          />
         </div>
       )}
 
-      {/* Pipeline Loader */}
-      {loading && <PipelineLoader />}
-
-      {/* Verification Result */}
-      {result && (
-        <>
-          <VerdictCard result={result} />
-          <EvidenceList result={result} onUpgradeClick={onUpgradeClick} />
-          <Recommendations recommendations={result.recommendations} onSelectClaim={(c) => handleVerify(c)} />
-
-          {/* Collapsible A2A Protocol Envelopes */}
-          {currentLogs.length > 0 && (
-            <div className="glass-card" style={{ padding: '20px', marginTop: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <span className="material-symbols-rounded" style={{ color: '#4F46E5' }}>settings</span>
-                <h4 style={{ margin: 0, fontSize: '1rem', color: '#0F172A', fontWeight: '700' }}>
-                  A2A/1.0 Agent Communication Messages ({currentLogs.length} envelopes)
-                </h4>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748B', marginBottom: '12px' }}>
-                Inspect inter-agent messages fired between Orchestrator, Security, NLP, and Retrieval agents during this run.
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {currentLogs.map((log, i) => (
-                  <div key={i} style={{
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div>
-                      <strong style={{ color: '#4F46E5' }}>{log.from}</strong> → <strong style={{ color: '#059669' }}>{log.to}</strong>
-                      <span style={{ color: '#64748B', marginLeft: '8px' }}>({log.action})</span>
-                    </div>
-                    <span style={{ fontFamily: 'monospace', color: '#94A3B8', fontSize: '0.74rem' }}>{log.timestamp}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      <PaymentDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} planId="pro" />
     </div>
   );
 }

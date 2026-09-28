@@ -1,134 +1,231 @@
 import React from 'react';
+import { useNavigate, useOutletContext, Link } from 'react-router';
+import {
+  Shield,
+  ArrowRight,
+  KeyRound,
+  Coins,
+  Zap,
+  ClipboardList,
+  Globe,
+  Brain,
+  Bot,
+  Lock,
+  Route,
+  BarChart3,
+  Dna,
+  Search,
+  Scale,
+  Lightbulb,
+  CircleCheck,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TypingAnimation } from '@/components/ui/typing-animation';
+import PlanCards from '@/components/PlanCards';
+import { useAuth } from '@/context/AuthContext';
 
-export default function LandingPage({ onGetStarted, onSelectPlan }) {
+const HERO_SUBTITLE =
+  'ClaimShield AI is an agentic fact-verification platform using 5 AI agents, RAG, and multi-LLM consensus to deliver transparent, evidence-backed verdicts.';
+
+const STATS = [
+  { value: '5', label: 'Specialized Agents' },
+  { value: '3', label: 'LLM Consensus Models' },
+  { value: 'A2A', label: 'Messaging Protocol' },
+  { value: 'FAISS', label: 'Vector Retrieval' },
+];
+
+const TRUST = [
+  { icon: KeyRound, label: 'PBKDF2-SHA256 Hashing' },
+  { icon: Coins, label: 'JWT Session Tokens' },
+  { icon: Zap, label: 'Token-Bucket Rate Limiting' },
+  { icon: ClipboardList, label: 'Encrypted Audit Trails' },
+  { icon: Globe, label: 'LangGraph Stateful Workflow' },
+];
+
+const FEATURES = [
+  {
+    icon: Brain,
+    title: 'Multi-Agent Orchestration',
+    desc: 'Security, NLP, Retrieval, Verification, and Explainer agents collaborate via A2A/1.0 JSON protocol with full message tracing and live audit logs.',
+    tone: 'text-blue-600 bg-blue-600/10',
+  },
+  {
+    icon: Zap,
+    title: 'Vector RAG & FAISS Index',
+    desc: 'Semantic similarity retrieval over curated news repositories with cosine ranking, top-5 expansion, and direct inline source citations.',
+    tone: 'text-sky-600 bg-sky-600/10',
+  },
+  {
+    icon: Bot,
+    title: 'Multi-LLM Consensus',
+    desc: 'Three independent LLMs independently evaluate claims, then vote on a consensus verdict — eliminating single-model hallucination bias.',
+    tone: 'text-cyan-600 bg-cyan-600/10',
+  },
+  {
+    icon: Lock,
+    title: 'Enterprise-Grade Security',
+    desc: 'PBKDF2-SHA256 password hashing, signed JWT tokens, token-bucket rate limiting, and AES-encrypted audit trails at every layer.',
+    tone: 'text-emerald-600 bg-emerald-600/10',
+  },
+  {
+    icon: Route,
+    title: 'LangGraph Stateful Workflow',
+    desc: 'Optional LangGraph execution mode provides a stateful graph-based pipeline for complex multi-step reasoning with full state persistence.',
+    tone: 'text-amber-600 bg-amber-600/10',
+  },
+  {
+    icon: BarChart3,
+    title: 'Explainability & Reports',
+    desc: 'Every verdict comes with a cited evidence summary, confidence scores, source attribution, and downloadable PDF verification reports.',
+    tone: 'text-red-600 bg-red-600/10',
+  },
+];
+
+const PIPELINE = [
+  { icon: KeyRound, label: 'Security\nAgent', tone: 'text-red-500 bg-red-500/15 border-red-500' },
+  { icon: Dna, label: 'NLP\nAgent', tone: 'text-sky-400 bg-sky-400/15 border-sky-400' },
+  { icon: Search, label: 'Retrieval\nAgent', tone: 'text-amber-500 bg-amber-500/15 border-amber-500' },
+  { icon: Scale, label: 'Verification\nAgent', tone: 'text-blue-500 bg-blue-500/15 border-blue-500' },
+  { icon: Lightbulb, label: 'Explainer\nAgent', tone: 'text-emerald-500 bg-emerald-500/15 border-emerald-500' },
+  { icon: CircleCheck, label: 'Verdict\n& Report', tone: 'text-teal-500 bg-teal-500/15 border-teal-500' },
+];
+
+function SectionHead({ eyebrow, title, desc }) {
   return (
-    <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '30px 20px 80px' }}>
-      {/* Hero Section */}
-      <section className="hero-section" style={{ textAlign: 'center', padding: '50px 0 40px' }}>
-        <div className="hero-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-          <span className="hero-badge-dot" />
-          <span>Now Live — Multi-Agent AI System</span>
-        </div>
+    <div className="mx-auto mb-10 max-w-2xl text-center">
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+      <h2 className="mt-2 font-heading text-3xl font-extrabold tracking-tight">{title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground sm:text-base">{desc}</p>
+    </div>
+  );
+}
 
-        <h1 className="hero-title" style={{
-          fontSize: '3.4rem',
-          fontWeight: '900',
-          letterSpacing: '-0.035em',
-          lineHeight: '1.15',
-          margin: '0 auto 18px',
-          maxWidth: '880px',
-          color: '#0F172A'
-        }}>
-          Defend Truth with <span style={{
-            background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>Autonomous Multi-Agent</span> Intelligence
+export default function LandingPage() {
+  const { openAuth } = useOutletContext();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const startVerifying = () =>
+    isAuthenticated ? navigate('/dashboard') : openAuth('register');
+
+  return (
+    <div>
+      {/* Hero */}
+      <section className="px-4 pb-14 pt-14 text-center sm:pt-20">
+        <span className="mx-auto mb-6 gap-2 px-3 py-1.5">
+          
+        </span>
+
+        <h1 className="mx-auto max-w-4xl font-heading text-4xl font-black leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+          Truth Verified.
+          <br />
+          <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
+            In Real Time.
+          </span>
         </h1>
 
-        <p style={{
-          fontSize: '1.15rem',
-          color: '#475569',
-          maxWidth: '720px',
-          margin: '0 auto 32px',
-          lineHeight: '1.65'
-        }}>
-          ClaimShield AI orchestrates 5 specialized AI agents, vector RAG retrieval, and multi-LLM consensus
-          to deliver transparent, evidence-backed verdicts instantly.
-        </p>
-
-        {/* Hero CTA Button */}
-        <div>
-          <button
-            className="hero-animated-wave-btn"
-            onClick={onGetStarted}
-            style={{
-              background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-              color: 'white',
-              border: 'none',
-              padding: '16px 36px',
-              fontSize: '1.1rem',
-              fontWeight: '700',
-              borderRadius: '16px',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.4)'
-            }}
+        <div className="mx-auto mt-6 max-w-3xl">
+          <TypingAnimation
+            as="p"
+            className="min-h-[5.75rem] text-balance text-base leading-relaxed text-muted-foreground sm:text-lg"
+            typeSpeed={reducedMotion ? 1 : 25}
+            delay={reducedMotion ? 0 : 100}
           >
-            <span className="material-symbols-rounded">shield</span>
-            <span>Start Verifying Claims</span>
-            <span className="material-symbols-rounded">arrow_forward</span>
-          </button>
+            {HERO_SUBTITLE}
+          </TypingAnimation>
+        </div>
+
+        <div className="mt-8">
+          <Button size="lg" className="px-8 text-base shadow-lg shadow-primary/25" onClick={startVerifying}>
+            <Shield data-icon="inline-start" />
+            Start Verifying Claims
+            <ArrowRight data-icon="inline-end" />
+          </Button>
         </div>
       </section>
 
-      {/* Stats Row */}
-      <section style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px',
-        margin: '40px 0 60px'
-      }}>
-        {[
-          { num: '98.4%', label: 'Fact-Check Accuracy' },
-          { num: '5 Agents', label: 'Sequential Pipeline' },
-          { num: '2.1s', label: 'Average Response Time' },
-          { num: '100%', label: 'Cryptographic Audit Trail' }
-        ].map((stat, i) => (
-          <div key={i} className="glass-card" style={{ textAlign: 'center', padding: '24px 16px' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#4F46E5', marginBottom: '4px' }}>
-              {stat.num}
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+      {/* Stats */}
+      <section className="mx-auto grid max-w-5xl grid-cols-2 gap-4 px-4 lg:grid-cols-4">
+        {STATS.map((stat) => (
+          <div key={stat.label} className="rounded-xl border bg-card p-5 text-center shadow-sm">
+            <div className="font-heading text-3xl font-extrabold text-primary">{stat.value}</div>
+            <div className="mt-1 text-xs font-semibold text-muted-foreground sm:text-sm">
               {stat.label}
             </div>
           </div>
         ))}
       </section>
 
-      {/* 5-Agent Pipeline Visual */}
-      <section style={{ margin: '60px 0' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div className="section-eyebrow">How It Works</div>
-          <h2 className="section-title">The 5-Agent Verification Pipeline</h2>
-          <div className="section-desc">Each statement flows sequentially through our specialized agent network.</div>
+      {/* Trust bar */}
+      <section className="mx-auto mt-8 max-w-5xl px-4">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {TRUST.map((item) => (
+            <span
+              key={item.label}
+              className="inline-flex items-center gap-2 rounded-full border bg-muted/40 px-3.5 py-1.5 text-xs font-medium text-muted-foreground"
+            >
+              <item.icon className="size-3.5 text-primary" />
+              {item.label}
+            </span>
+          ))}
         </div>
+      </section>
 
-        <div className="glass-card" style={{ padding: '36px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: '16px' }}>
-            {[
-              { icon: 'key', name: 'Security Agent', color: '#EF4444' },
-              { icon: 'biotech', name: 'NLP Agent', color: '#38BDF8' },
-              { icon: 'search', name: 'Retrieval Agent', color: '#F59E0B' },
-              { icon: 'balance', name: 'Verification Agent', color: '#A855F7' },
-              { icon: 'lightbulb', name: 'Explainer Agent', color: '#10B981' },
-              { icon: 'check_circle', name: 'Verdict & Audit', color: '#4F46E5' }
-            ].map((ag, i, arr) => (
-              <React.Fragment key={i}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '16px',
-                    background: `${ag.color}15`,
-                    border: `2px solid ${ag.color}`,
-                    color: ag.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 8px',
-                    boxShadow: `0 8px 20px ${ag.color}25`
-                  }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: '1.8rem' }}>{ag.icon}</span>
-                  </div>
-                  <div style={{ fontWeight: '700', fontSize: '0.86rem', color: '#1E293B' }}>{ag.name}</div>
-                </div>
-                {i < arr.length - 1 && (
-                  <span className="material-symbols-rounded" style={{ color: '#CBD5E1', fontSize: '1.5rem' }}>
-                    arrow_forward
+      {/* Features */}
+      <section className="mx-auto mt-20 max-w-6xl px-4">
+        <SectionHead
+          eyebrow="Platform Capabilities"
+          title="Everything you need to verify the truth"
+          desc="Six pillars of our multi-agent verification engine, built for journalists, researchers & news organizations."
+        />
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((feature) => (
+            <div
+              key={feature.title}
+              className="group rounded-xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <span
+                className={`mb-3 flex size-11 items-center justify-center rounded-lg ${feature.tone}`}
+              >
+                <feature.icon className="size-5" />
+              </span>
+              <h3 className="font-heading font-bold">{feature.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                {feature.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pipeline */}
+      <section className="mx-auto mt-24 max-w-6xl px-4">
+        <SectionHead
+          eyebrow="How it works"
+          title="The 5-Agent Verification Pipeline"
+          desc="Each claim flows through our sequential agent network — from authentication to final explanation."
+        />
+        <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            {PIPELINE.map((node, idx) => (
+              <React.Fragment key={node.label}>
+                <div className="flex w-24 flex-col items-center gap-2 text-center sm:w-28">
+                  <span
+                    className={`flex size-14 items-center justify-center rounded-2xl border-2 ${node.tone}`}
+                  >
+                    <node.icon className="size-6" />
                   </span>
+                  <span className="whitespace-pre-line text-xs font-bold leading-tight sm:text-sm">
+                    {node.label}
+                  </span>
+                </div>
+                {idx < PIPELINE.length - 1 && (
+                  <ArrowRight className="size-5 shrink-0 text-border" />
                 )}
               </React.Fragment>
             ))}
@@ -136,138 +233,19 @@ export default function LandingPage({ onGetStarted, onSelectPlan }) {
         </div>
       </section>
 
-      {/* Pricing Comparison (2-Tier: Free vs Pro) */}
-      <section style={{ margin: '70px 0' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div className="section-eyebrow">Pricing Plans</div>
-          <h2 className="section-title">Transparent Commercialization Plans</h2>
-          <div className="section-desc">Get started with Free or upgrade to Pro for expanded evidence depth.</div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-          {/* Free Plan */}
-          <div className="plan-card" style={{ padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '1.3rem', color: '#0F172A' }}>Free Plan</h4>
-              <div style={{ fontSize: '2.5rem', fontWeight: '900', color: '#0F172A', marginBottom: '8px' }}>
-                $0
-              </div>
-              <p style={{ color: '#64748B', fontSize: '0.88rem', marginBottom: '20px' }}>
-                Essential fact-checking tools for individual users
-              </p>
-              <ul className="plan-feature-list" style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '1.2rem' }}>check</span>
-                  <span><strong>3 requests</strong> token bucket capacity</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '1.2rem' }}>check</span>
-                  <span><strong>Displays only 2 resources</strong> per claim</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '1.2rem' }}>check</span>
-                  <span>Refills 3 tokens / hour</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '1.2rem' }}>check</span>
-                  <span>Standard NLP & FAISS vector search</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '1.2rem' }}>check</span>
-                  <span>Encrypted audit logging</span>
-                </li>
-              </ul>
-            </div>
-            <button
-              onClick={() => onSelectPlan('free')}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                border: '1px solid #CBD5E1',
-                background: '#FFFFFF',
-                color: '#1E293B',
-                fontWeight: '700',
-                cursor: 'pointer'
-              }}
-            >
-              Get Started Free
-            </button>
-          </div>
-
-          {/* Pro Plan */}
-          <div className="plan-card" style={{
-            padding: '32px',
-            border: '2px solid #4F46E5',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            boxShadow: '0 12px 35px -8px rgba(79, 70, 229, 0.25)'
-          }}>
-            <div className="plan-popular-tag" style={{
-              position: 'absolute',
-              top: '-12px',
-              right: '24px',
-              background: '#4F46E5',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: '800',
-              textTransform: 'uppercase'
-            }}>
-              Popular
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '1.3rem', color: '#4F46E5' }}>Pro Plan</h4>
-              <div style={{ fontSize: '2.5rem', fontWeight: '900', color: '#4F46E5', marginBottom: '8px' }}>
-                $19 <span style={{ fontSize: '1rem', color: '#64748B', fontWeight: '500' }}>/ month</span>
-              </div>
-              <p style={{ color: '#64748B', fontSize: '0.88rem', marginBottom: '20px' }}>
-                For journalists, researchers & media professionals
-              </p>
-              <ul className="plan-feature-list" style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '1.2rem' }}>check_circle</span>
-                  <span><strong>Unlimited</strong> claim checks (Zero throttles)</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '1.2rem' }}>check_circle</span>
-                  <span><strong>Displays at least 3 & up to 5 max</strong> resources</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '1.2rem' }}>check_circle</span>
-                  <span>Priority LLM reasoning queue</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '1.2rem' }}>check_circle</span>
-                  <span>Multi-Agent Persona Debate & LangGraph</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: '#334155' }}>
-                  <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '1.2rem' }}>check_circle</span>
-                  <span>Downloadable PDF verification certificates</span>
-                </li>
-              </ul>
-            </div>
-            <button
-              onClick={() => onSelectPlan('pro')}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #4F46E5, #3730A3)',
-                color: '#FFFFFF',
-                fontWeight: '700',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)'
-              }}
-            >
-              Upgrade to Pro ($19/mo)
-            </button>
-          </div>
-        </div>
+      {/* Pricing preview */}
+      <section className="mx-auto mt-24 max-w-5xl px-4 pb-8">
+        <SectionHead
+          eyebrow="Pricing"
+          title="Simple, Transparent Plans"
+          desc="Start with our Free plan or upgrade to Pro for expanded evidence depth."
+        />
+        <PlanCards onChoose={(planId) => openAuth('register', planId === 'pro' ? 'pro' : undefined)} />
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          <Link to="/plans" className="font-medium text-primary underline underline-offset-4">
+            Compare all features in the full plan matrix
+          </Link>
+        </p>
       </section>
     </div>
   );

@@ -4,7 +4,7 @@
 [![Framework: LangGraph](https://img.shields.io/badge/Framework-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
 [![LLM Consensus](https://img.shields.io/badge/Verification-Multi--LLM%20Consensus-purple.svg)](#cross-examination--verification)
 [![Vector Store: FAISS](https://img.shields.io/badge/Vector%20Store-FAISS-green.svg)](https://github.com/facebookresearch/faiss)
-[![UI: Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
+[![UI: React + shadcn/ui](https://img.shields.io/badge/UI-React%20%2B%20shadcn%2Fui-4338CA.svg)](https://react.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **ClaimShield AI** is an advanced, production-grade **Agentic AI** framework designed for real-time news claim verification. Powered by a collaborative network of **5 specialized agents** communicating via the **A2A/1.0 (Agent-to-Agent) JSON messaging protocol**, ClaimShield delivers transparent, evidence-backed fact checking using dense vector retrieval, NLP analysis, and multi-LLM consensus verification.
@@ -35,7 +35,7 @@ ClaimShield AI orchestrates verification across a multi-stage agentic pipeline:
 
 ```mermaid
 flowchart TD
-    User([ User / News Reader]) -->|Submits Claim| UI[Streamlit Web Dashboard]
+    User([ User / News Reader]) -->|Submits Claim| UI[React Web Dashboard]
     UI -->|A2A Request| Orchestrator[ Master Orchestrator Agent]
     
     subgraph "ClaimShield Multi-Agent Core (A2A/1.0)"
@@ -61,6 +61,10 @@ flowchart TD
     Orchestrator -->|Final Result & PDF Export| UI
     UI -->|Download Report| PDFGen[ PDF Report Generator]
 ```
+
+The dashboard talks to the **FastAPI backend** (`app/api.py`) over REST plus a
+**Server-Sent Events** stream (`POST /api/verify/stream`) that pushes live
+pipeline-step events while the agents run.
 
 ---
 
@@ -98,7 +102,7 @@ The claim verification pipeline executes through five distinct stages:
 - **LLM Integrations:** Groq Cloud API, Google Gemini Flash API, Ollama Local Server
 - **Security & Authentication:** PyJWT, PBKDF2 SHA-256, Cryptography
 - **Database & Persistence:** SQLite3, SQLAlchemy ORM
-- **UI & Visualization:** Streamlit, Plotly, HTML5/CSS3
+- **UI & Visualization:** React 19, Vite, Tailwind CSS v4, shadcn/ui, react-router
 - **Reporting:** ReportLab PDF Engine
 
 ---
@@ -128,13 +132,24 @@ ClaimShield_AI/
 │   │   ├── security.py           # Password hashing & JWT helpers
 │   │   ├── vector_store.py       # FAISS indexing & embedding store
 │   │   └── web_crawler.py        # Live web scraping utility
+│   ├── api.py                    # FastAPI app: REST endpoints + SSE stream
+│   ├── payment_gateway.py        # Demo checkout gateway (card validation)
 │   └── generate_pdf.py           # ReportLab PDF report builder
-├── ui/
-│   ├── main.py                   # Streamlit interactive application
-│   └── style.css                 # Custom glassmorphism UI styling
+├── frontend/
+│   ├── index.html                # Entry HTML (fonts loaded once)
+│   ├── vite.config.js            # Vite config (alias @ → src, /api proxy)
+│   └── src/
+│       ├── App.jsx               # Routes + providers (AuthProvider/RunProvider)
+│       ├── components/           # shadcn/ui + feature components (.jsx)
+│       ├── pages/                # Landing, Dashboard, Account, Audit, A2A, Plans
+│       ├── context/              # AuthContext, RunContext
+│       ├── layouts/              # PublicLayout, AppLayout
+│       ├── services/api.js       # HTTP + SSE client
+│       └── lib/                  # plans, verdicts, utils
 ├── tests/
-│   ├── test_agents.py              # Shared agent test suite
-│   └── test_verification.py        # Verification consensus, debate & PDF tests
+│   ├── test_agents.py            # Shared agent test suite
+│   ├── test_verification.py      # Verification consensus, debate & PDF tests
+│   └── test_api.py               # FastAPI auth, profile, admin, SSE tests
 ├── seed_database.py              # Knowledge base seeding script
 ├── requirements.txt              # Project dependencies
 ├── .gitignore                    # Version control ignore list
@@ -147,6 +162,7 @@ ClaimShield_AI/
 
 ### Prerequisites
 - **Python 3.10+** installed
+- **Node.js 20.19+** (or 22.12+) and **npm** installed — needed for the React frontend
 - **Git** installed
 - *(Optional)* [Ollama](https://ollama.ai/) for offline local LLM inference
 
@@ -158,7 +174,18 @@ ClaimShield_AI/
    cd ClaimShield_AI
    ```
 
-2. **Create and Activate a Virtual Environment:**
+2. **One-command setup (macOS / Linux):**
+   ```bash
+   npm run setup
+   ```
+   This creates the Python virtualenv, installs all Python and npm
+   dependencies (including the frontend workspace), and downloads the spaCy
+   model. Re-running it is safe — everything is idempotent.
+
+   **Windows:** use the manual steps below instead (the `setup`/`dev`
+   scripts use POSIX paths).
+
+3. **Create and Activate a Virtual Environment (manual alternative):**
    ```bash
    # Windows (PowerShell)
    python -m venv .venv
@@ -169,18 +196,23 @@ ClaimShield_AI/
    source .venv/bin/activate
    ```
 
-3. **Install Dependencies:**
+4. **Install Dependencies (manual alternative):**
    ```bash
    pip install --upgrade pip
    pip install -r requirements.txt
+   npm install
    ```
 
-4. **Download spaCy NLP Model:**
+5. **Download spaCy NLP Model (manual alternative):**
    ```bash
    python -m spacy download en_core_web_sm
    ```
 
 ### Environment Configuration
+
+Optional — the app boots without a `.env` file (SQLite storage and the local
+heuristic engine are used, so verification works offline). Add keys to enable
+live LLM consensus and Supabase:
 
 Create a `.env` file in the root directory:
 
@@ -201,7 +233,10 @@ JWT_EXPIRY_MINUTES=60
 
 ### Database Seeding
 
-Initialize the SQLite database and generate the FAISS semantic index with pre-loaded verifiable news articles:
+No action needed — the API seeds the SQLite database and builds the FAISS
+index automatically on first boot. (The first boot also downloads the
+`all-MiniLM-L6-v2` embedding model, ~90 MB, once — afterwards it is cached.)
+To re-seed manually:
 
 ```bash
 python seed_database.py
@@ -209,12 +244,45 @@ python seed_database.py
 
 ### Running the Application
 
-Launch the Streamlit web dashboard:
+One command starts both backend and frontend (macOS / Linux):
 
 ```bash
-streamlit run ui/main.py
+npm run dev
 ```
-Open your browser at `http://localhost:8501`.
+
+- `[api]` FastAPI + uvicorn on `http://localhost:8000` (auto-reloads on Python changes)
+- `[web]` Vite dev server on `http://localhost:5173` — open this in your browser;
+  it proxies `/api` to the backend
+- `Ctrl+C` stops both
+
+`npm run build` builds the frontend bundle and `npm run test` runs the
+Python test suite.
+
+<details>
+<summary>Manual alternative (two terminals / Windows)</summary>
+
+Start the FastAPI backend:
+
+```bash
+python -m uvicorn app.api:app --port 8000
+```
+
+In a second terminal, start the React dev server:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open your browser at `http://localhost:5173` — the dev server proxies `/api`
+to the backend at `http://127.0.0.1:8000`.
+
+</details>
+
+For a production build, run `npm run build`; serving
+`frontend/dist/` from FastAPI (SPA fallback route) gives you the whole app on
+a single port.
 
 ---
 
@@ -240,10 +308,10 @@ All agents interact through standardized, deterministic JSON envelopes adhering 
 
 ## 🧪 Evaluation & Testing
 
-Run the automated test suite covering all agents, security controls, and database operations:
+Run the automated test suite covering all agents, security controls, API endpoints, and database operations:
 
 ```bash
-python -m unittest tests/test_agents.py -v
+python -m unittest discover -s tests -v
 ```
 
 Run the verification-agent focused tests (multi-LLM consensus, offline fallback, debate bridge, PDF generator) independently:

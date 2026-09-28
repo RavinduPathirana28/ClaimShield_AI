@@ -1,211 +1,117 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router';
+import { ShieldCheck, LayoutDashboard, Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useAuth } from '@/context/AuthContext';
+import { ModeToggle } from '@/components/mode-toggle';
+import { cn } from '@/lib/utils';
 
-export default function Navbar({ activePage, setActivePage, openAuthModal }) {
-  const { isAuthenticated, user, profile, isPro, logout } = useAuth();
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/plans', label: 'Plans' },
+  { to: '/responsible-ai', label: 'Ethics & AI' },
+];
 
-  const tokens = profile?.tokens ?? 3.0;
-  const capacity = profile?.capacity ?? 3.0;
-  const pct = Math.min(Math.max((tokens / capacity) * 100, 0), 100);
+export default function Navbar({ openAuth }) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const desktopLinkClass = ({ isActive }) =>
+    cn(
+      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+      isActive
+        ? 'bg-muted text-foreground'
+        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+    );
+
+  const mobileLinkClass = ({ isActive }) =>
+    cn(
+      'flex items-center rounded-md px-3 py-3 text-base font-medium transition-colors',
+      isActive
+        ? 'bg-muted text-foreground'
+        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+    );
 
   return (
-    <header className="glass-nav" style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      padding: '12px 24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backdropFilter: 'blur(24px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-      background: 'rgba(255, 255, 255, 0.75)',
-      borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-      boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.05)'
-    }}>
-      {/* Brand */}
-      <div 
-        style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
-        onClick={() => setActivePage(isAuthenticated ? 'dashboard' : 'landing')}
-      >
-        <img 
-          src="/logo.jpg" 
-          alt="ClaimShield AI" 
-          style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', boxShadow: '0 2px 8px rgba(79,70,229,0.2)' }}
-          onError={(e) => { e.target.style.display = 'none'; }}
-        />
-        <div>
-          <div style={{ fontWeight: '800', fontSize: '1.15rem', color: '#0F172A', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ClaimShield <span style={{ color: '#4F46E5' }}>AI</span>
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: '500' }}>
-            Multi-Agent Fact Verification
-          </div>
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-4">
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 shrink-0 sm:hidden"
+              aria-label="Open navigation menu"
+            >
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 gap-0">
+            <SheetHeader className="border-b pb-4">
+              <SheetTitle className="flex items-center gap-2 font-heading text-base">
+                <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                  <ShieldCheck className="size-4" />
+                </span>
+                ClaimShield AI
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-1 px-4" aria-label="Main menu">
+              {NAV_LINKS.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  onClick={() => setMenuOpen(false)}
+                  className={mobileLinkClass}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        <NavLink to="/" className="flex items-center gap-2 font-semibold">
+          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <ShieldCheck className="size-4" />
+          </span>
+          <span className="hidden font-heading text-base tracking-tight min-[480px]:inline">
+            ClaimShield AI
+          </span>
+        </NavLink>
+
+        <nav className="ml-4 hidden items-center gap-1 sm:flex" aria-label="Main menu">
+          {NAV_LINKS.map((link) => (
+            <NavLink key={link.to} to={link.to} end={link.end} className={desktopLinkClass}>
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2">
+          {isAuthenticated ? (
+            <Button onClick={() => navigate('/dashboard')}>
+              <LayoutDashboard data-icon="inline-start" />
+              Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={() => openAuth('login')}>
+                Sign in
+              </Button>
+              <Button onClick={() => openAuth('register')}>Get started</Button>
+            </>
+          )}
+          <ModeToggle />
         </div>
-      </div>
-
-      {/* Navigation Links */}
-      <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {isAuthenticated ? (
-          <>
-            <button
-              className={`nav-tab-btn ${activePage === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActivePage('dashboard')}
-            >
-              <span className="material-symbols-rounded">shield</span>
-              <span>Verification</span>
-            </button>
-            <button
-              className={`nav-tab-btn ${activePage === 'plans' ? 'active' : ''}`}
-              onClick={() => setActivePage('plans')}
-            >
-              <span className="material-symbols-rounded">diamond</span>
-              <span>Plans & Account</span>
-            </button>
-            <button
-              className={`nav-tab-btn ${activePage === 'audit' ? 'active' : ''}`}
-              onClick={() => setActivePage('audit')}
-            >
-              <span className="material-symbols-rounded">history_edu</span>
-              <span>Audit Logs</span>
-            </button>
-            <button
-              className={`nav-tab-btn ${activePage === 'responsible_ai' ? 'active' : ''}`}
-              onClick={() => setActivePage('responsible_ai')}
-            >
-              <span className="material-symbols-rounded">smart_toy</span>
-              <span>Responsible AI</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className={`nav-tab-btn ${activePage === 'landing' ? 'active' : ''}`}
-              onClick={() => setActivePage('landing')}
-            >
-              <span className="material-symbols-rounded">home</span>
-              <span>Home</span>
-            </button>
-            <button
-              className={`nav-tab-btn ${activePage === 'plans' ? 'active' : ''}`}
-              onClick={() => setActivePage('plans')}
-            >
-              <span className="material-symbols-rounded">diamond</span>
-              <span>Plans</span>
-            </button>
-            <button
-              className={`nav-tab-btn ${activePage === 'responsible_ai' ? 'active' : ''}`}
-              onClick={() => setActivePage('responsible_ai')}
-            >
-              <span className="material-symbols-rounded">smart_toy</span>
-              <span>Ethics & AI</span>
-            </button>
-          </>
-        )}
-      </nav>
-
-      {/* Right User Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {isAuthenticated ? (
-          <>
-            {/* Live Token Indicator for Free plan */}
-            {!isPro ? (
-              <div style={{
-                background: 'rgba(241, 245, 249, 0.85)',
-                padding: '6px 12px',
-                borderRadius: '9999px',
-                border: '1px solid rgba(203, 213, 225, 0.8)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.8rem'
-              }}>
-                <span className="material-symbols-rounded" style={{ fontSize: '1.1rem', color: '#4F46E5' }}>bolt</span>
-                <div>
-                  <strong>{tokens.toFixed(1)} / {capacity}</strong> tokens
-                </div>
-                <div style={{ width: '50px', height: '6px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: '#4F46E5', borderRadius: '4px' }} />
-                </div>
-              </div>
-            ) : (
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(147, 51, 234, 0.15))',
-                color: '#4F46E5',
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                border: '1px solid rgba(79, 70, 229, 0.3)',
-                fontWeight: '700',
-                fontSize: '0.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}>
-                <span className="material-symbols-rounded" style={{ fontSize: '1.1rem', color: '#7C3AED' }}>star</span>
-                <span>Pro Unlimited</span>
-              </div>
-            )}
-
-            {/* User pill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="material-symbols-rounded" style={{ color: '#64748B' }}>account_circle</span>
-              <span style={{ fontWeight: '600', fontSize: '0.88rem', color: '#1E293B' }}>{user?.username}</span>
-            </div>
-
-            <button
-              onClick={logout}
-              style={{
-                background: 'transparent',
-                border: '1px solid #E2E8F0',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                color: '#64748B',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: '1rem' }}>logout</span>
-              <span>Sign Out</span>
-            </button>
-          </>
-        ) : (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => openAuthModal('login')}
-              style={{
-                background: 'transparent',
-                border: '1px solid #CBD5E1',
-                padding: '7px 16px',
-                borderRadius: '10px',
-                fontWeight: '600',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                color: '#1E293B'
-              }}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => openAuthModal('register')}
-              style={{
-                background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                border: 'none',
-                color: '#FFFFFF',
-                padding: '7px 16px',
-                borderRadius: '10px',
-                fontWeight: '600',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
-              }}
-            >
-              Get Started
-            </button>
-          </div>
-        )}
       </div>
     </header>
   );

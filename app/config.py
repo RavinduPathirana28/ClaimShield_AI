@@ -9,8 +9,8 @@ DATA_DIR.mkdir(exist_ok=True)
 
 # Load .env automatically from an explicit list of locations. A bare
 # load_dotenv() only finds ".env" in the process working directory, so
-# launching the app from the repo root (streamlit run ui/main.py) silently
-# ran with empty provider keys and fell back to the Local Heuristic Engine.
+# launching the app from the repo root silently ran with empty provider
+# keys and fell back to the Local Heuristic Engine.
 for _env_file in (BASE_DIR / ".env", BASE_DIR / "app" / ".env"):
     if _env_file.is_file():
         load_dotenv(_env_file)

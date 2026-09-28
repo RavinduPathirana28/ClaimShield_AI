@@ -1,90 +1,222 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import * as api from '../services/api';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router';
+import { ShieldCheck, Clock, Tag, Newspaper, RefreshCw, Loader2, ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
+import { verdictInfo } from '@/lib/verdicts';
+import { useAuth } from '@/context/AuthContext';
+import * as api from '@/services/api';
 
 export default function AuditPage() {
   const { token } = useAuth();
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (token) {
-      api.getAuditLogs(token)
-        .then((data) => setLogs(data))
-        .catch((err) => setError(err.message || 'Failed to fetch audit logs'))
-        .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setLogs(await api.getAuditLogs(token));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
-  return (
-    <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '24px 20px 80px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0F172A', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '2rem' }}>history_edu</span>
-          <span>System Audit Logs & Cryptographic Trail</span>
-        </h2>
-        <p style={{ margin: 0, color: '#64748B', fontSize: '0.94rem' }}>
-          All verified claims are cryptographically encrypted with AES-256 for transparency and auditability.
-        </p>
-      </div>
+  useEffect(() => {
+    load();
+  }, [load]);
 
-      {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#DC2626', padding: '12px 16px', borderRadius: '10px', marginBottom: '16px' }}>
-          {error}
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="shadow-sm">
+        <CardContent className="flex flex-col gap-3 pt-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-bold text-emerald-800 dark:text-emerald-400">
+                <ShieldCheck className="size-5" />
+                Cryptographic Verification Ledger
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-emerald-700 dark:text-emerald-500">
+                Immutable audit trail. Every verified query, model reasoning trace, and citation is
+                encrypted at rest using <strong>Fernet AES-128-CBC</strong>.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge
+                variant="outline"
+                className="border-emerald-600/40 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
+              >
+                Fernet AES-128-CBC
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-primary/40 bg-primary/10 text-primary"
+              >
+                PBKDF2 Salted
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {loading && (
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2 rounded-lg border p-4">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ))}
         </div>
       )}
 
-      {loading ? (
-        <div className="glass-card" style={{ padding: '36px', textAlign: 'center', color: '#64748B' }}>
-          <span className="material-symbols-rounded" style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>sync</span>
-          <div style={{ marginTop: '8px' }}>Decrypting user audit records...</div>
-        </div>
-      ) : logs.length === 0 ? (
-        <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: '#64748B' }}>
-          <span className="material-symbols-rounded" style={{ fontSize: '2.5rem', color: '#CBD5E1', marginBottom: '8px' }}>inbox</span>
-          <div style={{ fontWeight: '600', color: '#334155' }}>No verification audit logs found yet.</div>
-          <div style={{ fontSize: '0.86rem', marginTop: '4px' }}>Verify your first claim on the Verification Dashboard!</div>
-        </div>
-      ) : (
-        <div className="glass-card" style={{ padding: '20px', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#475569' }}>
-                <th style={{ padding: '10px 14px' }}>Timestamp</th>
-                <th style={{ padding: '10px 14px' }}>Claim / Query</th>
-                <th style={{ padding: '10px 14px' }}>Verdict</th>
-                <th style={{ padding: '10px 14px' }}>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((row, idx) => {
-                const dateStr = row.timestamp ? new Date(row.timestamp * 1000).toLocaleString() : 'N/A';
-                const conf = typeof row.confidence === 'number' ? Math.round(row.confidence * 100) : 'N/A';
-                return (
-                  <tr key={idx} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <td style={{ padding: '12px 14px', color: '#64748B', whiteSpace: 'nowrap' }}>{dateStr}</td>
-                    <td style={{ padding: '12px 14px', color: '#0F172A', fontWeight: '500' }}>{row.claim}</td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: '9999px',
-                        fontSize: '0.78rem',
-                        fontWeight: '700',
-                        background: row.verdict === 'Supported' ? 'rgba(16, 185, 129, 0.15)' : row.verdict === 'Contradicted' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(2, 132, 199, 0.15)',
-                        color: row.verdict === 'Supported' ? '#047857' : row.verdict === 'Contradicted' ? '#B91C1C' : '#0369A1'
-                      }}>
-                        {row.verdict || 'Unclear'}
+      {error && !loading && (
+        <Alert variant="destructive">
+          <AlertTitle>Failed to load audit logs</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-3">
+            <span>{error}</span>
+            <Button size="sm" variant="outline" onClick={load}>
+              <RefreshCw data-icon="inline-start" />
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!loading && !error && logs && logs.length === 0 && (
+        <Empty className="min-h-[240px] border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ShieldCheck />
+            </EmptyMedia>
+            <EmptyTitle>No audit entries yet</EmptyTitle>
+            <EmptyDescription>
+              You haven&apos;t run any fact checks yet. Check a claim on the Verification Dashboard
+              to populate this ledger.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/dashboard">
+                Open Verification Dashboard
+                <ArrowRight data-icon="inline-end" />
+              </Link>
+            </Button>
+          </EmptyContent>
+        </Empty>
+      )}
+
+      {!loading && !error && logs && logs.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            {logs.length} encrypted audit entr{logs.length === 1 ? 'y' : 'ies'} on file.
+          </p>
+          {logs.map((log, idx) => {
+            const info = verdictInfo(log.verdict);
+            const details = log.details || {};
+            const entities = (details.entities || []).filter((e) => e && typeof e === 'object');
+            const articles = (details.articles_retrieved || []).filter(
+              (a) => a && typeof a === 'object'
+            );
+            const confidence = Math.round((log.confidence || 0) * 100);
+
+            return (
+              <Collapsible key={log.id ?? idx}>
+                <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40">
+                  <Clock className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {log.timestamp}
+                    </span>{' '}
+                    — Claim: <span className="font-medium">“{log.claim}”</span>
+                  </span>
+                  <Badge variant="outline" className={`hidden shrink-0 sm:inline-flex ${info.badge}`}>
+                    <info.icon className="size-3" />
+                    {log.verdict}
+                  </Badge>
+                  <span className="shrink-0 text-xs font-bold tabular-nums">{confidence}%</span>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={info.badge}>
+                          <info.icon className="size-3" />
+                          {log.verdict}
+                        </Badge>
+                        <span className="font-mono text-xs text-muted-foreground">
+                          UTC: {log.timestamp}
+                        </span>
+                      </div>
+                      <span className="text-xs">
+                        <span className="font-semibold text-muted-foreground">Certainty:</span>{' '}
+                        <strong>{confidence}%</strong>
                       </span>
-                    </td>
-                    <td style={{ padding: '12px 14px', color: '#334155', fontWeight: '600' }}>
-                      {conf}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+
+                    <div className="rounded-lg border bg-card p-3">
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
+                        Audited Model Rationale
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        {details.summary || 'No reasoning logged.'}
+                      </p>
+                    </div>
+
+                    {entities.length > 0 && (
+                      <div>
+                        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+                          <Tag className="size-3.5" /> Extracted Named Entities
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {entities.map((ent, i) => (
+                            <Badge key={i} variant="secondary" className="font-mono text-xs">
+                              {ent.text} <span className="opacity-70">({ent.label || 'MISC'})</span>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {articles.length > 0 && (
+                      <div>
+                        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+                          <Newspaper className="size-3.5" /> Referenced Source Articles (FAISS
+                          Cosine Similarity)
+                        </p>
+                        <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
+                          {articles.map((a, i) => (
+                            <li key={i} className="flex flex-wrap items-baseline gap-1.5">
+                              <strong className="text-foreground">{a.source || 'Unknown'}</strong>
+                              <span>: {a.title}</span>
+                              <span className="font-mono text-xs">
+                                (Score: {Number(a.score || 0).toFixed(4)})
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </div>
       )}
     </div>

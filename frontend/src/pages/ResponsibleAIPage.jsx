@@ -1,137 +1,125 @@
 import React from 'react';
+import {
+  Bot,
+  Search,
+  Scale,
+  Brain,
+  Lightbulb,
+  Lock,
+  UserRound,
+  Globe,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const PILLARS = [
   {
-    icon: 'search',
+    icon: Search,
     title: 'Transparency & Auditability',
     badge: 'Fully Traceable',
-    badgeColor: '#059669',
-    badgeBg: 'rgba(16, 185, 129, 0.15)',
-    border: '#059669',
-    desc: 'Every verification result provides full source attribution, cosine similarity metrics, and an immutable AES-256 encrypted audit trail for regulatory compliance.'
+    tone: 'text-emerald-600',
+    badgeTone: 'border-emerald-600/40 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+    desc: 'Every verification result provides full source attribution, cosine similarity metrics, and an immutable AES-256 encrypted audit trail for regulatory compliance.',
   },
   {
-    icon: 'balance',
+    icon: Scale,
     title: 'Algorithmic Fairness',
     badge: 'Uniform Verification',
-    badgeColor: '#D97706',
-    badgeBg: 'rgba(245, 158, 11, 0.15)',
-    border: '#D97706',
-    desc: 'Our semantic pipeline evaluates statements without user demographic profiling, ensuring objective verdicts across scientific, historical, and sociopolitical topics.'
+    tone: 'text-amber-600',
+    badgeTone: 'border-amber-600/40 bg-amber-600/10 text-amber-700 dark:text-amber-500',
+    desc: 'Our semantic pipeline evaluates statements without user demographic profiling, ensuring objective verdicts across scientific, historical, and sociopolitical topics.',
   },
   {
-    icon: 'psychology',
+    icon: Brain,
     title: 'Grounding & Bias Mitigation',
     badge: 'Multi-LLM Consensus',
-    badgeColor: '#4F46E5',
-    badgeBg: 'rgba(79, 70, 229, 0.15)',
-    border: '#4F46E5',
-    desc: 'Dual-model consensus (Groq Llama-3.3-70b + Google Gemini-2.5) strictly penalizes ungrounded hallucinations, requiring retrieved factual documents before issuing positive verdicts.'
+    tone: 'text-primary',
+    badgeTone: 'border-primary/40 bg-primary/10 text-primary',
+    desc: 'Dual-model consensus (Groq Llama-3.3-70b + Google Gemini-2.5) strictly penalizes ungrounded hallucinations, requiring retrieved factual documents before issuing positive verdicts.',
   },
   {
-    icon: 'lightbulb',
+    icon: Lightbulb,
     title: 'Multi-Layer Explainability',
     badge: 'Transparent Rationale',
-    badgeColor: '#7C3AED',
-    badgeBg: 'rgba(124, 58, 237, 0.15)',
-    border: '#7C3AED',
-    desc: 'Provides plain-language explanations, specific cited article snippets, and confidence scores so end-users can independently verify reasoning.'
+    tone: 'text-cyan-600',
+    badgeTone: 'border-cyan-600/40 bg-cyan-600/10 text-cyan-700 dark:text-cyan-400',
+    desc: 'Provides plain-language explanations, specific cited article snippets, and confidence scores so end-users can independently verify reasoning.',
   },
   {
-    icon: 'lock',
+    icon: Lock,
     title: 'Cryptographic Security',
     badge: 'Defense in Depth',
-    badgeColor: '#DC2626',
-    badgeBg: 'rgba(239, 68, 68, 0.15)',
-    border: '#DC2626',
-    desc: 'Token-bucket rate limiting against DDoS and prompt injection sanitization protect backend reasoning infrastructure.'
+    tone: 'text-red-600',
+    badgeTone: 'border-red-600/40 bg-red-600/10 text-red-700 dark:text-red-400',
+    desc: 'Token-bucket rate limiting against DDoS and prompt injection sanitization protect backend reasoning infrastructure.',
   },
   {
-    icon: 'person',
+    icon: UserRound,
     title: 'User Data Rights & Privacy',
     badge: 'Privacy Protected',
-    badgeColor: '#0284C7',
-    badgeBg: 'rgba(2, 132, 199, 0.15)',
-    border: '#0284C7',
-    desc: 'User queries are processed transiently and personal audit records are encrypted. We never sell or train public foundation models on private user submissions.'
-  }
+    tone: 'text-sky-600',
+    badgeTone: 'border-sky-600/40 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+    desc: 'User queries are processed transiently and personal audit records are encrypted. We never sell or train public foundation models on private user submissions.',
+  },
 ];
 
 export default function ResponsibleAIPage() {
   return (
-    <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '24px 20px 80px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#0F172A', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-          <span className="material-symbols-rounded" style={{ color: '#4F46E5', fontSize: '2rem' }}>smart_toy</span>
-          <span>Responsible AI, Ethics & Governance</span>
-        </h2>
-        <p style={{ color: '#64748B', fontSize: '0.96rem', margin: 0, maxWidth: '720px', marginLeft: 'auto', marginRight: 'auto' }}>
-          ClaimShield AI is architected with Responsible AI principles at its foundation — guaranteeing fairness, explainability, safety, and verifiable evidence.
+    <div className="mx-auto max-w-5xl flex flex-col gap-8 px-4 py-12">
+      <header className="text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          Ethics & Governance
         </p>
-      </div>
+        <h1 className="mt-2 flex flex-wrap items-center justify-center gap-2 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
+          <Bot className="size-8 text-primary" />
+          Responsible AI, Ethics &amp; Governance
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+          ClaimShield AI is architected with Responsible AI principles at its foundation —
+          guaranteeing fairness, explainability, safety, and verifiable evidence.
+        </p>
+      </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        {PILLARS.map((p, idx) => (
-          <div
-            key={idx}
-            className="glass-card"
-            style={{
-              padding: '24px',
-              borderLeft: `5px solid ${p.border}`,
-              background: 'rgba(255, 255, 255, 0.88)'
-            }}
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {PILLARS.map((pillar) => (
+          <Card
+            key={pillar.title}
+            className="shadow-sm transition-shadow hover:shadow-md"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: p.border, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="material-symbols-rounded">{p.icon}</span>
-                <span>{p.title}</span>
-              </h3>
-              <span style={{
-                background: p.badgeBg,
-                color: p.badgeColor,
-                padding: '4px 10px',
-                borderRadius: '9999px',
-                fontSize: '0.74rem',
-                fontWeight: '700'
-              }}>
-                {p.badge}
-              </span>
-            </div>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: '1.6' }}>
-              {p.desc}
-            </p>
-          </div>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className={cn('flex items-center gap-2 text-base font-bold', pillar.tone)}>
+                  <pillar.icon className="size-4.5" />
+                  {pillar.title}
+                </CardTitle>
+                <Badge variant="outline" className={cn('shrink-0 text-[0.65rem]', pillar.badgeTone)}>
+                  {pillar.badge}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm leading-relaxed text-muted-foreground">
+              {pillar.desc}
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Global commitment banner */}
-      <div className="glass-card" style={{
-        padding: '32px 24px',
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08), rgba(16, 185, 129, 0.12))',
-        border: '1px solid rgba(5, 150, 105, 0.3)'
-      }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '46px',
-          height: '46px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #059669, #047857)',
-          color: 'white',
-          marginBottom: '10px'
-        }}>
-          <span className="material-symbols-rounded">public</span>
-        </div>
-        <h3 style={{ color: '#065F46', fontSize: '1.25rem', margin: '0 0 6px 0' }}>
-          Global Responsible AI Commitment
-        </h3>
-        <p style={{ color: '#047857', fontSize: '0.92rem', maxWidth: '760px', margin: '0 auto', lineHeight: '1.6' }}>
-          We commit to upholding open standards in computational truth verification. Every piece of retrieved
-          evidence is cited with transparent scoring, multi-model consensus, and human-in-the-loop oversight.
-        </p>
-      </div>
+      <Card className="border-emerald-600/40 bg-emerald-600/10 text-center shadow-sm">
+        <CardContent className="flex flex-col gap-3 pt-6">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-600 text-white">
+            <Globe className="size-6" />
+          </span>
+          <h2 className="font-heading text-xl font-bold text-emerald-800 dark:text-emerald-400">
+            Global Responsible AI Commitment
+          </h2>
+          <p className="mx-auto max-w-3xl text-sm leading-relaxed text-emerald-700 dark:text-emerald-500">
+            We commit to upholding open standards in computational truth verification. Every piece
+            of retrieved evidence is cited with transparent scoring, multi-model consensus, and
+            human-in-the-loop oversight.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

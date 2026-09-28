@@ -1,110 +1,137 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { Lightbulb, Newspaper, ExternalLink, Lock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const PREVIEW_COUNT = 3;
 
 export default function EvidenceList({ result, onUpgradeClick }) {
-  const { isPro } = useAuth();
+  const [showAll, setShowAll] = useState(false);
+
   if (!result) return null;
 
-  const displayArticles = result.display_articles || result.articles || [];
-  const totalFound = result.total_resources_found || displayArticles.length;
-  const citations = result.citations || [];
+  const articles = result.display_articles || result.articles || [];
+  const totalFound = result.total_resources_found ?? articles.length;
+  const isPro = result.is_pro_plan;
+  const citationsCount = (result.citations || []).length;
 
-  if (displayArticles.length === 0) return null;
+  if (articles.length === 0) {
+    return (
+      <Alert>
+        <Lightbulb className="size-4" />
+        <AlertTitle>General knowledge query</AlertTitle>
+        <AlertDescription>
+          No local database links were required. The answer was generated using internal facts
+          {citationsCount > 0 ? ` with ${citationsCount} supporting citation(s).` : '.'}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  const liveWeb = articles.filter((a) => (a.source || '').includes('Live Web'));
+  const dbArticles = articles.filter((a) => !(a.source || '').includes('Live Web'));
+  const dates = articles.map((a) => a.date).filter(Boolean);
+  const newest = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : 'unknown';
+  const visible = showAll ? articles : articles.slice(0, PREVIEW_COUNT);
+
+  const hostOf = (url) => {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch {
+      return null;
+    }
+  };
 
   return (
-    <div style={{ marginTop: '28px', marginBottom: '28px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="material-symbols-rounded" style={{ color: '#4F46E5' }}>search</span>
-            <span>Retrieved Evidence & Live Citations</span>
-          </h3>
-          <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '2px' }}>
-            Showing <strong>{displayArticles.length}</strong> of <strong>{totalFound}</strong> retrieved resources for your plan.
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Newspaper className="size-4 text-muted-foreground" />
+              Sources
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Showing {articles.length} of {totalFound} retrieved resources ·{' '}
+              {dbArticles.length} local · {liveWeb.length} live web · newest {newest}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={isPro ? 'default' : 'secondary'}>{isPro ? 'Pro' : 'Free'}</Badge>
+            {!isPro && totalFound > 2 && onUpgradeClick && (
+              <Button size="sm" variant="outline" onClick={onUpgradeClick}>
+                <Lock data-icon="inline-start" />
+                View 3–5 resources
+              </Button>
+            )}
           </div>
         </div>
+      </CardHeader>
 
-        {!isPro && totalFound > 2 && (
-          <button
-            onClick={onUpgradeClick}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.15))',
-              border: '1px solid rgba(79, 70, 229, 0.35)',
-              color: '#4F46E5',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              fontSize: '0.82rem',
-              fontWeight: '700',
-              cursor: 'pointer'
-            }}
-          >
-            <span className="material-symbols-rounded" style={{ fontSize: '1.1rem' }}>bolt</span>
-            <span>Upgrade to Pro to view all 3–5 resources</span>
-          </button>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {displayArticles.map((article, idx) => {
-          const score = typeof article.score === 'number' ? Math.round(article.score * 100) : null;
+      <CardContent className="flex flex-col gap-2">
+        {visible.map((article, idx) => {
+          const score =
+            typeof article.score === 'number'
+              ? (article.score * 100).toFixed(4).replace(/\.?0+$/, '')
+              : null;
+          const host = article.url && article.url !== '#' ? hostOf(article.url) : null;
           return (
-            <div
-              key={idx}
-              className="glass-card"
-              style={{
-                padding: '18px 20px',
-                borderLeft: '4px solid #4F46E5',
-                background: 'rgba(255, 255, 255, 0.85)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
-                <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#0F172A', fontWeight: '700' }}>
-                  {article.title || `Evidence Source #${idx + 1}`}
+            <div key={idx} className="flex flex-col gap-1 rounded-lg border px-3 py-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <h4 className="line-clamp-2 text-sm font-semibold leading-snug">
+                  {idx + 1}. {article.title || `Evidence Source #${idx + 1}`}
                 </h4>
-                {score !== null && (
-                  <span style={{
-                    fontSize: '0.74rem',
-                    fontWeight: '700',
-                    color: '#4F46E5',
-                    background: 'rgba(79, 70, 229, 0.1)',
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {score}% Match
-                  </span>
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  {score !== null && (
+                    <Badge variant="secondary" className="font-mono">
+                      {score}
+                    </Badge>
+                  )}
+                  {host && (
+                    <a
+                      href={article.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-primary hover:underline"
+                    >
+                      {host}
+                      <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </div>
               </div>
-
-              {article.snippet && (
-                <p style={{ margin: '0 0 10px 0', fontSize: '0.86rem', color: '#475569', lineHeight: '1.55' }}>
-                  "{article.snippet}"
-                </p>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', color: '#94A3B8' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span className="material-symbols-rounded" style={{ fontSize: '0.95rem' }}>link</span>
-                  <span>Source: {article.source || 'Verified Corpus'}</span>
-                </span>
-                {article.url && (
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: '#4F46E5', textDecoration: 'none', fontWeight: '600' }}
-                  >
-                    View Original ↗
-                  </a>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {article.source}
+                {article.date && ` · ${article.date}`}
+              </p>
+              <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                {article.content}
+              </p>
             </div>
           );
         })}
-      </div>
-    </div>
+
+        {articles.length > PREVIEW_COUNT && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mx-auto text-muted-foreground"
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll ? (
+              <>
+                Show fewer sources <ChevronUp data-icon="inline-end" />
+              </>
+            ) : (
+              <>
+                Show all {articles.length} sources <ChevronDown data-icon="inline-end" />
+              </>
+            )}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }

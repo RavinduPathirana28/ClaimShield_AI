@@ -1,74 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ShieldCheck, Dna, Search, BookOpen, Handshake, ClipboardCheck, Check } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const STEPS = [
-  { icon: 'shield', title: 'Security & Sanitization', detail: 'Token-bucket rate limits & prompt injection filtering' },
-  { icon: 'biotech', title: 'NLP Extraction', detail: 'spaCy entity extraction & keyword normalization' },
-  { icon: 'search', title: 'Vector Retrieval', detail: 'FAISS semantic search across the verified corpus' },
-  { icon: 'menu_book', title: 'Context & Summaries', detail: 'Extractive evidence summarization' },
-  { icon: 'handshake', title: 'Multi-LLM Consensus', detail: 'Groq (Llama-3.3-70b) & Google Gemini validation' },
-  { icon: 'fact_check', title: 'Verdict & Encrypted Audit', detail: 'Final scoring, citation mapping & audit logging' },
+  { icon: ShieldCheck, title: 'Security Check', detail: 'Sanitizing input & token-bucket rate limits' },
+  { icon: Dna, title: 'Parse & Extract', detail: 'spaCy NER extraction & query generation' },
+  { icon: Search, title: 'Vector Retrieval', detail: 'FAISS vector search over the corpus' },
+  { icon: BookOpen, title: 'Context & Summaries', detail: 'Building extractive evidence summary' },
+  { icon: Handshake, title: 'Model Consensus', detail: 'Collecting Groq & Gemini verdicts' },
+  { icon: ClipboardCheck, title: 'Verdict & Audit', detail: 'Persisting encrypted audit trail' },
 ];
 
-export default function PipelineLoader() {
-  const [currentStep, setCurrentStep] = useState(0);
+/**
+ * Live pipeline progress driven by real SSE `step` events (no timers).
+ * `events` accumulates `{ step, label, detail }` frames from /api/verify/stream.
+ */
+export default function PipelineLoader({ events = [] }) {
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentStep((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
-    }, 1200);
+    const started = Date.now();
+    const timer = setInterval(() => setElapsed((Date.now() - started) / 1000), 100);
     return () => clearInterval(timer);
   }, []);
 
-  const pct = Math.round(((currentStep + 1) / STEPS.length) * 100);
+  const activeStep = events.reduce((max, ev) => Math.max(max, ev.step ?? -1), -1);
+  const lastEvent = events[events.length - 1];
+  const detail = lastEvent?.detail || 'Booting the multi-agent pipeline…';
+  const pct = activeStep >= 0 ? Math.round(((activeStep + 1) / STEPS.length) * 100) : 0;
 
   return (
-    <div className="cs-run-loader" style={{ margin: '24px 0' }}>
-      <div className="cs-run-head">
-        <span className="cs-run-dot" />
-        <span style={{ fontWeight: '700', color: '#0F172A' }}>
-          Multi-Agent Verification In Progress
+    <div className="my-6 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="relative flex size-2.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
         </span>
-        <span className="cs-run-tag">{pct}%</span>
+        <span className="text-sm font-bold">Multi-Agent Verification Running</span>
+        <span className="ml-auto rounded-full border bg-muted px-2.5 py-0.5 text-xs font-bold tabular-nums">
+          {pct}%
+        </span>
       </div>
 
-      <div className="cs-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', margin: '16px 0' }}>
+      <div className="my-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {STEPS.map((step, idx) => {
-          const isDone = idx < currentStep;
-          const isActive = idx === currentStep;
-
+          const isDone = activeStep >= 0 && idx < activeStep;
+          const isActive = idx === activeStep;
           return (
             <div
-              key={idx}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 12px',
-                borderRadius: '10px',
-                background: isActive ? 'rgba(79, 70, 229, 0.1)' : isDone ? 'rgba(16, 185, 129, 0.08)' : 'rgba(241, 245, 249, 0.6)',
-                border: `1px solid ${isActive ? '#4F46E5' : isDone ? '#10B981' : '#E2E8F0'}`,
-                transition: 'all 0.3s ease'
-              }}
+              key={step.title}
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg border px-3 py-2 transition-all',
+                isActive && 'border-primary bg-primary/10',
+                isDone && 'border-emerald-600/40 bg-emerald-600/10',
+                !isActive && !isDone && 'border-border bg-muted/40'
+              )}
             >
               <span
-                className="material-symbols-rounded"
-                style={{
-                  fontSize: '1.2rem',
-                  color: isActive ? '#4F46E5' : isDone ? '#10B981' : '#94A3B8'
-                }}
+                className={cn(
+                  'flex size-7 shrink-0 items-center justify-center rounded-md',
+                  isActive && 'bg-primary text-primary-foreground',
+                  isDone && 'bg-emerald-600 text-white',
+                  !isActive && !isDone && 'bg-muted text-muted-foreground'
+                )}
               >
-                {isDone ? 'check_circle' : step.icon}
+                {isDone ? <Check className="size-4" /> : <step.icon className="size-4" />}
               </span>
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{
-                  fontSize: '0.8rem',
-                  fontWeight: isActive || isDone ? '700' : '500',
-                  color: isActive ? '#4F46E5' : isDone ? '#0F172A' : '#64748B',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden'
-                }}>
+              <div className="min-w-0">
+                <div
+                  className={cn(
+                    'truncate text-xs font-semibold',
+                    isActive && 'text-primary',
+                    isDone && 'text-foreground',
+                    !isActive && !isDone && 'text-muted-foreground'
+                  )}
+                >
                   {step.title}
+                </div>
+                <div className="text-[0.65rem] text-muted-foreground">
+                  {isActive ? 'Running' : isDone ? 'Done' : 'Queued'}
                 </div>
               </div>
             </div>
@@ -76,20 +87,13 @@ export default function PipelineLoader() {
         })}
       </div>
 
-      <div className="cs-bar" style={{ height: '6px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-        <div
-          className="cs-bar-fill"
-          style={{
-            width: `${pct}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #4F46E5, #06B6D4)',
-            transition: 'width 0.4s ease'
-          }}
-        />
-      </div>
+      <Progress value={pct} className="h-1.5" />
 
-      <div className="cs-run-detail" style={{ marginTop: '10px', fontSize: '0.82rem', color: '#64748B', textAlign: 'center' }}>
-        Active: <strong style={{ color: '#4F46E5' }}>{STEPS[currentStep].title}</strong> — {STEPS[currentStep].detail}
+      <div className="mt-2.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+        <span className="truncate">
+          <strong className="text-primary">{STEPS[Math.max(activeStep, 0)].title}</strong> — {detail}
+        </span>
+        <span className="shrink-0 tabular-nums">{elapsed.toFixed(1)}s</span>
       </div>
     </div>
   );
