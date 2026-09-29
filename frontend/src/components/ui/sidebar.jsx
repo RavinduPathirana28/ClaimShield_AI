@@ -164,7 +164,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="w-(--sidebar-width) glass-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE
@@ -208,10 +208,9 @@ function Sidebar({
         data-side={side}
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
-          // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
           className
         )}
         {...props}
@@ -219,7 +218,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="flex size-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1 group-data-[variant=floating]:ring-sidebar-border"
+          className="flex size-full flex-col glass-sidebar text-sidebar-foreground group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:shadow-lg"
         >
           {children}
         </div>
@@ -468,18 +467,18 @@ function SidebarMenuItem({
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button group/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-md p-2.5 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-2.5! group-data-[collapsible=icon]:mx-auto hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:font-medium data-active:text-sidebar-accent-foreground [&_svg]:size-5 group-data-[collapsible=icon]:[&_svg]:size-6 [&_svg]:shrink-0 [&>span:last-child]:truncate",
+  "peer/menu-button group/menu-button flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-2 text-left text-sm font-medium ring-sidebar-ring outline-hidden transition-all duration-150 group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:mx-auto hover:bg-[var(--glass-secondary-bg)] hover:text-foreground hover:backdrop-blur-sm focus-visible:ring-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-open:bg-[var(--glass-secondary-bg)] data-open:text-foreground data-active:glass-pill data-active:font-semibold data-active:text-primary data-active:shadow-xs data-active:[&_svg]:text-primary [&_svg]:size-4.5 group-data-[collapsible=icon]:[&_svg]:size-5 [&_svg]:shrink-0 [&>span:last-child]:truncate",
   {
     variants: {
       variant: {
-        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        default: "",
         outline:
-          "bg-background shadow-[0_0_0_1px_var(--sidebar-border)] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_var(--sidebar-accent)]",
+          "glass-button hover:bg-[var(--glass-secondary-bg)]",
       },
       size: {
-        default: "h-11 text-[0.9375rem] sm:h-12 sm:text-base",
-        sm: "h-9 text-sm",
-        lg: "h-12 text-base group-data-[collapsible=icon]:p-0!",
+        default: "h-9.5 text-sm",
+        sm: "h-8 text-xs",
+        lg: "h-11 text-base group-data-[collapsible=icon]:p-0!",
       },
     },
     defaultVariants: {

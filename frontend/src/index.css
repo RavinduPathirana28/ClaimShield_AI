@@ -273,6 +273,17 @@
   box-shadow: var(--glass-floating-shadow), var(--glass-floating-highlight);
 }
 
+.glass-sidebar {
+  background-color: var(--glass-floating-bg);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-right: 1px solid var(--glass-floating-border);
+  box-shadow: 4px 0 24px 0 rgba(15, 23, 42, 0.03);
+}
+.dark .glass-sidebar {
+  box-shadow: 6px 0 32px 0 rgba(0, 0, 0, 0.40);
+}
+
 .glass-modal {
   background-color: var(--glass-modal-bg);
   backdrop-filter: blur(var(--glass-modal-blur)) saturate(var(--glass-modal-saturate));
