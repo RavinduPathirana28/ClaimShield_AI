@@ -80,7 +80,7 @@ export default function EvidenceList({ result, onUpgradeClick }) {
           return (
             <div
               key={idx}
-              className="flex flex-col gap-1.5 rounded-xl border border-border/50 bg-background/40 p-3.5 shadow-xs backdrop-blur-xs transition-all duration-150 hover:border-border hover:bg-background/60 dark:border-white/10 dark:bg-card/40 dark:hover:bg-card/60"
+              className="flex flex-col gap-1.5 rounded-xl glass-panel p-3.5 transition-all duration-150 hover:border-[var(--glass-primary-border)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <h4 className="line-clamp-2 text-sm font-semibold leading-snug">

@@ -200,7 +200,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
                       type="button"
                       disabled={busy}
                       onClick={() => demoLogin(acct.username, acct.password)}
-                      className="flex items-center justify-between gap-1 rounded-xl border border-border/50 bg-background/50 px-3 py-2 text-left shadow-xs backdrop-blur-xs transition-all hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50 dark:border-white/10 dark:bg-card/40"
+                      className="flex items-center justify-between gap-1 rounded-xl glass-panel px-3 py-2 text-left transition-all hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50"
                     >
                       <div className="min-w-0">
                         <p className="truncate font-mono text-xs font-medium">{acct.username}</p>

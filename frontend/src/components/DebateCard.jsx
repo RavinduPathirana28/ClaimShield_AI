@@ -44,7 +44,7 @@ export default function DebateCard({ debate }) {
         return (
           <div
             key={idx}
-            className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/50 p-3.5 shadow-xs backdrop-blur-xs dark:border-white/10 dark:bg-card/40"
+            className="flex flex-col gap-2 rounded-xl glass-panel p-3.5"
           >
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className={cn('gap-1', stage.chip)}>
@@ -70,7 +70,7 @@ export default function DebateCard({ debate }) {
       })}
 
       {consensus && (
-        <div className="rounded-xl border border-emerald-600/35 bg-emerald-600/10 p-3.5 shadow-xs backdrop-blur-xs">
+        <div className="rounded-xl border border-emerald-600/35 bg-emerald-600/10 p-3.5 shadow-xs backdrop-blur-md">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600">
             <Target className="size-3.5" />
             Final Consensus

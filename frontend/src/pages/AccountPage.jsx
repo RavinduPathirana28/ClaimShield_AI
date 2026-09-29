@@ -391,7 +391,7 @@ export default function AccountPage() {
           <BarChart3 className="size-5 text-primary" />
           Subscription Plan Comparison Matrix
         </h3>
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto rounded-2xl glass-panel">
           <Table>
             <TableHeader>
               <TableRow>

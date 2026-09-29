@@ -23,7 +23,7 @@ export default function Recommendations({ recommendations, onSelectClaim }) {
   if (!recommendations || recommendations.length === 0) return null;
 
   return (
-    <section className="rounded-2xl border border-primary/25 bg-primary/[0.03] p-5 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.03)] backdrop-blur-xl sm:p-6">
+    <section className="rounded-2xl glass-card p-5 sm:p-6">
       <div className="flex items-center gap-2">
         <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
           <Compass className="size-4.5" />
@@ -45,7 +45,7 @@ export default function Recommendations({ recommendations, onSelectClaim }) {
               key={idx}
               type="button"
               onClick={() => onSelectClaim(claim)}
-              className="group rounded-xl border border-border/60 bg-card/75 p-3.5 text-left shadow-xs backdrop-blur-md transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card/95 hover:shadow-md dark:border-white/10 dark:bg-card/50 dark:hover:bg-card/70"
+              className="group rounded-xl glass-card glass-card-interactive p-3.5 text-left"
             >
               <span className="flex items-center gap-2">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[0.7rem] font-bold text-primary">

@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border border-border/60 bg-card/75 py-(--card-spacing) text-sm text-card-foreground shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04),0_2px_8px_-2px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-200 dark:border-white/10 dark:bg-card/65 dark:shadow-[0_12px_36px_-6px_rgba(0,0,0,0.35)] [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl glass-card py-(--card-spacing) text-sm text-card-foreground [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl",
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ function CardFooter({
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-2xl border-t border-border/40 bg-muted/30 p-(--card-spacing) backdrop-blur-sm",
+        "flex items-center rounded-b-2xl border-t border-[var(--glass-secondary-border)] bg-[var(--glass-secondary-bg)] p-(--card-spacing) backdrop-blur-md",
         className
       )}
       {...props}

@@ -114,7 +114,7 @@ export default function PaymentDialog({ open, onOpenChange, planId = 'pro' }) {
 
         {step === 'form' ? (
           <form onSubmit={submit} className="flex flex-col gap-4">
-            <div className="rounded-xl border border-border/50 bg-background/50 p-3.5 shadow-xs backdrop-blur-xs dark:border-white/10 dark:bg-card/40">
+            <div className="rounded-xl glass-panel p-3.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">{plan.name}</p>

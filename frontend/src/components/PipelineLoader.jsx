@@ -31,14 +31,14 @@ export default function PipelineLoader({ events = [] }) {
   const pct = activeStep >= 0 ? Math.round(((activeStep + 1) / STEPS.length) * 100) : 0;
 
   return (
-    <div className="my-6 rounded-2xl border border-border/60 bg-card/75 p-5 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:border-white/10 dark:bg-card/65">
+    <div className="my-6 rounded-2xl glass-card p-5">
       <div className="flex items-center gap-2">
         <span className="relative flex size-2.5">
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
           <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
         </span>
         <span className="text-sm font-bold">Multi-Agent Verification Running</span>
-        <span className="ml-auto rounded-full border border-border/40 bg-muted/60 px-2.5 py-0.5 text-xs font-bold tabular-nums backdrop-blur-xs">
+        <span className="ml-auto rounded-full glass-pill px-2.5 py-0.5 text-xs font-bold tabular-nums">
           {pct}%
         </span>
       </div>
@@ -51,10 +51,10 @@ export default function PipelineLoader({ events = [] }) {
             <div
               key={step.title}
               className={cn(
-                'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 backdrop-blur-xs transition-all duration-150',
+                'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 backdrop-blur-md transition-all duration-150',
                 isActive && 'border-primary/60 bg-primary/10 shadow-xs shadow-primary/15',
-                isDone && 'border-emerald-600/35 bg-emerald-600/10',
-                !isActive && !isDone && 'border-border/40 bg-muted/30'
+                isDone && 'border-emerald-600/35 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+                !isActive && !isDone && 'glass-panel text-muted-foreground'
               )}
             >
               <span

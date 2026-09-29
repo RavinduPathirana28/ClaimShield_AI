@@ -57,7 +57,7 @@ export default function PlansPage() {
           <BarChart3 className="size-5 text-primary" />
           Subscription Plan Comparison Matrix
         </h2>
-        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card/75 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.03)] backdrop-blur-xl dark:border-white/10 dark:bg-card/65">
+        <div className="overflow-x-auto rounded-2xl glass-panel">
           <Table>
             <TableHeader>
               <TableRow>

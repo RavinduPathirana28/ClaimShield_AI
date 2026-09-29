@@ -42,7 +42,7 @@ function QuotaCard() {
   const pct = isPro ? 100 : Math.max(0, Math.min(100, (tokens / capacity) * 100));
 
   return (
-    <div className="rounded-2xl border border-sidebar-border/50 bg-sidebar-accent/30 p-3.5 shadow-xs backdrop-blur-md">
+    <div className="rounded-2xl glass-panel p-3.5 shadow-xs">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-sidebar-foreground/80">Token quota</span>
         <Badge variant={isPro ? 'default' : 'secondary'} className="text-[0.65rem]">
@@ -153,7 +153,7 @@ export default function AppSidebar() {
       <SidebarFooter>
         <div
           className={cn(
-            'flex items-center gap-3 rounded-2xl border border-sidebar-border/50 bg-sidebar-accent/30 p-2.5 shadow-xs backdrop-blur-md',
+            'flex items-center gap-3 rounded-2xl glass-panel p-2.5 shadow-xs',
             'group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0'
           )}
           title={user?.username}

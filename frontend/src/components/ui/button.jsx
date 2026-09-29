@@ -8,15 +8,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm shadow-primary/25 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30",
+        default: "bg-primary text-primary-foreground shadow-sm shadow-primary/25 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 active:scale-[0.98]",
         outline:
-          "border-border/60 bg-background/60 shadow-xs backdrop-blur-md hover:border-border hover:bg-background/90 hover:text-foreground aria-expanded:bg-background/90 dark:border-white/10 dark:bg-card/40 dark:hover:bg-card/70",
+          "glass-button text-foreground hover:text-foreground active:scale-[0.98] aria-expanded:bg-[var(--glass-button-hover-bg)]",
         secondary:
-          "border border-border/40 bg-secondary/70 backdrop-blur-md text-secondary-foreground hover:bg-secondary/90 aria-expanded:bg-secondary/90",
+          "glass-panel text-secondary-foreground hover:bg-[var(--glass-primary-bg)] active:scale-[0.98] aria-expanded:bg-[var(--glass-primary-bg)]",
         ghost:
-          "hover:bg-muted/60 hover:text-foreground hover:backdrop-blur-xs aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/40",
+          "hover:bg-[var(--glass-secondary-bg)] hover:text-foreground hover:backdrop-blur-md aria-expanded:bg-[var(--glass-secondary-bg)] aria-expanded:text-foreground",
         destructive:
-          "border border-destructive/20 bg-destructive/10 backdrop-blur-xs text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "border border-destructive/25 bg-destructive/10 backdrop-blur-md text-destructive hover:bg-destructive/20 active:scale-[0.98] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

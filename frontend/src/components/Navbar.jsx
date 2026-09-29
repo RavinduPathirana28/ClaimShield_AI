@@ -28,20 +28,20 @@ export default function Navbar({ openAuth }) {
     cn(
       'rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-150',
       isActive
-        ? 'border border-border/40 bg-muted/70 text-foreground shadow-xs backdrop-blur-xs'
-        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        ? 'glass-pill font-semibold text-foreground'
+        : 'text-muted-foreground hover:bg-[var(--glass-secondary-bg)] hover:text-foreground'
     );
 
   const mobileLinkClass = ({ isActive }) =>
     cn(
       'flex items-center rounded-xl px-3.5 py-2.5 text-base font-medium transition-all',
       isActive
-        ? 'border border-border/40 bg-muted/70 text-foreground'
-        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        ? 'glass-pill font-semibold text-foreground'
+        : 'text-muted-foreground hover:bg-[var(--glass-secondary-bg)] hover:text-foreground'
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/40 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 shadow-[0_1px_4px_0_rgba(0,0,0,0.02)] transition-all">
+    <header className="sticky top-0 z-40 glass-navbar transition-all">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-4">
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
