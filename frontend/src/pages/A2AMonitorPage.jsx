@@ -44,7 +44,7 @@ function JsonPane({ title, icon: Icon, data, tone }) {
         <Icon className="size-3.5" />
         {title}
       </p>
-      <pre className="max-h-72 overflow-auto rounded-lg border bg-muted/50 p-3 font-mono text-xs leading-relaxed">
+      <pre className="max-h-72 overflow-auto rounded-xl border border-border/50 bg-background/60 p-3.5 font-mono text-xs leading-relaxed shadow-inner backdrop-blur-xs dark:border-white/10 dark:bg-card/50">
         {text}
       </pre>
     </div>
@@ -77,7 +77,7 @@ export default function A2AMonitorPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-xl border border-border/50 bg-background/30 backdrop-blur-xs">
             <Table>
               <TableBody>
                 {SPEC_ROWS.map(([key, value]) => (
@@ -95,7 +95,7 @@ export default function A2AMonitorPage() {
       </Card>
 
       {agentLogs.length === 0 ? (
-        <Empty className="min-h-[220px] border">
+        <Empty className="min-h-[220px] rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl dark:border-white/10 dark:bg-card/40">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Inbox />
@@ -130,7 +130,7 @@ export default function A2AMonitorPage() {
 
           {agentLogs.map((log, idx) => (
             <Collapsible key={idx}>
-              <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40">
+              <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card/75 px-4 py-3.5 text-left shadow-xs backdrop-blur-xl transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/90 dark:border-white/10 dark:bg-card/65">
                 <Radio className="size-4 shrink-0 text-primary" />
                 <span className="min-w-0 flex-1 truncate text-sm">
                   Trace #{idx + 1}{' '}
@@ -146,7 +146,7 @@ export default function A2AMonitorPage() {
                 </Badge>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="mt-2 grid gap-4 rounded-lg border bg-muted/30 p-4 lg:grid-cols-2">
+                <div className="mt-2 grid gap-4 rounded-2xl border border-border/50 bg-muted/30 p-4.5 backdrop-blur-md lg:grid-cols-2">
                   <JsonPane
                     title="Outgoing A2A/1.0 Message"
                     icon={Send}

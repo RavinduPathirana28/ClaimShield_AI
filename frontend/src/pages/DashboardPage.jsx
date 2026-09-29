@@ -201,7 +201,7 @@ export default function DashboardPage() {
               {agentLogs.slice(0, 4).map((log, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs"
+                  className="flex flex-wrap items-center gap-2 rounded-xl border border-border/50 bg-muted/40 px-3.5 py-2 text-xs backdrop-blur-xs"
                 >
                   <strong className="text-primary">{log.from}</strong>
                   <span className="text-muted-foreground">→</span>
@@ -269,6 +269,7 @@ export default function DashboardPage() {
               key={sample.label}
               variant="outline"
               size="sm"
+              className="rounded-full border-border/50 bg-background/50 backdrop-blur-md shadow-xs hover:border-border hover:bg-background/80 dark:border-white/10 dark:bg-card/40 dark:hover:bg-card/70"
               onClick={() => setClaim(sample.query)}
             >
               <sample.icon data-icon="inline-start" />
@@ -278,7 +279,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border bg-card p-4 shadow-sm">
+      <section className="rounded-2xl border border-border/60 bg-card/75 p-5 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:border-white/10 dark:bg-card/65 dark:shadow-[0_12px_36px_-6px_rgba(0,0,0,0.35)]">
         <Textarea
           id="claim-input"
           name="claim"
@@ -307,7 +308,7 @@ export default function DashboardPage() {
             <span className="hidden text-xs text-muted-foreground md:inline">
               Supports general knowledge questions as well as factual news verification.
             </span>
-            <Button onClick={() => run()} disabled={loading}>
+            <Button onClick={() => run()} disabled={loading} className="shadow-sm shadow-primary/25">
               {loading ? (
                 <Loader2 data-icon="inline-start" className="animate-spin" />
               ) : (
@@ -338,7 +339,7 @@ export default function DashboardPage() {
       {loading && <PipelineLoader events={steps} />}
 
       {!loading && !result && !error && (
-        <Empty className="min-h-[260px] border">
+        <Empty className="min-h-[260px] rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl dark:border-white/10 dark:bg-card/40">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search />

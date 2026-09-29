@@ -27,16 +27,16 @@ export default function AppLayout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-auto" />
+        <header className="sticky top-0 z-10 flex h-13 shrink-0 items-center gap-2 border-b border-border/40 bg-background/75 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 shadow-[0_1px_4px_0_rgba(0,0,0,0.02)] transition-all">
+          <SidebarTrigger className="-ml-1 rounded-lg" />
+          <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           <span className="truncate text-sm font-semibold">{title}</span>
           <span className="ml-auto flex items-center gap-2">
             <span
-              className={`hidden rounded-full border px-2 py-0.5 text-xs font-medium sm:inline ${
+              className={`hidden rounded-full border px-2.5 py-0.5 text-xs font-medium backdrop-blur-xs sm:inline ${
                 isPro
                   ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'border-border bg-muted text-muted-foreground'
+                  : 'border-border/60 bg-muted/60 text-muted-foreground'
               }`}
             >
               {isPro ? 'Pro plan' : 'Free plan'}

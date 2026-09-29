@@ -59,10 +59,10 @@ function PlanCard({ plan, active, onUpgrade, onDowngrade }) {
     <Card
       className={
         active
-          ? 'border-2 border-primary shadow-md'
+          ? 'border-2 border-primary shadow-lg shadow-primary/15'
           : isProPlan
-            ? 'border-2 border-primary/50'
-            : 'border-2 border-border'
+            ? 'border-2 border-primary/50 shadow-md shadow-primary/10'
+            : 'border border-border/60'
       }
     >
       <CardHeader className="pb-2">

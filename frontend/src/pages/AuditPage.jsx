@@ -137,7 +137,7 @@ export default function AuditPage() {
 
             return (
               <Collapsible key={log.id ?? idx}>
-                <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40">
+                <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card/75 px-4 py-3.5 text-left shadow-xs backdrop-blur-xl transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/90 dark:border-white/10 dark:bg-card/65">
                   <Clock className="size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1 truncate text-sm">
                     <span className="font-mono text-xs text-muted-foreground">
@@ -152,7 +152,7 @@ export default function AuditPage() {
                   <span className="shrink-0 text-xs font-bold tabular-nums">{confidence}%</span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-muted/30 p-4">
+                  <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-border/50 bg-muted/30 p-4.5 backdrop-blur-md">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={info.badge}>
@@ -169,7 +169,7 @@ export default function AuditPage() {
                       </span>
                     </div>
 
-                    <div className="rounded-lg border bg-card p-3">
+                    <div className="rounded-xl border border-border/50 bg-card/60 p-3.5 backdrop-blur-xs">
                       <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
                         Audited Model Rationale
                       </p>

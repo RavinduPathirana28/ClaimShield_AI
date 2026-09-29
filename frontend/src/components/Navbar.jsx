@@ -26,22 +26,22 @@ export default function Navbar({ openAuth }) {
 
   const desktopLinkClass = ({ isActive }) =>
     cn(
-      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+      'rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-150',
       isActive
-        ? 'bg-muted text-foreground'
-        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+        ? 'border border-border/40 bg-muted/70 text-foreground shadow-xs backdrop-blur-xs'
+        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
     );
 
   const mobileLinkClass = ({ isActive }) =>
     cn(
-      'flex items-center rounded-md px-3 py-3 text-base font-medium transition-colors',
+      'flex items-center rounded-xl px-3.5 py-2.5 text-base font-medium transition-all',
       isActive
-        ? 'bg-muted text-foreground'
-        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+        ? 'border border-border/40 bg-muted/70 text-foreground'
+        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-border/40 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 shadow-[0_1px_4px_0_rgba(0,0,0,0.02)] transition-all">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-4">
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
@@ -57,7 +57,7 @@ export default function Navbar({ openAuth }) {
           <SheetContent side="left" className="w-72 gap-0">
             <SheetHeader className="border-b pb-4">
               <SheetTitle className="flex items-center gap-2 font-heading text-base">
-                <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30">
                   <ShieldCheck className="size-4" />
                 </span>
                 ClaimShield AI
@@ -80,7 +80,7 @@ export default function Navbar({ openAuth }) {
         </Sheet>
 
         <NavLink to="/" className="flex items-center gap-2 font-semibold">
-          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30">
             <ShieldCheck className="size-4" />
           </span>
           <span className="hidden font-heading text-base tracking-tight min-[480px]:inline">

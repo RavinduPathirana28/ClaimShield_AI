@@ -152,7 +152,10 @@ export default function LandingPage() {
       {/* Stats */}
       <section className="mx-auto grid max-w-5xl grid-cols-2 gap-4 px-4 lg:grid-cols-4">
         {STATS.map((stat) => (
-          <div key={stat.label} className="rounded-xl border bg-card p-5 text-center shadow-sm">
+          <div
+            key={stat.label}
+            className="rounded-2xl border border-border/60 bg-card/75 p-5 text-center shadow-[0_8px_24px_-4px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-card/65"
+          >
             <div className="font-heading text-3xl font-extrabold text-primary">{stat.value}</div>
             <div className="mt-1 text-xs font-semibold text-muted-foreground sm:text-sm">
               {stat.label}
@@ -167,7 +170,7 @@ export default function LandingPage() {
           {TRUST.map((item) => (
             <span
               key={item.label}
-              className="inline-flex items-center gap-2 rounded-full border bg-muted/40 px-3.5 py-1.5 text-xs font-medium text-muted-foreground"
+              className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-xs backdrop-blur-md dark:border-white/10 dark:bg-card/30"
             >
               <item.icon className="size-3.5 text-primary" />
               {item.label}
@@ -187,10 +190,10 @@ export default function LandingPage() {
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="group rounded-xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+              className="group rounded-2xl border border-border/60 bg-card/75 p-6 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.03)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-card/65"
             >
               <span
-                className={`mb-3 flex size-11 items-center justify-center rounded-lg ${feature.tone}`}
+                className={`mb-3.5 flex size-11 items-center justify-center rounded-xl ${feature.tone}`}
               >
                 <feature.icon className="size-5" />
               </span>
@@ -210,13 +213,13 @@ export default function LandingPage() {
           title="The 5-Agent Verification Pipeline"
           desc="Each claim flows through our sequential agent network — from authentication to final explanation."
         />
-        <div className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+        <div className="rounded-3xl border border-border/60 bg-card/75 p-6 shadow-[0_12px_32px_-6px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-8 dark:border-white/10 dark:bg-card/65">
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             {PIPELINE.map((node, idx) => (
               <React.Fragment key={node.label}>
                 <div className="flex w-24 flex-col items-center gap-2 text-center sm:w-28">
                   <span
-                    className={`flex size-14 items-center justify-center rounded-2xl border-2 ${node.tone}`}
+                    className={`flex size-14 items-center justify-center rounded-2xl border-2 backdrop-blur-xs ${node.tone}`}
                   >
                     <node.icon className="size-6" />
                   </span>

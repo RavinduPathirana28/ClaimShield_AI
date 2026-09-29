@@ -42,7 +42,7 @@ function QuotaCard() {
   const pct = isPro ? 100 : Math.max(0, Math.min(100, (tokens / capacity) * 100));
 
   return (
-    <div className="rounded-lg border bg-sidebar-accent/40 p-3">
+    <div className="rounded-2xl border border-sidebar-border/50 bg-sidebar-accent/30 p-3.5 shadow-xs backdrop-blur-md">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-sidebar-foreground/80">Token quota</span>
         <Badge variant={isPro ? 'default' : 'secondary'} className="text-[0.65rem]">
@@ -98,7 +98,7 @@ export default function AppSidebar() {
           className="flex items-center gap-2 px-1 py-1.5 group-data-[collapsible=icon]:justify-center"
           title="ClaimShield AI — Home"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground group-data-[collapsible=icon]:size-7">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30 group-data-[collapsible=icon]:size-7">
             <ShieldCheck className="size-5" />
           </span>
           <span className="font-heading text-sm font-semibold group-data-[collapsible=icon]:hidden">
@@ -153,7 +153,7 @@ export default function AppSidebar() {
       <SidebarFooter>
         <div
           className={cn(
-            'flex items-center gap-3 rounded-lg border bg-sidebar-accent/40 p-2',
+            'flex items-center gap-3 rounded-2xl border border-sidebar-border/50 bg-sidebar-accent/30 p-2.5 shadow-xs backdrop-blur-md',
             'group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0'
           )}
           title={user?.username}

@@ -130,7 +130,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-heading">
-              <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30">
                 <ShieldCheck className="size-4" />
               </span>
               ClaimShield AI
@@ -182,7 +182,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
                     {errors.password && <FieldError>{errors.password}</FieldError>}
                   </Field>
                 </FieldGroup>
-                <Button type="submit" className="w-full" disabled={busy}>
+                <Button type="submit" className="w-full shadow-sm shadow-primary/25" disabled={busy}>
                   {busy && <Loader2 data-icon="inline-start" className="animate-spin" />}
                   <KeyRound data-icon="inline-start" />
                   Sign in
@@ -200,7 +200,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
                       type="button"
                       disabled={busy}
                       onClick={() => demoLogin(acct.username, acct.password)}
-                      className="flex items-center justify-between gap-1 rounded-lg border bg-muted/30 px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50"
+                      className="flex items-center justify-between gap-1 rounded-xl border border-border/50 bg-background/50 px-3 py-2 text-left shadow-xs backdrop-blur-xs transition-all hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50 dark:border-white/10 dark:bg-card/40"
                     >
                       <div className="min-w-0">
                         <p className="truncate font-mono text-xs font-medium">{acct.username}</p>

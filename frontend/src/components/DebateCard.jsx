@@ -42,7 +42,10 @@ export default function DebateCard({ debate }) {
         const vInfo = turn.verdict ? verdictInfo(turn.verdict) : null;
 
         return (
-          <div key={idx} className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
+          <div
+            key={idx}
+            className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/50 p-3.5 shadow-xs backdrop-blur-xs dark:border-white/10 dark:bg-card/40"
+          >
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className={cn('gap-1', stage.chip)}>
                 <StageIcon className="size-3" />
@@ -67,7 +70,7 @@ export default function DebateCard({ debate }) {
       })}
 
       {consensus && (
-        <div className="rounded-lg border border-emerald-600/40 bg-emerald-600/10 p-3">
+        <div className="rounded-xl border border-emerald-600/35 bg-emerald-600/10 p-3.5 shadow-xs backdrop-blur-xs">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600">
             <Target className="size-3.5" />
             Final Consensus
