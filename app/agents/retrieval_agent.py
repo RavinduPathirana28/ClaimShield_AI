@@ -5,8 +5,17 @@ from app.utils.web_crawler import WebCrawler
 
 class RetrievalAgent(BaseAgent):
     """
-    Information Retrieval (IR) Agent. Integrates FAISS vector indexing with database
-    queries and live web crawling to fetch related news articles to back up or dispute claims.
+    Information Retrieval Agent
+
+    Receive a claim/query from another agent.
+    Search the local FAISS vector index for semantically similar articles.
+    Retrieve matching article records from the local database.
+    Detect queries that require current information.
+    Fall back to live web retrieval when local evidence is weak/outdated.
+    Avoid repeatedly inserting duplicate web articles into the database.
+    Return retrieved evidence to the next stage of the fact-checking pipeline.
+
+    this agent doesn't decide whether a claim is True, False, or Unsure.
     """
     def __init__(self, db: DBManager = None, vector_store: VectorStore = None):
         super().__init__("retrieval_agent")
