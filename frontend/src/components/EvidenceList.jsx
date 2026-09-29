@@ -78,7 +78,10 @@ export default function EvidenceList({ result, onUpgradeClick }) {
               : null;
           const host = article.url && article.url !== '#' ? hostOf(article.url) : null;
           return (
-            <div key={idx} className="flex flex-col gap-1 rounded-lg border px-3 py-2.5">
+            <div
+              key={idx}
+              className="flex flex-col gap-1.5 rounded-xl glass-panel p-3.5 transition-all duration-150 hover:border-[var(--glass-primary-border)]"
+            >
               <div className="flex items-start justify-between gap-3">
                 <h4 className="line-clamp-2 text-sm font-semibold leading-snug">
                   {idx + 1}. {article.title || `Evidence Source #${idx + 1}`}

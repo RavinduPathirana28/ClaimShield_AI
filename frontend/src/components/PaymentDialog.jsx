@@ -114,7 +114,7 @@ export default function PaymentDialog({ open, onOpenChange, planId = 'pro' }) {
 
         {step === 'form' ? (
           <form onSubmit={submit} className="flex flex-col gap-4">
-            <div className="rounded-lg border bg-muted/40 p-3">
+            <div className="rounded-xl glass-panel p-3.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold">{plan.name}</p>
@@ -190,6 +190,7 @@ export default function PaymentDialog({ open, onOpenChange, planId = 'pro' }) {
                   />
                   {errors.expiry && <FieldError>{errors.expiry}</FieldError>}
                 </Field>
+
                 <Field data-invalid={!!errors.cvv}>
                   <FieldLabel htmlFor="cvv">
                     <FieldTitle>CVV</FieldTitle>
@@ -218,7 +219,7 @@ export default function PaymentDialog({ open, onOpenChange, planId = 'pro' }) {
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting} className="shadow-sm shadow-primary/25">
                 {submitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
                 Pay {plan.priceLabel}.00
               </Button>
@@ -226,7 +227,7 @@ export default function PaymentDialog({ open, onOpenChange, planId = 'pro' }) {
           </form>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-center backdrop-blur-xs">
               <CircleCheck className="mx-auto size-8 text-primary" />
               <p className="mt-2 text-lg font-semibold">
                 {receipt?.plan_name ?? plan.name} active

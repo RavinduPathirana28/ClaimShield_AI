@@ -85,7 +85,7 @@ export default function ResponsibleAIPage() {
         {PILLARS.map((pillar) => (
           <Card
             key={pillar.title}
-            className="shadow-sm transition-shadow hover:shadow-md"
+            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
           >
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-2">

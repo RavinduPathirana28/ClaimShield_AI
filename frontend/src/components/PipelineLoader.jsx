@@ -31,14 +31,14 @@ export default function PipelineLoader({ events = [] }) {
   const pct = activeStep >= 0 ? Math.round(((activeStep + 1) / STEPS.length) * 100) : 0;
 
   return (
-    <div className="my-6 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="my-6 rounded-2xl glass-card p-5">
       <div className="flex items-center gap-2">
         <span className="relative flex size-2.5">
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
           <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
         </span>
         <span className="text-sm font-bold">Multi-Agent Verification Running</span>
-        <span className="ml-auto rounded-full border bg-muted px-2.5 py-0.5 text-xs font-bold tabular-nums">
+        <span className="ml-auto rounded-full glass-pill px-2.5 py-0.5 text-xs font-bold tabular-nums">
           {pct}%
         </span>
       </div>
@@ -51,16 +51,16 @@ export default function PipelineLoader({ events = [] }) {
             <div
               key={step.title}
               className={cn(
-                'flex items-center gap-2.5 rounded-lg border px-3 py-2 transition-all',
-                isActive && 'border-primary bg-primary/10',
-                isDone && 'border-emerald-600/40 bg-emerald-600/10',
-                !isActive && !isDone && 'border-border bg-muted/40'
+                'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 backdrop-blur-md transition-all duration-150',
+                isActive && 'border-primary/60 bg-primary/10 shadow-xs shadow-primary/15',
+                isDone && 'border-emerald-600/35 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+                !isActive && !isDone && 'glass-panel text-muted-foreground'
               )}
             >
               <span
                 className={cn(
-                  'flex size-7 shrink-0 items-center justify-center rounded-md',
-                  isActive && 'bg-primary text-primary-foreground',
+                  'flex size-7.5 shrink-0 items-center justify-center rounded-xl',
+                  isActive && 'bg-primary text-primary-foreground shadow-xs shadow-primary/30',
                   isDone && 'bg-emerald-600 text-white',
                   !isActive && !isDone && 'bg-muted text-muted-foreground'
                 )}
