@@ -28,7 +28,7 @@ export default function AppLayout() {
     <SidebarProvider>
       <AmbientBackground />
       <AppSidebar />
-      <SidebarInset className="bg-background/25">
+      <SidebarInset className="bg-transparent">
         <header className="sticky top-0 z-10 flex h-13 shrink-0 items-center gap-2 glass-navbar px-4 transition-all">
           <SidebarTrigger className="-ml-1 rounded-lg" />
           <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
