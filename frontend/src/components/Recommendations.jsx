@@ -23,15 +23,15 @@ export default function Recommendations({ recommendations, onSelectClaim }) {
   if (!recommendations || recommendations.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 shadow-sm sm:p-5">
+    <section className="rounded-2xl glass-card p-5 sm:p-6">
       <div className="flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
           <Compass className="size-4.5" />
         </span>
         <h3 className="text-base font-bold leading-tight">Explore Related Claims</h3>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {recommendations.map((rec, idx) => {
           const claim = typeof rec === 'string' ? rec : rec.claim || rec.title || '';
           const source = typeof rec === 'object' ? rec.source || 'Related claim' : 'Related claim';
@@ -45,7 +45,7 @@ export default function Recommendations({ recommendations, onSelectClaim }) {
               key={idx}
               type="button"
               onClick={() => onSelectClaim(claim)}
-              className="group rounded-lg border border-primary/20 bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              className="group rounded-xl glass-card glass-card-interactive p-3.5 text-left"
             >
               <span className="flex items-center gap-2">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[0.7rem] font-bold text-primary">

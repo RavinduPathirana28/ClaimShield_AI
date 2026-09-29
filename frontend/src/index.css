@@ -89,6 +89,60 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.623 0.214 259.815);
+    /* iOS 27 Inspired Physical Glassmorphism Design System - Light Theme */
+    --glass-subtle-bg: rgba(255, 255, 255, 0.20);
+    --glass-subtle-border: rgba(255, 255, 255, 0.45);
+    --glass-subtle-blur: 14px;
+    --glass-subtle-saturate: 170%;
+    --glass-subtle-edge: inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.80), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.02);
+    --glass-subtle-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.03);
+
+    --glass-primary-bg: rgba(255, 255, 255, 0.28);
+    --glass-primary-border: rgba(255, 255, 255, 0.55);
+    --glass-primary-blur: 24px;
+    --glass-primary-saturate: 190%;
+    --glass-primary-edge: inset 0 1px 1px 0 rgba(255, 255, 255, 0.90), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04);
+    --glass-primary-shadow: 0 12px 36px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+
+    --glass-secondary-bg: rgba(255, 255, 255, 0.22);
+    --glass-secondary-border: rgba(255, 255, 255, 0.48);
+    --glass-secondary-blur: 18px;
+    --glass-secondary-saturate: 175%;
+    --glass-secondary-edge: inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.03);
+    --glass-secondary-shadow: 0 6px 20px -3px rgba(15, 23, 42, 0.04);
+
+    --glass-panel-bg: rgba(255, 255, 255, 0.32);
+    --glass-panel-border: rgba(255, 255, 255, 0.60);
+    --glass-panel-blur: 24px;
+    --glass-panel-saturate: 185%;
+    --glass-panel-edge: inset 0 1px 1px 0 rgba(255, 255, 255, 0.90), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04);
+    --glass-panel-shadow: 0 14px 40px -4px rgba(15, 23, 42, 0.09), 0 3px 8px 0 rgba(15, 23, 42, 0.03);
+
+    --glass-floating-bg: rgba(255, 255, 255, 0.38);
+    --glass-floating-border: rgba(255, 255, 255, 0.68);
+    --glass-floating-blur: 28px;
+    --glass-floating-saturate: 190%;
+    --glass-floating-edge: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.05);
+    --glass-floating-shadow: 0 16px 44px -6px rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+
+    --glass-modal-bg: rgba(255, 255, 255, 0.58);
+    --glass-modal-border: rgba(255, 255, 255, 0.80);
+    --glass-modal-blur: 32px;
+    --glass-modal-saturate: 200%;
+    --glass-modal-edge: inset 0 1.5px 2px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.06);
+    --glass-modal-shadow: 0 24px 64px -12px rgba(15, 23, 42, 0.16), 0 8px 24px -4px rgba(15, 23, 42, 0.06);
+
+    --glass-input-bg: rgba(255, 255, 255, 0.22);
+    --glass-input-border: rgba(255, 255, 255, 0.52);
+    --glass-input-focus-bg: rgba(255, 255, 255, 0.45);
+
+    --glass-button-bg: rgba(255, 255, 255, 0.32);
+    --glass-button-border: rgba(255, 255, 255, 0.60);
+    --glass-button-hover-bg: rgba(255, 255, 255, 0.52);
+
+    --glass-specular-primary: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 38%, transparent 68%);
+    --glass-specular-floating: linear-gradient(135deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.10) 35%, transparent 68%);
+    --glass-specular-modal: linear-gradient(135deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.12) 35%, transparent 68%);
 }
 
 .dark {
@@ -123,19 +177,287 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.707 0.165 254.624);
+    /* iOS 27 Inspired Physical Glassmorphism Design System - Dark Theme */
+    --glass-subtle-bg: rgba(255, 255, 255, 0.04);
+    --glass-subtle-border: rgba(255, 255, 255, 0.08);
+    --glass-subtle-blur: 14px;
+    --glass-subtle-saturate: 140%;
+    --glass-subtle-edge: inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.25);
+    --glass-subtle-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.30);
+
+    --glass-primary-bg: rgba(22, 22, 28, 0.42);
+    --glass-primary-border: rgba(255, 255, 255, 0.13);
+    --glass-primary-blur: 24px;
+    --glass-primary-saturate: 165%;
+    --glass-primary-edge: inset 0 1px 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.40);
+    --glass-primary-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45), 0 2px 8px 0 rgba(0, 0, 0, 0.25);
+
+    --glass-secondary-bg: rgba(20, 20, 26, 0.32);
+    --glass-secondary-border: rgba(255, 255, 255, 0.09);
+    --glass-secondary-blur: 18px;
+    --glass-secondary-saturate: 150%;
+    --glass-secondary-edge: inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.10), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.30);
+    --glass-secondary-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.35);
+
+    --glass-panel-bg: rgba(20, 20, 26, 0.48);
+    --glass-panel-border: rgba(255, 255, 255, 0.14);
+    --glass-panel-blur: 24px;
+    --glass-panel-saturate: 160%;
+    --glass-panel-edge: inset 0 1px 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.45);
+    --glass-panel-shadow: 0 14px 40px -4px rgba(0, 0, 0, 0.50), 0 3px 8px 0 rgba(0, 0, 0, 0.30);
+
+    --glass-floating-bg: rgba(24, 24, 32, 0.58);
+    --glass-floating-border: rgba(255, 255, 255, 0.16);
+    --glass-floating-blur: 28px;
+    --glass-floating-saturate: 180%;
+    --glass-floating-edge: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.20), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.50);
+    --glass-floating-shadow: 0 16px 44px -6px rgba(0, 0, 0, 0.60), 0 4px 12px 0 rgba(0, 0, 0, 0.35);
+
+    --glass-modal-bg: rgba(24, 24, 32, 0.75);
+    --glass-modal-border: rgba(255, 255, 255, 0.20);
+    --glass-modal-blur: 32px;
+    --glass-modal-saturate: 185%;
+    --glass-modal-edge: inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.24), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.60);
+    --glass-modal-shadow: 0 28px 64px -12px rgba(0, 0, 0, 0.80), 0 8px 24px 0 rgba(0, 0, 0, 0.45);
+
+    --glass-input-bg: rgba(255, 255, 255, 0.05);
+    --glass-input-border: rgba(255, 255, 255, 0.11);
+    --glass-input-focus-bg: rgba(255, 255, 255, 0.09);
+
+    --glass-button-bg: rgba(255, 255, 255, 0.07);
+    --glass-button-border: rgba(255, 255, 255, 0.12);
+    --glass-button-hover-bg: rgba(255, 255, 255, 0.14);
+
+    --glass-specular-primary: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 35%, transparent 65%);
+    --glass-specular-floating: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 35%, transparent 65%);
+    --glass-specular-modal: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 35%, transparent 65%);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
-    @apply bg-background text-foreground;
-    }
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    background-image:
+      radial-gradient(circle 900px at 90% -10%, oklch(0.546 0.245 262.881 / 14%), transparent 70%),
+      radial-gradient(circle 700px at 5% 35%, oklch(0.715 0.143 215.221 / 12%), transparent 60%),
+      radial-gradient(circle 800px at 85% 85%, oklch(0.685 0.169 237.323 / 11%), transparent 65%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(circle 900px at 90% -10%, oklch(0.707 0.165 254.624 / 16%), transparent 70%),
+      radial-gradient(circle 700px at 5% 35%, oklch(0.789 0.154 211.53 / 13%), transparent 60%),
+      radial-gradient(circle 800px at 85% 85%, oklch(0.746 0.16 232.661 / 11%), transparent 65%);
+  }
   html {
-    @apply font-sans;
-    }
+    @apply font-sans scroll-smooth;
+  }
   h1, h2, h3 {
     @apply font-heading;
-    }
+  }
+}
+
+/* ==================================================
+   REUSABLE GLASS MATERIAL SYSTEM (iOS 27 Inspired)
+   ================================================== */
+
+.glass,
+.glass-card,
+.glass-panel,
+.glass-navbar,
+.glass-sidebar,
+.glass-modal,
+.glass-floating {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Subtle Specular Surface Highlight (Top-left light reflection) */
+.glass::before,
+.glass-card::before,
+.glass-panel::before,
+.glass-navbar::before,
+.glass-sidebar::before,
+.glass-modal::before,
+.glass-floating::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-specular-primary);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass-floating::before,
+.glass-navbar::before,
+.glass-sidebar::before {
+  background: var(--glass-specular-floating);
+}
+
+.glass-modal::before {
+  background: var(--glass-specular-modal);
+}
+
+/* 1. Base Glass */
+.glass {
+  background-color: var(--glass-primary-bg);
+  backdrop-filter: blur(var(--glass-primary-blur)) saturate(var(--glass-primary-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-primary-blur)) saturate(var(--glass-primary-saturate));
+  border: 1px solid var(--glass-primary-border);
+  box-shadow: var(--glass-primary-shadow), var(--glass-primary-edge);
+}
+
+/* 2. Frosted Glass Cards */
+.glass-card {
+  background-color: var(--glass-primary-bg);
+  backdrop-filter: blur(var(--glass-primary-blur)) saturate(var(--glass-primary-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-primary-blur)) saturate(var(--glass-primary-saturate));
+  border: 1px solid var(--glass-primary-border);
+  box-shadow: var(--glass-primary-shadow), var(--glass-primary-edge);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.glass-card-interactive {
+  cursor: pointer;
+}
+.glass-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-floating-shadow), var(--glass-primary-edge);
+  border-color: rgba(99, 102, 241, 0.40);
+}
+.dark .glass-card-interactive:hover {
+  border-color: rgba(129, 140, 248, 0.40);
+}
+
+/* 3. Elevated Glass Panels */
+.glass-panel {
+  background-color: var(--glass-panel-bg);
+  backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-panel-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-panel-saturate));
+  border: 1px solid var(--glass-panel-border);
+  box-shadow: var(--glass-panel-shadow), var(--glass-panel-edge);
+}
+
+/* 4. Floating Glass (Navbar, Dropdowns, Floating Menus) */
+.glass-navbar {
+  background-color: var(--glass-floating-bg);
+  backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  border-bottom: 1px solid var(--glass-floating-border);
+  box-shadow: var(--glass-floating-shadow), var(--glass-floating-edge);
+}
+
+.glass-sidebar {
+  background-color: var(--glass-floating-bg);
+  backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  border-right: 1px solid var(--glass-floating-border);
+  box-shadow: 4px 0 28px 0 rgba(15, 23, 42, 0.04), var(--glass-floating-edge);
+}
+.dark .glass-sidebar {
+  box-shadow: 6px 0 32px 0 rgba(0, 0, 0, 0.50), var(--glass-floating-edge);
+}
+
+.glass-floating {
+  background-color: var(--glass-floating-bg);
+  backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-floating-blur)) saturate(var(--glass-floating-saturate));
+  border: 1px solid var(--glass-floating-border);
+  box-shadow: var(--glass-floating-shadow), var(--glass-floating-edge);
+}
+
+/* 5. Modal Glass */
+.glass-modal {
+  background-color: var(--glass-modal-bg);
+  backdrop-filter: blur(var(--glass-modal-blur)) saturate(var(--glass-modal-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-modal-blur)) saturate(var(--glass-modal-saturate));
+  border: 1px solid var(--glass-modal-border);
+  box-shadow: var(--glass-modal-shadow), var(--glass-modal-edge);
+}
+
+/* 6. Glass Buttons */
+.glass-button {
+  background-color: var(--glass-button-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-button-border);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.03), 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+}
+.dark .glass-button {
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0.5px 0 rgba(0, 0, 0, 0.35), 0 2px 8px 0 rgba(0, 0, 0, 0.30);
+}
+.glass-button:hover {
+  background-color: var(--glass-button-hover-bg);
+  border-color: var(--glass-primary-border);
+}
+
+/* 7. Glass Inputs */
+.glass-input {
+  background-color: var(--glass-input-bg);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--glass-input-border);
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04), inset 0 -1px 0.5px 0 rgba(255, 255, 255, 0.60);
+  transition: all 0.15s ease;
+}
+.dark .glass-input {
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.30), inset 0 -1px 0.5px 0 rgba(255, 255, 255, 0.05);
+}
+.glass-input:focus {
+  background-color: var(--glass-input-focus-bg);
+  border-color: var(--ring);
+}
+
+/* 8. Light / Subtle Glass (Pills, Badges, Tabs) */
+.glass-pill {
+  background-color: var(--glass-subtle-bg);
+  backdrop-filter: blur(var(--glass-subtle-blur)) saturate(var(--glass-subtle-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-subtle-blur)) saturate(var(--glass-subtle-saturate));
+  border: 1px solid var(--glass-subtle-border);
+  box-shadow: var(--glass-subtle-shadow), var(--glass-subtle-edge);
+}
+
+/* Browser Fallback: Graceful degradation when backdrop-filter is unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.92);
+  }
+  .dark .glass,
+  .dark .glass-card {
+    background-color: rgba(22, 22, 28, 0.94);
+  }
+  .glass-panel {
+    background-color: rgba(255, 255, 255, 0.90);
+  }
+  .dark .glass-panel {
+    background-color: rgba(20, 20, 26, 0.92);
+  }
+  .glass-navbar,
+  .glass-sidebar,
+  .glass-floating {
+    background-color: rgba(255, 255, 255, 0.94);
+  }
+  .dark .glass-navbar,
+  .dark .glass-sidebar,
+  .dark .glass-floating {
+    background-color: rgba(24, 24, 32, 0.95);
+  }
+  .glass-modal {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
+  .dark .glass-modal {
+    background-color: rgba(24, 24, 32, 0.98);
+  }
+  .glass-pill {
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  .dark .glass-pill {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
 }

@@ -21,10 +21,10 @@ export default function PlanCards({ onChoose }) {
           <Card
             key={plan.id}
             className={cn(
-              'relative flex flex-col shadow-sm transition-shadow',
+              'relative flex flex-col transition-all duration-200 hover:-translate-y-1',
               isPro
-                ? 'border-2 border-primary shadow-lg shadow-primary/10'
-                : 'border-2 border-border'
+                ? 'border-2 border-primary/80 bg-primary/[0.02] shadow-xl shadow-primary/15'
+                : 'border border-border/60 hover:border-border'
             )}
           >
             <CardHeader className="pb-2">

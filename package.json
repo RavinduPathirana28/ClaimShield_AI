@@ -6,13 +6,14 @@
   ],
   "scripts": {
     "setup": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m spacy download en_core_web_sm && npm install",
-    "dev": "node -e \"const fs=require('fs');if(!fs.existsSync('.venv/bin/python')){console.error('\\n[dev] Setup not run yet — first run:  npm run setup\\n');process.exit(1)}\" && concurrently -k -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": ".venv/bin/python -m uvicorn app.api:app --port 8000 --reload --reload-dir app",
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node run-py.js -m uvicorn app.api:app --port 8000 --reload --reload-dir app",
     "dev:web": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
-    "test": ".venv/bin/python -m unittest discover -s tests"
+    "test": "node run-py.js -m unittest discover -s tests"
   },
   "devDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.11",
     "concurrently": "^9.2.0"
   }
 }

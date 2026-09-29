@@ -10,7 +10,7 @@ function ModelRow({ model }) {
   const snippet = truncate(model.straight_answer || model.summary || '');
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
+    <div className="flex flex-col gap-2 rounded-xl glass-panel p-3.5">
       <div className="flex flex-wrap items-center gap-2">
         <span className={cn('size-2.5 shrink-0 rounded-full', providerDot(model.engine))} />
         <span className="text-sm font-medium">{model.engine || 'LLM'}</span>
@@ -52,7 +52,7 @@ export default function ConsensusCard({ agreementScore, modelResults = [] }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-sm leading-relaxed text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-[var(--glass-secondary-border)] glass-panel p-3.5 text-sm leading-relaxed text-muted-foreground">
           <strong className="font-semibold text-foreground">No live LLM models were available.</strong>{' '}
           This verdict was produced by the built-in Local Heuristic Engine. Add working
           Groq / Gemini API keys or start Ollama to see the per-model comparison here.
@@ -60,7 +60,7 @@ export default function ConsensusCard({ agreementScore, modelResults = [] }) {
       )}
 
       {agreePct != null && (
-        <div className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
+        <div className="flex flex-col gap-1.5 rounded-xl glass-panel p-3.5">
           <div className="flex items-center justify-between gap-2 text-xs font-semibold">
             <span className={converged ? 'text-emerald-600' : 'text-amber-600'}>
               {converged ? (
