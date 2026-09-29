@@ -82,7 +82,13 @@ class VectorStore:
             return False
 
     def search_index(self, query: str, limit: int = 3) -> list:
-        """Searches the index for query text and returns matching article ids and similarity scores."""
+        """
+        Searches the FAISS index for semantically similar articles.
+
+        The returned score represents semantic relevance between the
+        query and article content. It does not represent source credibility
+        or whether the claim is true or false
+        """
         if self.index is None or not self.mapping:
             print("[Warning] Vector Store: Attempted search, but FAISS index is not built or loaded.")
             return []
@@ -94,6 +100,7 @@ class VectorStore:
             faiss.normalize_L2(query_vector)
             
             # Perform FAISS inner-product search
+            # Higher cosine similarity means greater semantic relevance, not greater truthfulness
             scores, indices = self.index.search(query_vector, limit)
             
             results = []

@@ -7,13 +7,13 @@ class RetrievalAgent(BaseAgent):
     """
     Information Retrieval Agent
 
-    Receive a claim/query from another agent.
+    Receive a claim/query from NLP agent.
     Search the local FAISS vector index for semantically similar articles.
     Retrieve matching article records from the local database.
     Detect queries that require current information.
     Fall back to live web retrieval when local evidence is weak/outdated.
     Avoid repeatedly inserting duplicate web articles into the database.
-    Return retrieved evidence to the next stage of the fact-checking pipeline.
+    Return retrieved evidence to the next stage.
 
     this agent doesn't decide whether a claim is True, False, or Unsure.
     """
