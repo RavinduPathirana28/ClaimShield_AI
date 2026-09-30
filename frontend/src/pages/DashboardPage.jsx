@@ -46,6 +46,7 @@ import DebateCard from '@/components/DebateCard';
 import EvidenceList from '@/components/EvidenceList';
 import Recommendations from '@/components/Recommendations';
 import PaymentDialog from '@/components/PaymentDialog';
+import VoiceClaimInput from '@/components/VoiceClaimInput';
 
 import { useAuth } from '@/context/AuthContext';
 import { useRuns } from '@/context/RunContext';
@@ -280,6 +281,18 @@ export default function DashboardPage() {
       </section>
 
       <section className="rounded-2xl glass-card p-5">
+        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+          <label htmlFor="claim-input" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Claim or Query Input
+          </label>
+          <VoiceClaimInput
+            onTranscript={(transcribed) => {
+              setClaim((prev) => (prev.trim() ? `${prev.trim()} ${transcribed}` : transcribed));
+            }}
+            disabled={loading}
+            token={token}
+          />
+        </div>
         <Textarea
           id="claim-input"
           name="claim"

@@ -13,7 +13,8 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-from fastapi import FastAPI, HTTPException, Header, Depends, status
+import httpx
+from fastapi import FastAPI, HTTPException, Header, Depends, status, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -576,6 +577,86 @@ def get_audit_logs(user: Dict[str, Any] = Depends(require_current_user)):
             "details": details
         })
     return {"logs": formatted}
+
+# ---------------------------------------------------------------------------
+# Voice Input: Speech-to-Text Transcription via Groq Whisper AI
+# ---------------------------------------------------------------------------
+@app.post("/api/transcribe")
+async def transcribe_audio(
+    file: UploadFile = File(...),
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+):
+    """
+    Transcribe recorded user speech into text using Groq's high-speed Whisper model.
+    Accepts webm, wav, mp4, mp3, ogg, or m4a audio files up to 25MB.
+    """
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty audio file provided.")
+    if len(audio_bytes) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Audio file exceeds maximum size limit (25 MB).")
+
+    groq_key = (os.environ.get("GROQ_API_KEY") or config.GROQ_API_KEY or "").strip().strip("'").strip('"')
+    if not groq_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Groq API key is not configured on the server. Please check your .env configuration.",
+        )
+
+    filename = file.filename or "recording.webm"
+    if "." not in filename:
+        filename = f"{filename}.webm"
+    content_type = file.content_type or "audio/webm"
+
+    headers = {"Authorization": f"Bearer {groq_key}"}
+    files = {"file": (filename, audio_bytes, content_type)}
+    data = {
+        "model": "whisper-large-v3-turbo",
+        "response_format": "json",
+        "temperature": "0.0",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                "https://api.groq.com/openai/v1/audio/transcriptions",
+                headers=headers,
+                files=files,
+                data=data,
+            )
+            # If turbo model encounters an issue, fallback to whisper-large-v3
+            if resp.status_code != 200:
+                fallback_data = dict(data)
+                fallback_data["model"] = "whisper-large-v3"
+                resp = await client.post(
+                    "https://api.groq.com/openai/v1/audio/transcriptions",
+                    headers=headers,
+                    files={"file": (filename, audio_bytes, content_type)},
+                    data=fallback_data,
+                )
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Network error communicating with Groq Whisper API: {str(exc)}",
+        )
+
+    if resp.status_code != 200:
+        error_detail = "Voice transcription failed."
+        try:
+            err_json = resp.json()
+            error_detail = err_json.get("error", {}).get("message") or error_detail
+        except Exception:
+            error_detail = resp.text[:200]
+        raise HTTPException(status_code=resp.status_code, detail=error_detail)
+
+    result_json = resp.json()
+    transcribed_text = (result_json.get("text") or "").strip()
+
+    return {
+        "status": "success",
+        "text": transcribed_text,
+        "engine": "Groq Whisper (whisper-large-v3-turbo)",
+    }
 
 # ---------------------------------------------------------------------------
 # Health Check / Status

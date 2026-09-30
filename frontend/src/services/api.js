@@ -175,6 +175,43 @@ export async function streamVerify(token, claim, engineMode, onStep) {
   return { result: terminal.result, agent_logs: terminal.agent_logs || [] };
 }
 
+// ------------------------------------------------------------- voice
+export async function transcribeAudio(token, audioBlob, filename = 'claim_voice.webm') {
+  const formData = new FormData();
+  formData.append('file', audioBlob, filename);
+
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/transcribe`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+  } catch {
+    throw new ApiError('Could not reach the voice transcription service. Is the backend running?', 0);
+  }
+
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!res.ok) {
+    if (res.status === 401 && unauthorizedHandler) unauthorizedHandler();
+    throw new ApiError(normalizeDetail(data, `Audio transcription failed (${res.status})`), res.status);
+  }
+
+  return data;
+}
+
 // ---------------------------------------------------------------- misc
 export async function exportPdf(result) {
   let res;
