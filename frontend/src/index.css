@@ -266,12 +266,15 @@
 
 .glass,
 .glass-card,
-.glass-panel,
+.glass-panel {
+  position: relative;
+  isolation: isolate;
+}
+
 .glass-navbar,
 .glass-sidebar,
 .glass-modal,
 .glass-floating {
-  position: relative;
   isolation: isolate;
 }
 

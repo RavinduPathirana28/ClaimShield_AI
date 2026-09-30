@@ -54,28 +54,67 @@ export default function Navbar({ openAuth }) {
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 gap-0">
-            <SheetHeader className="border-b pb-4">
-              <SheetTitle className="flex items-center gap-2 font-heading text-base">
-                <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30">
-                  <ShieldCheck className="size-4" />
-                </span>
-                ClaimShield AI
-              </SheetTitle>
-            </SheetHeader>
-            <nav className="flex flex-col gap-1 px-4" aria-label="Main menu">
-              {NAV_LINKS.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.end}
-                  onClick={() => setMenuOpen(false)}
-                  className={mobileLinkClass}
+          <SheetContent side="left" className="w-72 p-0 flex flex-col justify-between">
+            <div>
+              <SheetHeader className="border-b p-4">
+                <SheetTitle className="flex items-center gap-2 font-heading text-base">
+                  <span className="flex size-7 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs shadow-primary/30">
+                    <ShieldCheck className="size-4" />
+                  </span>
+                  ClaimShield AI
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 p-3" aria-label="Main menu">
+                {NAV_LINKS.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.end}
+                    onClick={() => setMenuOpen(false)}
+                    className={mobileLinkClass}
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+
+            <div className="border-t p-4 flex flex-col gap-2">
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate('/dashboard');
+                  }}
+                  className="w-full"
                 >
-                  {link.label}
-                </NavLink>
-              ))}
-            </nav>
+                  <LayoutDashboard data-icon="inline-start" />
+                  Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openAuth('login');
+                    }}
+                    className="w-full"
+                  >
+                    Sign in
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openAuth('register');
+                    }}
+                    className="w-full"
+                  >
+                    Get started
+                  </Button>
+                </>
+              )}
+            </div>
           </SheetContent>
         </Sheet>
 
