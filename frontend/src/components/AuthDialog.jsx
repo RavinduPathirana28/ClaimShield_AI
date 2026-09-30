@@ -60,6 +60,42 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     return res;
   };
 
+  const notifyLoginSuccess = (userRes) => {
+    const isPro = ['pro', 'premium'].includes(userRes.role);
+    const isAdmin = userRes.role === 'newsroom_admin';
+
+    const roleLabel = isAdmin ? 'Newsroom Admin' : isPro ? 'Pro Member' : 'Free Tier';
+    const roleDescription = isAdmin
+      ? 'Administrative tools, full audit logs, and member governance are active.'
+      : isPro
+      ? 'Pro plan active — 5-source retrieval and multi-model consensus ready.'
+      : 'Ready to verify claims with AI consensus and live web search.';
+
+    toast.success(`Welcome back, ${userRes.username}`, {
+      className: '!p-4 sm:!p-5 !min-w-[340px] sm:!min-w-[420px] !rounded-2xl !border-border/80 shadow-2xl backdrop-blur-md',
+      classNames: {
+        title: '!text-base sm:!text-lg !font-semibold text-foreground tracking-tight',
+        description: '!text-sm text-muted-foreground mt-1',
+        icon: '!size-5 sm:!size-6 text-emerald-500',
+      },
+      description: (
+        <div className="flex flex-col gap-2.5 mt-1.5">
+          <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+            {roleDescription}
+          </p>
+          <div className="flex items-center gap-2 pt-0.5">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary border border-primary/20">
+              <ShieldCheck className="size-3.5 text-primary" />
+              {roleLabel}
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">• Session active</span>
+          </div>
+        </div>
+      ),
+      duration: 5000,
+    });
+  };
+
   const submitLogin = async (e) => {
     e.preventDefault();
     setServerError(null);
@@ -72,7 +108,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     setBusy(true);
     try {
       const res = await login(form.username.trim(), form.password);
-      toast.success(`Welcome back, ${res.username}`);
+      notifyLoginSuccess(res);
       afterAuth(res);
     } catch (err) {
       setServerError(err.message);
@@ -99,9 +135,27 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
       if (planChoice === 'pro') {
         onOpenChange(false);
         setCheckoutOpen(true);
-        toast.success('Account created', { description: 'Complete checkout to activate Pro.' });
+        toast.success(`Welcome to ClaimShield, ${res.username}`, {
+          className: '!p-4 sm:!p-5 !min-w-[340px] sm:!min-w-[420px] !rounded-2xl !border-border/80 shadow-2xl backdrop-blur-md',
+          classNames: {
+            title: '!text-base sm:!text-lg !font-semibold text-foreground tracking-tight',
+            description: '!text-sm text-muted-foreground mt-1',
+            icon: '!size-5 sm:!size-6 text-emerald-500',
+          },
+          description: 'Account created successfully. Complete checkout to activate Pro features.',
+          duration: 5000,
+        });
       } else {
-        toast.success(res.message || 'Account created');
+        toast.success(`Welcome to ClaimShield, ${res.username}`, {
+          className: '!p-4 sm:!p-5 !min-w-[340px] sm:!min-w-[420px] !rounded-2xl !border-border/80 shadow-2xl backdrop-blur-md',
+          classNames: {
+            title: '!text-base sm:!text-lg !font-semibold text-foreground tracking-tight',
+            description: '!text-sm text-muted-foreground mt-1',
+            icon: '!size-5 sm:!size-6 text-emerald-500',
+          },
+          description: 'Your account is ready. Start verifying claims and exploring facts.',
+          duration: 5000,
+        });
         afterAuth(res);
       }
     } catch (err) {
@@ -116,7 +170,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     setBusy(true);
     try {
       const res = await login(username, password);
-      toast.success(`Welcome back, ${res.username}`);
+      notifyLoginSuccess(res);
       afterAuth(res);
     } catch (err) {
       setServerError(err.message);

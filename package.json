@@ -5,6 +5,7 @@
     "frontend"
   ],
   "scripts": {
+    "start": "node start.js",
     "setup": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m spacy download en_core_web_sm && npm install",
     "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "node run-py.js -m uvicorn app.api:app --port 8000 --reload --reload-dir app",

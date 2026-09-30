@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import {
   ShieldCheck,
   UserRound,
@@ -95,6 +96,10 @@ export default function AppSidebar() {
   const handleLogout = () => {
     logout();
     setOpenMobile(false);
+    toast.info('Signed out', {
+      description: 'You have been safely signed out. See you next time!',
+      duration: 3500,
+    });
     navigate('/');
   };
 
