@@ -360,8 +360,40 @@ class TestApi(unittest.TestCase):
     def test_17_verify_rejects_blank_claim(self):
         self.assertEqual(self.client.post("/api/verify", json={"claim": "   "}).status_code, 400)
 
+    # ---------------------------------------------------------------- voice transcribe
+    def test_19_transcribe_rejects_empty_file(self):
+        res = self.client.post(
+            "/api/transcribe",
+            files={"file": ("empty.webm", b"", "audio/webm")}
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("Empty audio file", res.json()["detail"])
+
+    def test_20_transcribe_groq_mocked(self):
+        from unittest.mock import patch, AsyncMock
+        fake_response = AsyncMock()
+        fake_response.status_code = 200
+        fake_response.json = lambda: {"text": "Artificial Intelligence is transforming medical science."}
+
+        orig_key = config.GROQ_API_KEY
+        config.GROQ_API_KEY = "gsk_test_mock_key"
+        try:
+            with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = fake_response
+                res = self.client.post(
+                    "/api/transcribe",
+                    files={"file": ("test.webm", b"RIFF....fake_audio_bytes", "audio/webm")}
+                )
+                self.assertEqual(res.status_code, 200, res.text)
+                data = res.json()
+                self.assertEqual(data["status"], "success")
+                self.assertEqual(data["text"], "Artificial Intelligence is transforming medical science.")
+                self.assertIn("Groq Whisper", data["engine"])
+        finally:
+            config.GROQ_API_KEY = orig_key
+
     # ---------------------------------------------------------------- health
-    def test_18_health(self):
+    def test_21_health(self):
         res = self.client.get("/api/health")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()["status"], "ok")

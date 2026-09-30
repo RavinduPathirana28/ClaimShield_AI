@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { verdictInfo } from '@/lib/verdicts';
 import * as api from '@/services/api';
+import AudioVerdictPlayer from '@/components/AudioVerdictPlayer';
 
 export default function VerdictCard({ result, elapsed, agreementScore = null, modelCount = 0 }) {
   const [exporting, setExporting] = useState(false);
@@ -90,14 +91,21 @@ export default function VerdictCard({ result, elapsed, agreementScore = null, mo
               </span>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={downloadPdf} disabled={exporting}>
-            {exporting ? (
-              <Loader2 data-icon="inline-start" className="animate-spin" />
-            ) : (
-              <FileDown data-icon="inline-start" />
-            )}
-            {exporting ? 'Generating PDF…' : 'Download report (PDF)'}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <AudioVerdictPlayer
+              verdict={info.label}
+              straight={straight}
+              summary={result.summary}
+            />
+            <Button variant="outline" size="sm" onClick={downloadPdf} disabled={exporting}>
+              {exporting ? (
+                <Loader2 data-icon="inline-start" className="animate-spin" />
+              ) : (
+                <FileDown data-icon="inline-start" />
+              )}
+              {exporting ? 'Generating PDF…' : 'Download report (PDF)'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
