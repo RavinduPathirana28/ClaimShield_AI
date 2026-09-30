@@ -250,18 +250,18 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+        <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-foreground">
           <Search className="size-6 text-primary" />
           Ask a Question or Verify a Claim
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm font-medium text-slate-600 dark:text-muted-foreground">
           Type any general question or factual statement below. Our multi-agent AI system will
           evaluate it and provide a realistic, easy-to-understand explanation.
         </p>
       </header>
 
       <section>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-muted-foreground">
           Sample Questions &amp; Claims:
         </p>
         <div className="flex flex-wrap gap-2">
@@ -270,10 +270,10 @@ export default function DashboardPage() {
               key={sample.label}
               variant="outline"
               size="sm"
-              className="rounded-full glass-button hover:bg-[var(--glass-button-hover-bg)]"
+              className="rounded-full border-slate-300/80 bg-white/75 font-semibold text-slate-800 shadow-xs hover:border-slate-400 hover:bg-white hover:text-black dark:border-white/10 dark:glass-button dark:text-foreground"
               onClick={() => setClaim(sample.query)}
             >
-              <sample.icon data-icon="inline-start" />
+              <sample.icon data-icon="inline-start" className="text-primary" />
               {sample.label}
             </Button>
           ))}
@@ -282,7 +282,7 @@ export default function DashboardPage() {
 
       <section className="rounded-2xl glass-card p-5">
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <label htmlFor="claim-input" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <label htmlFor="claim-input" className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-muted-foreground">
             Claim or Query Input
           </label>
           <VoiceClaimInput
@@ -300,7 +300,7 @@ export default function DashboardPage() {
           value={claim}
           onChange={(e) => setClaim(e.target.value)}
           placeholder="e.g. 'What is quantum computing?', 'Why is the sky blue?', or 'Apple will launch iPhone 18 in July 2026'"
-          className="resize-y text-sm"
+          className="resize-y text-sm font-medium text-slate-950 placeholder:text-slate-500 dark:text-foreground dark:placeholder:text-muted-foreground"
         />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <Select value={engineMode} onValueChange={setEngineMode}>
