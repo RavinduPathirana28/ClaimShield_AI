@@ -41,7 +41,7 @@ export default function Navbar({ openAuth }) {
     );
 
   return (
-    <header className="sticky top-0 z-40 glass-navbar transition-all">
+    <header className="sticky top-0 z-40 glass-navbar border-b border-border/80 transition-all">
       <div className="relative z-10 mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-4">
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
