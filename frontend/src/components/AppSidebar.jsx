@@ -44,14 +44,14 @@ function QuotaCard() {
   return (
     <div className="rounded-2xl glass-card p-4 shadow-xs">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-sidebar-foreground/90">Token quota</span>
+        <span className="text-xs font-bold text-slate-800 dark:text-sidebar-foreground/90">Token quota</span>
         <Badge
           variant={isPro ? 'default' : 'secondary'}
           className={cn(
             'text-[0.65rem] font-bold px-2 py-0.5 rounded-full',
             isPro
-              ? 'border border-primary/30 bg-primary/20 text-primary shadow-xs backdrop-blur-md'
-              : 'glass-pill'
+              ? 'border border-primary/40 bg-primary/20 text-primary shadow-xs backdrop-blur-md'
+              : 'border border-slate-300/80 bg-white/70 text-slate-700 dark:border-white/10 dark:glass-pill dark:text-muted-foreground'
           )}
         >
           {isPro ? 'Pro' : 'Free'}
@@ -60,20 +60,20 @@ function QuotaCard() {
       <div className="mt-2.5 flex items-baseline gap-1.5">
         {isPro ? (
           <>
-            <span className="text-xl font-extrabold leading-none text-primary">∞</span>
-            <span className="text-xs font-medium text-muted-foreground">unlimited</span>
+            <span className="text-xl font-black leading-none text-primary">∞</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-muted-foreground">unlimited</span>
           </>
         ) : (
           <>
-            <span className="text-lg font-bold leading-none tabular-nums text-foreground">
+            <span className="text-lg font-bold leading-none tabular-nums text-slate-950 dark:text-foreground">
               {Math.floor(tokens)}
             </span>
-            <span className="text-xs text-muted-foreground">/ {capacity} left</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-muted-foreground">/ {capacity} left</span>
           </>
         )}
       </div>
-      <Progress value={pct} className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted/40" />
-      <p className="mt-2 text-[0.7rem] leading-snug text-muted-foreground">
+      <Progress value={pct} className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-200/80 dark:bg-muted/40" />
+      <p className="mt-2 text-[0.72rem] font-medium leading-snug text-slate-600 dark:text-muted-foreground">
         {isPro
           ? 'Rate limits bypassed'
           : tokens < capacity
@@ -109,7 +109,7 @@ export default function AppSidebar() {
           <span className="flex size-9.5 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/85 text-primary-foreground shadow-md shadow-primary/25 ring-1 ring-primary/30 group-data-[collapsible=icon]:size-8">
             <ShieldCheck className="size-5" />
           </span>
-          <span className="font-heading text-base font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+          <span className="font-heading text-[1.05rem] font-black tracking-tight text-black dark:text-white group-data-[collapsible=icon]:hidden">
             ClaimShield AI
           </span>
         </NavLink>
@@ -117,7 +117,7 @@ export default function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-3 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted-foreground/75">
+          <SidebarGroupLabel className="px-3 text-[0.72rem] font-bold uppercase tracking-[0.14em] text-slate-600 dark:text-muted-foreground/75">
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -128,9 +128,10 @@ export default function AppSidebar() {
                     asChild
                     isActive={location.pathname === item.to}
                     tooltip={item.label}
+                    className="font-medium text-slate-700 hover:text-slate-950 hover:bg-slate-900/[0.05] data-[active=true]:font-bold data-[active=true]:text-primary dark:text-sidebar-foreground dark:hover:text-foreground"
                   >
                     <NavLink to={item.to}>
-                      <item.icon />
+                      <item.icon className="[&_svg]:stroke-[2]" />
                       <span>{item.label}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -150,7 +151,7 @@ export default function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Sign out" onClick={handleLogout}>
+                <SidebarMenuButton tooltip="Sign out" onClick={handleLogout} className="font-medium text-slate-700 hover:text-red-600 hover:bg-red-500/10 dark:text-sidebar-foreground dark:hover:text-red-400">
                   <LogOut />
                   <span>Sign out</span>
                 </SidebarMenuButton>
@@ -177,8 +178,8 @@ export default function AppSidebar() {
             {initial}
           </span>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold leading-tight">{user?.username}</p>
-            <p className="text-xs font-medium text-muted-foreground">{isPro ? 'Pro plan' : 'Free plan'}</p>
+            <p className="truncate text-sm font-bold leading-tight text-slate-950 dark:text-foreground">{user?.username}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-muted-foreground">{isPro ? 'Pro plan' : 'Free plan'}</p>
           </div>
         </div>
       </SidebarFooter>
