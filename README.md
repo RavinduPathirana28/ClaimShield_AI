@@ -11,7 +11,7 @@
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 - [System Architecture](#-system-architecture)
 - [Specialized Agents](#-specialized-agents)
 - [Workflow Pipeline](#-workflow-pipeline)
@@ -29,7 +29,7 @@
 
 ---
 
-## 🏛️ System Architecture
+##  System Architecture
 
 ClaimShield AI orchestrates verification across a multi-stage agentic pipeline:
 
@@ -333,5 +333,5 @@ python -m unittest tests/test_verification.py -v
 
 ---
 
-## 📄 License
+## License
 This project is licensed under the [MIT License](LICENSE).
