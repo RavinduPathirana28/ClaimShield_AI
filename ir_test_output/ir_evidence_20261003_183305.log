@@ -1,0 +1,445 @@
+=== ClaimShield IR & Security Assessment Suite v2 ===
+Python: C:\Users\USER\Documents\GitHub\ClaimShield_AI\.venv\Scripts\python.exe
+Project root: c:\Users\USER\Documents\GitHub\ClaimShield_AI
+API: http://localhost:8000/api/verify
+Config path attributes found: ['SQLITE_DB_PATH', 'FAISS_INDEX_PATH']
+Discovered routes (set CS_VERIFY_PATH to the right one):
+  app\api.py:162  @app.post("/api/auth/login")
+  app\api.py:181  @app.post("/api/auth/register")
+  app\api.py:211  @app.get("/api/user/profile")
+  app\api.py:240  @app.post("/api/user/plan")
+  app\api.py:256  @app.post("/api/user/password")
+  app\api.py:283  @app.get("/api/admin/users")
+  app\api.py:298  @app.patch("/api/admin/users")
+  app\api.py:317  @app.post("/api/payment/checkout")
+  app\api.py:435  @app.post("/api/verify")
+  app\api.py:461  @app.post("/api/verify/stream")
+  app\api.py:538  @app.post("/api/export-pdf")
+  app\api.py:557  @app.get("/api/audit-logs")
+  app\api.py:583  @app.get("/api/health")
+  app\api.py:604  @app.get("/{full_path:path}")
+
+Code reference check (use THESE line numbers in the report):
+  hard-coded 0.85      app/utils/web_crawler.py: L441: "score": 0.85
+  paragraph slice      app/utils/web_crawler.py: L199: key = norm_title[:60]; L347: return name_raw[:60]; L402: title = re.sub(r"\s+", " ", title_tag.get_text().strip())[:120]; L406: extracted = " ".join(paragraphs[:6])
+  time pattern         app/utils/web_crawler.py: L26: TIME_SENSITIVE_PATTERN = re.compile(; L78: return bool(query.strip()) and bool(TIME_SENSITIVE_PATTERN.search(query))
+  follow_redirects     app/utils/web_crawler.py: L210: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L260: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L286: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L311: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl
+  fallback threshold   app/agents/retrieval_agent.py: L77: if query_is_news or not retrieved_articles or top_score < 0.30:; L111: retrieved_articles = saved_web_articles + [a for a in retrieved_articles if a.get("score",
+  dedup                app/agents/retrieval_agent.py: L85: existing_urls = {str(a.get("url", "")).strip() for a in existing if a.get("url")}; L92: is_duplicate = bool(url and url in existing_urls) or bool(title and title.lower() in exist
+  limit parsing        app/agents/retrieval_agent.py: L42: limit = int(data.get("limit", 3)); L44: limit = 3; L55: results = self.vector_store.search_index(query, limit=limit); L79: web_results = self.web_crawler.search_and_crawl(query, limit=limit)
+  security precheck    app/agents/orchestrator.py: L50: ctx, err = self._security_precheck(data); L73: def _security_precheck(self, data: dict) -> tuple:; L145: ctx, err = self._security_precheck(data)
+
+======================================================================
+Test ID: IR-01
+Category: Retrieval Accuracy
+Target: VectorStore / RetrievalAgent
+Objective: Baseline FAISS semantic retrieval (real seeded DB, read-only query).
+Setup/Input: Query: 'coffee health cardiovascular disease'
+Expected secure behaviour: Relevant article with cosine score > 0.50.
+Actual behaviour: 3 articles; top 'Coffee Consumption and Cardiovascular Health: A Long-term Cohort Study' score 0.7081
+Evidence/Log:
+[
+ {
+  "id": 2,
+  "title": "Coffee Consumption and Cardiovascular Health: A Long-term Cohort Study",
+  "score": 0.7081334590911865
+ },
+ {
+  "id": 16,
+  "title": "Mediterranean Diet Confirmed to Lower Dementia and Cognitive Decline Risk",
+  "score": 0.22160468995571136
+ },
+ {
+  "id": 8,
+  "title": "mRNA Cancer Vaccines Complete Landmark Phase 3 Clinical Trial",
+  "score": 0.09782284498214722
+ }
+]
+Outcome: Attack blocked
+Impact 1 x Likelihood 1 = 1 -> Severity: N/A
+Technical explanation: all-MiniLM-L6-v2 embeddings, L2-normalised, inner-product FAISS search.
+Mitigation: Keep embedding model identical between index build and query time.
+======================================================================
+
+======================================================================
+Test ID: IR-02
+Category: Retrieval Accuracy
+Target: VectorStore -> VerificationAgent (end to end)
+Objective: Do opposite claims retrieve the same evidence AND get the same verdict?
+Setup/Input: {'pos': 'Drinking coffee daily reduces cardiovascular risk', 'neg': 'Drinking coffee daily increases cardiovascular risk'}
+Expected secure behaviour: Opposite claims should not both be 'Supported' by one article.
+Actual behaviour: Opposite claims received the SAME verdict (supported) from the same evidence (engine: Local Heuristic Engine (No LLM)). Confirmed for the offline engine; LLM path not tested.
+Evidence/Log:
+pos: scores=[0.8011870384216309, 0.30223768949508667, 0.11385492235422134] verdict=Supported conf=0.85 engine=Local Heuristic Engine (No LLM)
+neg: scores=[0.8079119920730591, 0.3037479817867279, 0.09712937474250793] verdict=Supported conf=0.85 engine=Local Heuristic Engine (No LLM)
+Outcome: Vulnerability confirmed
+Impact 3 x Likelihood 4 = 12 -> Severity: Medium
+Technical explanation: Bi-encoders encode topic more than polarity; same article ranks first for both. Only a stance-aware step (cross-encoder/NLI/LLM) separates them.
+Mitigation: Add NLI/cross-encoder re-ranking and make the verifier explicitly check stance (supports/refutes).
+======================================================================
+
+======================================================================
+Test ID: IR-03
+Category: Retrieval Manipulation
+Target: RetrievalAgent (threshold gate)
+Objective: Does a weakly related local article suppress live-web fallback?
+Setup/Input: Isolated DB with 1 off-topic article; query: 'Official health announcement: Daily coffee consumption cuts heart failure rate'
+Expected secure behaviour: Fallback to live search when local evidence does not address the claim.
+Actual behaviour: top score 0.3428, web_crawled=False; verifier verdict on weak evidence: Supported
+Evidence/Log:
+threshold code: L77: if query_is_news or not retrieved_articles or top_score < 0.30:; L111: retrieved_articles = saved_web_articles + [a for a in retrieved_articles if a.get("score",
+control (unrelated query) web_crawled=True
+Outcome: Vulnerability confirmed
+Impact 4 x Likelihood 3 = 12 -> Severity: Medium
+Technical explanation: A single static score threshold decides whether live search runs; shared vocabulary ('coffee') clears it without relevance to the actual claim.
+Mitigation: Raise/calibrate threshold, require claim-entity overlap, or always combine local + live evidence for health/news claims.
+======================================================================
+
+======================================================================
+Test ID: IR-04
+Category: Retrieval Accuracy
+Target: WebCrawler / Orchestrator
+Objective: Are live-web results given a fixed relevance score?
+Setup/Input: search_and_crawl('Apple Inc quarterly revenue 2026')
+Expected secure behaviour: Real similarity or explicit 'unscored' tag.
+Actual behaviour: crawler scores=[0.85, 0.85, 0.85]; real cosine(query, content)=[0.5879, 0.5186, 0.6594]
+Evidence/Log:
+hard-coded score lines: L441: "score": 0.85
+orchestrator threshold lines: L270: # Only summarize if top article vector score demonstrates actual relevance (>= 0.30); L273: if articles and top_score >= 0.30:; L312: if verdict in ["Answered", "General Info"] or (articles and articles[0].get("score", 0.0) 
+Outcome: Vulnerability confirmed
+Impact 3 x Likelihood 5 = 15 -> Severity: High
+Technical explanation: A constant masquerades as a similarity score, so downstream logic cannot tell strong from irrelevant web evidence.
+Mitigation: Compute cosine similarity for crawled pages or mark them 'score: None / source: live'.
+======================================================================
+
+======================================================================
+Test ID: IR-05
+Category: Source Reliability
+Target: WebCrawler / RetrievalAgent
+Objective: Is there any source-credibility control before evidence reaches the verifier?
+Setup/Input: Static scan for allow/block/credibility logic + live search domain sample
+Expected secure behaviour: Domain weighting or filtering.
+Actual behaviour: No credibility-related code found.
+Evidence/Log:
+keyword hits: no match
+domains returned: ['pmc.ncbi.nlm.nih.gov', 'www.mayoclinic.org', 'www.hopkinsmedicine.org', 'news.harvard.edu', 'www.scientificamerican.com']
+Outcome: Vulnerability confirmed
+Impact 3 x Likelihood 3 = 9 -> Severity: Medium
+Technical explanation: All search results are treated as equal-trust evidence, so one low-quality page can influence the verdict.
+Mitigation: Domain tiers (gov/edu/major news), per-source weights, and multi-source corroboration.
+======================================================================
+
+======================================================================
+Test ID: IR-06
+Category: Retrieval Manipulation
+Target: VectorStore / VerificationAgent
+Objective: Does an adversarial article change ranking or the final verdict (isolated index)?
+Setup/Input: Control index (1 true article) vs poisoned index (+1 conspiracy article)
+Expected secure behaviour: Verdict unchanged; low-trust source down-weighted.
+Actual behaviour: ranking=['Official NASA Moon Mission History', 'Apollo 11 Moon Landing Deception Revealed']; verdict control=Supported vs poisoned=Supported
+Evidence/Log:
+scores=[0.8544315695762634, 0.6274785995483398] engine=Local Heuristic Engine (No LLM)
+Outcome: Inconclusive
+Impact 4 x Likelihood 2 = 8 -> Severity: N/A
+Technical explanation: FAISS ranks by similarity only. NOTE: planting a row requires write access to the DB/ingestion path (likelihood 2); the realistic remote route is poisoned live web content (see IR-05).
+Mitigation: Source-authority weighting, multi-source consensus, and write-protected ingestion.
+======================================================================
+
+======================================================================
+Test ID: IR-07
+Category: Retrieval Accuracy
+Target: VectorStore / RetrievalAgent
+Objective: Is a newly saved article searchable without rebuilding FAISS?
+Setup/Input: Isolated DB: build index, then add_article(), then search
+Expected secure behaviour: Incremental indexing.
+Actual behaviour: new id=2, FAISS hits=[1], DB rows=2, FAISS vectors=1
+Evidence/Log:
+add_article call site: L96: db_saved = self.db.add_article(
+incremental index method present: no match
+Outcome: Vulnerability confirmed
+Impact 3 x Likelihood 4 = 12 -> Severity: Medium
+Technical explanation: Index is built once from the DB; later inserts are invisible to vector search.
+Mitigation: Add VectorStore.add_article() (index.add) on insert, or rebuild periodically.
+======================================================================
+
+======================================================================
+Test ID: IR-08
+Category: Retrieval Accuracy
+Target: RetrievalAgent (dedup via real save path)
+Objective: Is dedup bypassed by UTM params / title suffix when going through the real agent?
+Setup/Input: Stubbed crawler returns base then variant article
+Expected secure behaviour: Variant recognised as duplicate.
+Actual behaviour: rows: before=1, after base=2, after tracking-param variant=3
+Evidence/Log:
+dedup code: L85: existing_urls = {str(a.get("url", "")).strip() for a in existing if a.get("url")}; L86: existing_titles = {str(a.get("title", "")).strip().lower() for a in existing if a.get("tit; L92: is_duplicate = bool(url and url in existing_urls) or bool(title and title.lower() in exist
+Outcome: Vulnerability confirmed
+Impact 2 x Likelihood 4 = 8 -> Severity: Low
+Technical explanation: Exact-string comparison on URL/title.
+Mitigation: Canonicalise URLs (strip utm_*/fragments) and add fuzzy title or embedding dedup.
+======================================================================
+
+======================================================================
+Test ID: IR-09
+Category: Source Reliability
+Target: WebCrawler (date labelling)
+Objective: Does the crawler stamp today's date on historical pages?
+Setup/Input: search_and_crawl('Apollo 11 moon landing Wikipedia')
+Expected secure behaviour: Real page date or blank.
+Actual behaviour: today=2026-10-03; results=[('Apollo 11 - Wikipedia', '2026-10-03'), ('Moon landing - Wikipedia', '2026-10-03'), ('Apollo 11', '2026-10-03')]
+Evidence/Log:
+date assignment code: L234: pub_date = parsed.strftime("%Y-%m-%d"); L238: pub_date = time.strftime("%Y-%m-%d", time.gmtime()); L259: today = time.strftime("%Y-%m-%d", time.gmtime()); L284: today = time.strftime("%Y-%m-%d", time.gmtime()); L368: date_str = published_date or time.strftime("%Y-%m-%d", time.gmtime())
+Outcome: Vulnerability confirmed
+Impact 2 x Likelihood 4 = 8 -> Severity: Low
+Technical explanation: A date-labelling bug (not attacker-controlled) that removes recency signal from the verifier and audit trail.
+Mitigation: Parse <meta article:published_time>/Last-Modified or leave the date empty.
+======================================================================
+
+======================================================================
+Test ID: IR-10
+Category: Retrieval Accuracy
+Target: WebCrawler (TIME_SENSITIVE_PATTERN)
+Objective: Are historical years treated as time-sensitive?
+Setup/Input: ['Apollo 11 landed on the Moon in 1969', 'World War II ended in 1945', 'Apple reported record revenue in 2026', 'Water boils at 100 C']
+Expected secure behaviour: Past years should not force live crawling.
+Actual behaviour: classification: {'Apollo 11 landed on the Moon in 1969': True, 'World War II ended in 1945': True, 'Apple reported record revenue in 2026': True, 'Water boils at 100 C': False}
+Evidence/Log:
+pattern: L26: TIME_SENSITIVE_PATTERN = re.compile(; L78: return bool(query.strip()) and bool(TIME_SENSITIVE_PATTERN.search(query))
+Outcome: Vulnerability confirmed
+Impact 1 x Likelihood 4 = 4 -> Severity: Low
+Technical explanation: Regex matches any 19xx/20xx year -> unnecessary live crawls (performance/noise, not a security flaw).
+Mitigation: Compare year to the current year or require recency keywords.
+======================================================================
+
+======================================================================
+Test ID: IR-11
+Category: Retrieval Accuracy
+Target: WebCrawler (_crawl_page)
+Objective: Is later page content dropped?
+Setup/Input: Local page with 12 marked paragraphs
+Expected secure behaviour: Relevant evidence preserved regardless of position.
+Actual behaviour: paragraphs present: [1, 2, 3, 4]; content length 703
+Evidence/Log:
+slice code: L102: def search_and_crawl(self, query: str, limit: int = 3) -> list:; L110: search_candidates = self._gather_candidates(query, limit)  # (url, title, snippet, publish; L131: search_candidates = search_candidates[:limit]; L147: def _gather_candidates(self, query: str, limit: int) -> list:; L164: if len(out) >= limit:; L166: self._search_google_news(variant, max(limit, 3), out); L167: if len(out) < limit:; L168: self._search_duckduckgo(query, limit, out); L170: self._search_duckduckgo(query, limit, out); L171: if len(out) < limit:; L172: self._search_google_news(query, max(limit, 3), out); L189: self._search_wikipedia(query, limit, out); L199: key = norm_title[:60]; L206: def _search_google_news(self, query: str, limit: int, out: list) -> None:; L225: for item in soup.find_all("item")[: limit * 2]:; L251: if len(out) >= limit * 2:; L256: def _search_duckduckgo(self, query: str, limit: int, out: list) -> None:; L276: if len(out) >= limit * 2:; L281: def _search_wikipedia(self, query: str, limit: int, out: list) -> None:; L285: wiki_api = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={quote_plus(query; L347: return name_raw[:60]; L402: title = re.sub(r"\s+", " ", title_tag.get_text().strip())[:120]; L406: extracted = " ".join(paragraphs[:6]); L411: body_text = re.sub(r"\s+", " ", raw_body)[:500]; L427: title = fallback_title[:120]
+Outcome: Vulnerability confirmed
+Impact 4 x Likelihood 3 = 12 -> Severity: Medium
+Technical explanation: Fixed paragraph cap drops evidence located after the cutoff.
+Mitigation: Rank paragraphs by relevance to the claim or raise the cap with a token budget.
+======================================================================
+
+======================================================================
+Test ID: IR-12
+Category: Retrieval Manipulation
+Target: VerificationAgent (indirect prompt injection)
+Objective: Can instructions inside retrieved text steer the verdict?
+Setup/Input: 4 payload variants vs false claim: 'The earth is flat according to secret satellite data'
+Expected secure behaviour: Retrieved text treated as data only.
+Actual behaviour: LLM never reached (heuristic engine only). Set the Groq API key and rerun: this result says nothing about LLM injection resistance.
+Evidence/Log:
+body: verdict=Unverified conf=0.6 engine=Local Heuristic Engine (No LLM)
+title: verdict=Unverified conf=0.6 engine=Local Heuristic Engine (No LLM)
+fake_json: verdict=Unverified conf=0.6 engine=Local Heuristic Engine (No LLM)
+delimiter: verdict=Unverified conf=0.6 engine=Local Heuristic Engine (No LLM)
+Groq key detected: False
+Outcome: Inconclusive
+Impact 4 x Likelihood 3 = 12 -> Severity: N/A
+Technical explanation: Retrieved web text is concatenated into the LLM prompt; delimiters alone are not a security boundary.
+Mitigation: Strip/neutralise instruction-like text, system/user role separation, schema-validated output, and verdict sanity checks.
+======================================================================
+
+======================================================================
+Test ID: IR-13
+Category: SSRF / Unsafe Retrieval
+Target: WebCrawler (_crawl_page / httpx)
+Objective: Can the crawler reach loopback directly or via redirect?
+Setup/Input: Local 'internal' server + a second server that 302-redirects to it
+Expected secure behaviour: Private/loopback targets and redirects to them are blocked.
+Actual behaviour: direct fetched=True, via redirect fetched=True
+Evidence/Log:
+direct content: 'CONFIDENTIAL LOCAL ADMIN PANEL DATA ACCESS'
+redirect content: 'CONFIDENTIAL LOCAL ADMIN PANEL DATA ACCESS'
+IP-validation code found: no match
+client code: L210: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L260: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L286: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L311: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L328: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl; L376: with httpx.Client(timeout=self.timeout, headers=self.headers, follow_redirects=True) as cl
+NOT tested: cloud metadata IP (169.254.169.254) - theoretical only. Explain attacker path in report: attacker-controlled page returned by search -> redirects to internal URL.
+Outcome: Vulnerability confirmed
+Impact 5 x Likelihood 3 = 15 -> Severity: High
+Technical explanation: No destination validation; follow_redirects lets a public URL bounce to internal services.
+Mitigation: Resolve DNS and block private/loopback/link-local ranges on every hop; cap redirects; use an egress proxy.
+======================================================================
+
+======================================================================
+Test ID: IR-14
+Category: API/Input Robustness
+Target: RetrievalAgent (_retrieve)
+Objective: Malformed/extreme parameters (isolated DB with 30 articles).
+Setup/Input: 7 malformed payloads
+Expected secure behaviour: Graceful errors and an enforced upper bound on `limit`.
+Actual behaviour: unbounded limit returned 30 articles; crashes: False
+Evidence/Log:
+empty query: status=error returned=0 msg=Empty query text supplied to Retrieval Agent.
+whitespace query: status=error returned=0 msg=Empty query text supplied to Retrieval Agent.
+limit='abc': status=success returned=3 msg=None
+limit=0: status=success returned=0 msg=None
+limit=-5: status=success returned=0 msg=None
+limit=2.5: status=success returned=2 msg=None
+limit=100000: status=success returned=30 msg=None
+Outcome: Vulnerability confirmed
+Impact 2 x Likelihood 3 = 6 -> Severity: Low
+Technical explanation: Type errors are handled, but no maximum is enforced, so one request can pull the whole corpus (resource exhaustion/data dump).
+Mitigation: Clamp: limit = max(1, min(limit, 20)); reject non-integers explicitly.
+======================================================================
+
+======================================================================
+Test ID: IR-15
+Category: Authorization / Access
+Target: Architecture (Orchestrator boundary)
+Objective: Are security controls enforced only in the Orchestrator, and is a direct route exposed?
+Setup/Input: Direct RetrievalAgent.handle_message() + static scan of HTTP routes
+Expected secure behaviour: Controls enforced on every entry point.
+Actual behaviour: direct call status=success, articles=5; routes calling sub-agents directly: 0
+Evidence/Log:
+HTTP routes found:
+  app\api.py:162 @app.post("/api/auth/login")
+  app\api.py:181 @app.post("/api/auth/register")
+  app\api.py:211 @app.get("/api/user/profile")
+  app\api.py:240 @app.post("/api/user/plan")
+  app\api.py:256 @app.post("/api/user/password")
+  app\api.py:283 @app.get("/api/admin/users")
+  app\api.py:298 @app.patch("/api/admin/users")
+  app\api.py:317 @app.post("/api/payment/checkout")
+  app\api.py:435 @app.post("/api/verify")
+  app\api.py:461 @app.post("/api/verify/stream")
+  app\api.py:538 @app.post("/api/export-pdf")
+  app\api.py:557 @app.get("/api/audit-logs")
+  app\api.py:583 @app.get("/api/health")
+  app\api.py:604 @app.get("/{full_path:path}")
+Direct sub-agent calls outside agents/:
+  none
+precheck definition: L50: ctx, err = self._security_precheck(data); L73: def _security_precheck(self, data: dict) -> tuple:; L145: ctx, err = self._security_precheck(data)
+Outcome: Vulnerability confirmed
+Impact 4 x Likelihood 2 = 8 -> Severity: Low
+Technical explanation: Likelihood 2: no route bypasses the Orchestrator today, so this is a defence-in-depth design weakness, not an exploitable hole.
+Mitigation: Move auth/rate limiting into middleware or BaseAgent so every entry point is covered.
+======================================================================
+
+======================================================================
+Test ID: IR-16
+Category: Authentication
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable at http://localhost:8000. Start the backend and set CS_BASE_URL/CS_VERIFY_PATH.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+Test ID: IR-17
+Category: Authentication
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+Test ID: IR-18
+Category: Rate limiting
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+Test ID: IR-19
+Category: CORS
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+Test ID: IR-20
+Category: Error handling
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+Test ID: IR-21
+Category: Transport / headers
+Target: HTTP API
+Objective: -
+Setup/Input: -
+Expected secure behaviour: -
+Actual behaviour: API not reachable.
+Evidence/Log:
+
+Outcome: Skipped
+Impact 0 x Likelihood 0 = 0 -> Severity: N/A
+Technical explanation: 
+Mitigation: 
+======================================================================
+
+======================================================================
+SUMMARY
+ID     Outcome                     I  L Score  Severity
+IR-01  Attack blocked              1  1     1  N/A
+IR-02  Vulnerability confirmed     3  4    12  Medium
+IR-03  Vulnerability confirmed     4  3    12  Medium
+IR-04  Vulnerability confirmed     3  5    15  High
+IR-05  Vulnerability confirmed     3  3     9  Medium
+IR-06  Inconclusive                4  2     8  N/A
+IR-07  Vulnerability confirmed     3  4    12  Medium
+IR-08  Vulnerability confirmed     2  4     8  Low
+IR-09  Vulnerability confirmed     2  4     8  Low
+IR-10  Vulnerability confirmed     1  4     4  Low
+IR-11  Vulnerability confirmed     4  3    12  Medium
+IR-12  Inconclusive                4  3    12  N/A
+IR-13  Vulnerability confirmed     5  3    15  High
+IR-14  Vulnerability confirmed     2  3     6  Low
+IR-15  Vulnerability confirmed     4  2     8  Low
+IR-16  Skipped                     0  0     0  N/A
+IR-17  Skipped                     0  0     0  N/A
+IR-18  Skipped                     0  0     0  N/A
+IR-19  Skipped                     0  0     0  N/A
+IR-20  Skipped                     0  0     0  N/A
+IR-21  Skipped                     0  0     0  N/A
+
+Saved log + JSON in c:\Users\USER\Documents\GitHub\ClaimShield_AI\ir_test_output

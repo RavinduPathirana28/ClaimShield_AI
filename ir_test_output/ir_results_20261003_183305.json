@@ -1,0 +1,212 @@
+[
+  {
+    "test_id": "IR-01",
+    "category": "Retrieval Accuracy",
+    "target": "VectorStore / RetrievalAgent",
+    "outcome": "Attack blocked",
+    "impact": 1,
+    "likelihood": 1,
+    "score": 1,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-02",
+    "category": "Retrieval Accuracy",
+    "target": "VectorStore -> VerificationAgent (end to end)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 3,
+    "likelihood": 4,
+    "score": 12,
+    "severity": "Medium"
+  },
+  {
+    "test_id": "IR-03",
+    "category": "Retrieval Manipulation",
+    "target": "RetrievalAgent (threshold gate)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 4,
+    "likelihood": 3,
+    "score": 12,
+    "severity": "Medium"
+  },
+  {
+    "test_id": "IR-04",
+    "category": "Retrieval Accuracy",
+    "target": "WebCrawler / Orchestrator",
+    "outcome": "Vulnerability confirmed",
+    "impact": 3,
+    "likelihood": 5,
+    "score": 15,
+    "severity": "High"
+  },
+  {
+    "test_id": "IR-05",
+    "category": "Source Reliability",
+    "target": "WebCrawler / RetrievalAgent",
+    "outcome": "Vulnerability confirmed",
+    "impact": 3,
+    "likelihood": 3,
+    "score": 9,
+    "severity": "Medium"
+  },
+  {
+    "test_id": "IR-06",
+    "category": "Retrieval Manipulation",
+    "target": "VectorStore / VerificationAgent",
+    "outcome": "Inconclusive",
+    "impact": 4,
+    "likelihood": 2,
+    "score": 8,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-07",
+    "category": "Retrieval Accuracy",
+    "target": "VectorStore / RetrievalAgent",
+    "outcome": "Vulnerability confirmed",
+    "impact": 3,
+    "likelihood": 4,
+    "score": 12,
+    "severity": "Medium"
+  },
+  {
+    "test_id": "IR-08",
+    "category": "Retrieval Accuracy",
+    "target": "RetrievalAgent (dedup via real save path)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 2,
+    "likelihood": 4,
+    "score": 8,
+    "severity": "Low"
+  },
+  {
+    "test_id": "IR-09",
+    "category": "Source Reliability",
+    "target": "WebCrawler (date labelling)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 2,
+    "likelihood": 4,
+    "score": 8,
+    "severity": "Low"
+  },
+  {
+    "test_id": "IR-10",
+    "category": "Retrieval Accuracy",
+    "target": "WebCrawler (TIME_SENSITIVE_PATTERN)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 1,
+    "likelihood": 4,
+    "score": 4,
+    "severity": "Low"
+  },
+  {
+    "test_id": "IR-11",
+    "category": "Retrieval Accuracy",
+    "target": "WebCrawler (_crawl_page)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 4,
+    "likelihood": 3,
+    "score": 12,
+    "severity": "Medium"
+  },
+  {
+    "test_id": "IR-12",
+    "category": "Retrieval Manipulation",
+    "target": "VerificationAgent (indirect prompt injection)",
+    "outcome": "Inconclusive",
+    "impact": 4,
+    "likelihood": 3,
+    "score": 12,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-13",
+    "category": "SSRF / Unsafe Retrieval",
+    "target": "WebCrawler (_crawl_page / httpx)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 5,
+    "likelihood": 3,
+    "score": 15,
+    "severity": "High"
+  },
+  {
+    "test_id": "IR-14",
+    "category": "API/Input Robustness",
+    "target": "RetrievalAgent (_retrieve)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 2,
+    "likelihood": 3,
+    "score": 6,
+    "severity": "Low"
+  },
+  {
+    "test_id": "IR-15",
+    "category": "Authorization / Access",
+    "target": "Architecture (Orchestrator boundary)",
+    "outcome": "Vulnerability confirmed",
+    "impact": 4,
+    "likelihood": 2,
+    "score": 8,
+    "severity": "Low"
+  },
+  {
+    "test_id": "IR-16",
+    "category": "Authentication",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-17",
+    "category": "Authentication",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-18",
+    "category": "Rate limiting",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-19",
+    "category": "CORS",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-20",
+    "category": "Error handling",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  },
+  {
+    "test_id": "IR-21",
+    "category": "Transport / headers",
+    "target": "HTTP API",
+    "outcome": "Skipped",
+    "impact": 0,
+    "likelihood": 0,
+    "score": 0,
+    "severity": "N/A"
+  }
+]
