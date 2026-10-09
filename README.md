@@ -329,6 +329,7 @@ OPENAI_API_KEY="sk_your_openai_api_key_here"
 # ==============================================================================
 JWT_SECRET="claimshield_super_secure_secret_token_key_2026"
 JWT_EXPIRY_MINUTES=60
+GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
 
 # ==============================================================================
 # Cloud Database (Optional - defaults to local SQLite if omitted)
@@ -359,6 +360,7 @@ The FastAPI backend exposes comprehensive REST endpoints and real-time streaming
 |---|---|---|---|
 | `POST` | `/api/auth/register` | Register a new user account with hashed password | No |
 | `POST` | `/api/auth/login` | Authenticate credentials and return JWT bearer token | No |
+| `POST` | `/api/auth/google` | Authenticate via Google ID Token (Google OAuth 2.0 / GIS) | No |
 | `GET` | `/api/user/profile` | Retrieve authenticated user profile and subscription status | Yes (Bearer) |
 | `POST` | `/api/user/plan` | Update user subscription plan tier (Free / Pro / Enterprise) | Yes (Bearer) |
 | `POST` | `/api/user/password` | Change account password with current password verification | Yes (Bearer) |

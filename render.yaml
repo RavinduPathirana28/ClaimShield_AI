@@ -18,5 +18,7 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
       - key: JWT_SECRET
         generateValue: true

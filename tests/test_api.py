@@ -129,6 +129,26 @@ class TestApi(unittest.TestCase):
         )
         self.assertEqual(res.status_code, 400)
 
+    def test_04b_google_auth(self):
+        # Empty credential returns 400
+        res = self.client.post("/api/auth/google", json={"credential": ""})
+        self.assertEqual(res.status_code, 400)
+
+        # Demo google credential succeeds and creates account
+        demo_email = self._unique("google_tester") + "@gmail.com"
+        res = self.client.post("/api/auth/google", json={"credential": f"demo_google_{demo_email}"})
+        self.assertEqual(res.status_code, 200, res.text)
+        data = res.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["email"], demo_email)
+        self.assertEqual(data["username"], demo_email)
+        self.assertTrue(data["token"])
+
+        # Signing in again with the same credential re-uses existing account
+        res2 = self.client.post("/api/auth/google", json={"credential": f"demo_google_{demo_email}"})
+        self.assertEqual(res2.status_code, 200)
+        self.assertEqual(res2.json()["username"], demo_email)
+
     # --------------------------------------------------------------- profile
     def test_05_profile_requires_auth(self):
         self.assertEqual(self.client.get("/api/user/profile").status_code, 401)

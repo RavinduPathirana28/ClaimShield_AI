@@ -26,12 +26,40 @@ const DEMO_ACCOUNTS = [
   { username: 'newsroom', password: 'newsroom', label: 'Admin', badge: 'outline' },
 ];
 
+function GoogleIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" {...props}>
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
+
 const EMPTY = { username: '', password: '', confirm: '' };
 
 export default function AuthDialog({ open, onOpenChange, mode = 'login', plan }) {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googlePromptOpen, setGooglePromptOpen] = useState(false);
+  const [demoGoogleEmail, setDemoGoogleEmail] = useState('alex.researcher@gmail.com');
 
   const [tab, setTab] = useState(mode);
   const [form, setForm] = useState(EMPTY);
@@ -59,6 +87,76 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     navigate(location.state?.from || '/dashboard');
     return res;
   };
+
+  const handleGoogleSuccess = async (credential) => {
+    setServerError(null);
+    setGoogleBusy(true);
+    try {
+      const res = await loginWithGoogle(credential);
+      notifyLoginSuccess(res);
+      afterAuth(res);
+    } catch (err) {
+      setServerError(err.message || 'Google sign-in failed.');
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
+  // Initialize GIS if client ID is provided
+  useEffect(() => {
+    if (!open || !googleClientId || !window.google?.accounts?.id) return;
+    try {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (resp) => {
+          if (resp.credential) {
+            handleGoogleSuccess(resp.credential);
+          }
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      const btnContainer = document.getElementById('google-btn-slot');
+      if (btnContainer) {
+        btnContainer.innerHTML = '';
+        window.google.accounts.id.renderButton(btnContainer, {
+          theme: 'outline',
+          size: 'large',
+          width: '100%',
+          text: tab === 'register' ? 'signup_with' : 'signin_with',
+          shape: 'rectangular',
+        });
+      }
+    } catch (err) {
+      console.warn('Google Identity Services initialization:', err);
+    }
+  }, [open, googleClientId, tab]);
+
+  const onGoogleBtnClick = () => {
+    if (googleClientId && window.google?.accounts?.id) {
+      window.google.accounts.id.prompt();
+    } else {
+      setGooglePromptOpen(true);
+    }
+  };
+
+  const handleDemoGoogleLogin = async () => {
+    setGooglePromptOpen(false);
+    setServerError(null);
+    setGoogleBusy(true);
+    try {
+      const email = demoGoogleEmail.trim() || 'alex.researcher@gmail.com';
+      const res = await loginWithGoogle(`demo_google_${email}`);
+      notifyLoginSuccess(res);
+      afterAuth(res);
+    } catch (err) {
+      setServerError(err.message || 'Google sign-in failed.');
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
 
   const notifyLoginSuccess = (userRes) => {
     const isPro = ['pro', 'premium'].includes(userRes.role);
@@ -193,6 +291,42 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
               Sign in to run multi-agent claim verifications, or create a free account.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Google Sign In Section */}
+          <div className="flex flex-col gap-2.5 pt-1">
+            {googleClientId ? (
+              <div id="google-btn-slot" className="w-full flex justify-center min-h-[40px]" />
+            ) : null}
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || googleBusy}
+              onClick={onGoogleBtnClick}
+              className="w-full flex items-center justify-center gap-2.5 rounded-xl border-border/80 hover:bg-accent/60 transition-all font-medium py-2.5 shadow-xs"
+            >
+              {googleBusy ? (
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              ) : (
+                <GoogleIcon />
+              )}
+              <span>Continue with Google</span>
+              {!googleClientId && (
+                <span className="ml-1 text-[10px] text-muted-foreground font-mono bg-muted/80 border px-1.5 py-0.5 rounded">
+                  Demo ready
+                </span>
+              )}
+            </Button>
+
+            <div className="relative my-1 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/80" />
+              </div>
+              <span className="relative bg-background px-3 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                Or with credentials
+              </span>
+            </div>
+          </div>
 
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="grid w-full grid-cols-2">
@@ -359,6 +493,60 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
       </Dialog>
 
       <PaymentDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} planId="pro" />
+
+      {/* Google Setup / Quick-Sign-in Dialog */}
+      <Dialog open={googlePromptOpen} onOpenChange={setGooglePromptOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-heading">
+              <GoogleIcon />
+              Sign in with Google
+            </DialogTitle>
+            <DialogDescription>
+              Single Sign-On authentication for ClaimShield AI.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            <Alert className="border-primary/20 bg-primary/5">
+              <AlertDescription className="text-xs text-muted-foreground leading-relaxed">
+                <strong>Google Identity Setup:</strong> To link a production Google Cloud client, configure{' '}
+                <code className="text-foreground font-mono text-[11px] bg-muted px-1 py-0.5 rounded">
+                  VITE_GOOGLE_CLIENT_ID
+                </code>{' '}
+                and backend{' '}
+                <code className="text-foreground font-mono text-[11px] bg-muted px-1 py-0.5 rounded">
+                  GOOGLE_CLIENT_ID
+                </code>. You can also sign in instantly using the demo profile below:
+              </AlertDescription>
+            </Alert>
+
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="demo-google-email">
+                  <FieldTitle>Google Account Email</FieldTitle>
+                </FieldLabel>
+                <Input
+                  id="demo-google-email"
+                  value={demoGoogleEmail}
+                  onChange={(e) => setDemoGoogleEmail(e.target.value)}
+                  placeholder="e.g. alex.researcher@gmail.com"
+                />
+              </Field>
+            </FieldGroup>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="ghost" onClick={() => setGooglePromptOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleDemoGoogleLogin} disabled={googleBusy} className="gap-2">
+                {googleBusy ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
+                Sign in with Google
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

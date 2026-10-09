@@ -67,7 +67,13 @@ export function AuthProvider({ children }) {
   const persistSession = useCallback(async (res) => {
     setToken(res.token);
     localStorage.setItem('cs_token', res.token);
-    const u = { username: res.username, role: res.role };
+    const u = {
+      username: res.username,
+      role: res.role,
+      email: res.email || res.username,
+      name: res.name || res.username,
+      picture: res.picture || '',
+    };
     setUser(u);
     localStorage.setItem('cs_user', JSON.stringify(u));
     return res;
@@ -81,6 +87,11 @@ export function AuthProvider({ children }) {
   const registerUser = useCallback(
     async (username, password, role = 'user') =>
       persistSession(await api.register(username, password, role)),
+    [persistSession]
+  );
+
+  const loginWithGoogle = useCallback(
+    async (credential) => persistSession(await api.googleLogin(credential)),
     [persistSession]
   );
 
@@ -101,11 +112,12 @@ export function AuthProvider({ children }) {
       isAdmin: user?.role === 'newsroom_admin' || profile?.role === 'newsroom_admin',
       login: loginUser,
       register: registerUser,
+      loginWithGoogle,
       logout,
       saveToken,
       refreshProfile,
     }),
-    [token, user, profile, loginUser, registerUser, logout, saveToken, refreshProfile]
+    [token, user, profile, loginUser, registerUser, loginWithGoogle, logout, saveToken, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

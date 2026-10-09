@@ -31,7 +31,8 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "")
 
-# Security & JWT
+# Security, Google OAuth & JWT
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 JWT_SECRET = os.environ.get("JWT_SECRET", "super_secret_jwt_key_for_news_verifier_agentic_system_2026")
 try:
     JWT_EXPIRY_MINUTES = int(os.environ.get("JWT_EXPIRY_MINUTES", "60"))

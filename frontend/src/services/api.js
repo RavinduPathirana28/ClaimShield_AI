@@ -70,6 +70,10 @@ export function register(username, password, role = 'user') {
   return request('/auth/register', { method: 'POST', body: { username, password, role } });
 }
 
+export function googleLogin(credential) {
+  return request('/auth/google', { method: 'POST', body: { credential } });
+}
+
 export function getProfile(token) {
   return request('/user/profile', { token });
 }
