@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ShieldCheck, Loader2, KeyRound, UserPlus } from 'lucide-react';
@@ -56,7 +56,10 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
   const navigate = useNavigate();
   const location = useLocation();
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    import.meta.env.GOOGLE_CLIENT_ID ||
+    '';
   const [googleBusy, setGoogleBusy] = useState(false);
   const [googlePromptOpen, setGooglePromptOpen] = useState(false);
   const [demoGoogleEmail, setDemoGoogleEmail] = useState('alex.researcher@gmail.com');
@@ -88,7 +91,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     return res;
   };
 
-  const handleGoogleSuccess = async (credential) => {
+  const handleGoogleSuccess = useCallback(async (credential) => {
     setServerError(null);
     setGoogleBusy(true);
     try {
@@ -100,42 +103,85 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     } finally {
       setGoogleBusy(false);
     }
-  };
+  }, [loginWithGoogle]);
 
-  // Initialize GIS if client ID is provided
-  useEffect(() => {
-    if (!open || !googleClientId || !window.google?.accounts?.id) return;
+  // Render Google Identity Services button whenever container mounts
+  const renderGoogleBtn = useCallback((node) => {
+    if (!node || !googleClientId || !window.google?.accounts?.id) return;
     try {
       window.google.accounts.id.initialize({
         client_id: googleClientId,
         callback: (resp) => {
-          if (resp.credential) {
-            handleGoogleSuccess(resp.credential);
-          }
+          if (resp.credential) handleGoogleSuccess(resp.credential);
         },
         auto_select: false,
-        cancel_on_tap_outside: true,
       });
-
-      const btnContainer = document.getElementById('google-btn-slot');
-      if (btnContainer) {
-        btnContainer.innerHTML = '';
-        window.google.accounts.id.renderButton(btnContainer, {
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          text: tab === 'register' ? 'signup_with' : 'signin_with',
-          shape: 'rectangular',
-        });
-      }
+      node.innerHTML = '';
+      window.google.accounts.id.renderButton(node, {
+        theme: 'outline',
+        size: 'large',
+        width: 320,
+        text: tab === 'register' ? 'signup_with' : 'signin_with',
+        shape: 'pill',
+      });
     } catch (err) {
-      console.warn('Google Identity Services initialization:', err);
+      console.warn('GIS renderButton note:', err);
     }
-  }, [open, googleClientId, tab]);
+  }, [googleClientId, tab, handleGoogleSuccess]);
 
   const onGoogleBtnClick = () => {
-    if (googleClientId && window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
+    if (!googleClientId) {
+      setGooglePromptOpen(true);
+      return;
+    }
+
+    // Modern Google OAuth 2.0 Token Client popup (guaranteed popup on click)
+    if (window.google?.accounts?.oauth2) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'openid email profile',
+          callback: async (tokenResponse) => {
+            if (tokenResponse.error) {
+              setServerError(`Google sign-in canceled or failed: ${tokenResponse.error}`);
+              return;
+            }
+            if (tokenResponse.access_token) {
+              setGoogleBusy(true);
+              try {
+                const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const profile = await userRes.json();
+                if (profile.email) {
+                  const authRes = await loginWithGoogle(`demo_google_${profile.email}`);
+                  notifyLoginSuccess(authRes);
+                  afterAuth(authRes);
+                } else {
+                  throw new Error('Google did not return an email address.');
+                }
+              } catch (err) {
+                setServerError(err.message || 'Failed to retrieve Google profile.');
+              } finally {
+                setGoogleBusy(false);
+              }
+            }
+          },
+        });
+        tokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (e) {
+        console.warn('Google tokenClient initialization note:', e);
+      }
+    }
+
+    // Fallback: try One Tap or open quick sign-in modal
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          setGooglePromptOpen(true);
+        }
+      });
     } else {
       setGooglePromptOpen(true);
     }
@@ -295,7 +341,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
           {/* Google Sign In Section */}
           <div className="flex flex-col gap-2.5 pt-1">
             {googleClientId ? (
-              <div id="google-btn-slot" className="w-full flex justify-center min-h-[40px]" />
+              <div ref={renderGoogleBtn} className="w-full flex justify-center min-h-[40px]" />
             ) : null}
 
             <Button
