@@ -40,7 +40,7 @@ export default function App() {
       <AuthProvider>
         <RunProvider>
           <TooltipProvider delayDuration={150}>
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route element={<PublicLayout openAuth={openAuth} />}>
