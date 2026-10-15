@@ -12,19 +12,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Field, FieldGroup, FieldLabel, FieldTitle, FieldError } from '@/components/ui/field';
 import { useAuth } from '@/context/AuthContext';
 import PaymentDialog from '@/components/PaymentDialog';
 
-const DEMO_ACCOUNTS = [
-  { username: 'user', password: 'password', label: 'Free', badge: 'secondary' },
-  { username: 'pro', password: 'password', label: 'Pro', badge: 'default' },
-  { username: 'premium', password: 'premium', label: 'Premium', badge: 'default' },
-  { username: 'newsroom', password: 'newsroom', label: 'Admin', badge: 'outline' },
-];
 
 function GoogleIcon(props) {
   return (
@@ -309,18 +302,6 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
     }
   };
 
-  const demoLogin = async (username, password) => {
-    setServerError(null);
-    setBusy(true);
-    try {
-      const res = await login(username, password);
-      notifyLoginSuccess(res);
-      afterAuth(res);
-    } catch (err) {
-      setServerError(err.message);
-      setBusy(false);
-    }
-  };
 
   return (
     <>
@@ -397,7 +378,7 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
                       value={form.username}
                       onChange={set('username')}
                       autoComplete="username"
-                      placeholder="e.g. pro"
+                      placeholder="Enter your username"
                     />
                     {errors.username && <FieldError>{errors.username}</FieldError>}
                   </Field>
@@ -422,33 +403,6 @@ export default function AuthDialog({ open, onOpenChange, mode = 'login', plan })
                   Sign in
                 </Button>
               </form>
-
-              <div className="flex flex-col gap-2">
-                <p className="text-center text-xs font-medium text-muted-foreground">
-                  Demo accounts — click to sign in
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {DEMO_ACCOUNTS.map((acct) => (
-                    <button
-                      key={acct.username}
-                      type="button"
-                      disabled={busy}
-                      onClick={() => demoLogin(acct.username, acct.password)}
-                      className="flex items-center justify-between gap-1 rounded-xl glass-panel px-3 py-2 text-left transition-all hover:border-primary/40 hover:bg-primary/5 disabled:opacity-50"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-mono text-xs font-medium">{acct.username}</p>
-                        <p className="truncate text-[0.65rem] text-muted-foreground">
-                          {acct.password}
-                        </p>
-                      </div>
-                      <Badge variant={acct.badge} className="text-[0.6rem]">
-                        {acct.label}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </TabsContent>
 
             <TabsContent value="register" className="flex flex-col gap-4">
